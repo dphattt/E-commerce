@@ -30,7 +30,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <SiteHeader activeHref="/explore" />
-        <div className="flex flex-1 flex-col">{children}</div>
+        <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-9 sm:px-6 lg:px-8">
+          {children}
+        </div>
         <SiteFooter />
       </body>
     </html>
