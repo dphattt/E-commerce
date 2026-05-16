@@ -1,4 +1,9 @@
-export { SiteHeader, type SiteHeaderNavItem, type SiteHeaderProps } from "./SiteHeader";
+export {
+  SiteHeader,
+  type SiteHeaderNavItem,
+  type SiteHeaderProps,
+} from "./SiteHeader";
+export { CartDrawer, type CartDrawerProps } from "./CartDrawer";
 export {
   SiteFooter,
   type FooterColumn,
