@@ -2,6 +2,16 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  IconClose,
+  IconHeart,
+  IconMenu,
+  IconPause,
+  IconPlay,
+  IconSearch,
+  IconUser,
+} from "@/components/icons";
+import { iconBlockClassName, iconGlyphClassName } from "@/lib/icon-block";
 import { CartDrawer } from "./CartDrawer";
 
 export type SiteHeaderNavItem = {
@@ -35,119 +45,6 @@ const defaultNav: SiteHeaderNavItem[] = [
   { label: "Accessories", href: "/accessories" },
   { label: "Explore", href: "/explore" },
 ];
-
-function IconSearch(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      aria-hidden
-      {...props}
-    >
-      <circle cx="11" cy="11" r="7" />
-      <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconHeart(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      aria-hidden
-      {...props}
-    >
-      <path
-        d="M12 21s-7-4.35-7-10a4.5 4.5 0 0 1 7-3 4.5 4.5 0 0 1 7 3c0 5.65-7 10-7 10Z"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconUser(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      aria-hidden
-      {...props}
-    >
-      <path d="M20 21a8 8 0 0 0-16 0" strokeLinecap="round" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
-function IconBag(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      aria-hidden
-      {...props}
-    >
-      <path d="M9 11V8a3 3 0 0 1 6 0v3" strokeLinecap="round" />
-      <path d="M5 11h14l-1 10H6L5 11Z" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconMenu(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      aria-hidden
-      {...props}
-    >
-      <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconClose(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      aria-hidden
-      {...props}
-    >
-      <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconPause(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-      <rect x="6" y="5" width="4" height="14" rx="1" />
-      <rect x="14" y="5" width="4" height="14" rx="1" />
-    </svg>
-  );
-}
-
-function IconPlay(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-      <path d="M8 5v14l11-7-11-7Z" />
-    </svg>
-  );
-}
 
 export function SiteHeader({
   brandName = "GYMSHARK",
@@ -245,13 +142,13 @@ export function SiteHeader({
           <div className="flex min-w-0 items-center gap-2 lg:min-w-[200px]">
             <button
               type="button"
-              className="inline-flex size-10 items-center justify-center rounded-md hover:bg-store-surface lg:hidden"
+              className={`${iconBlockClassName} rounded-md hover:bg-store-surface lg:hidden`}
               aria-expanded={menuOpen}
               aria-controls={menuId}
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
             >
-              <IconMenu className="size-6" />
+              <IconMenu className={iconGlyphClassName} />
             </button>
             <nav
               className="hidden min-w-0 lg:flex lg:items-center lg:gap-6"
@@ -311,26 +208,26 @@ export function SiteHeader({
 
             <button
               type="button"
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-store-surface lg:hidden"
+              className={`${iconBlockClassName} rounded-full hover:bg-store-surface lg:hidden`}
               aria-label="Open search"
               onClick={() => setSearchOpen(true)}
             >
-              <IconSearch className="size-6 text-store-ink" />
+              <IconSearch className={`${iconGlyphClassName} text-store-ink`} />
             </button>
 
             <Link
               href="/wishlist"
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-store-surface"
+              className={`${iconBlockClassName} rounded-full hover:bg-store-surface`}
               aria-label="Wishlist"
             >
-              <IconHeart className="size-6" />
+              <IconHeart className={iconGlyphClassName} />
             </Link>
             <Link
               href="/account"
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-store-surface"
+              className={`${iconBlockClassName} rounded-full hover:bg-store-surface`}
               aria-label="Account"
             >
-              <IconUser className="size-6" />
+              <IconUser className={iconGlyphClassName} />
             </Link>
             <CartDrawer cartCount={cartCount} />
           </div>
@@ -409,11 +306,11 @@ export function SiteHeader({
               </span>
               <button
                 type="button"
-                className="inline-flex size-10 items-center justify-center rounded-md hover:bg-store-surface"
+                className={`${iconBlockClassName} rounded-md hover:bg-store-surface`}
                 onClick={() => setMenuOpen(false)}
                 aria-label="Close menu"
               >
-                <IconClose className="size-6" />
+                <IconClose className={iconGlyphClassName} />
               </button>
             </div>
             <nav className="flex flex-col p-2" aria-label="Mobile">

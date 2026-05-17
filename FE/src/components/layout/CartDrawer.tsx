@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { IconBag, IconClose, IconHeart } from "@/components/icons";
 import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -13,55 +15,6 @@ import {
 export type CartDrawerProps = {
   cartCount?: number;
 };
-
-function IconBag(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      aria-hidden
-      {...props}
-    >
-      <path d="M9 11V8a3 3 0 0 1 6 0v3" strokeLinecap="round" />
-      <path d="M5 11h14l-1 10H6L5 11Z" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconHeart(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      aria-hidden
-      {...props}
-    >
-      <path
-        d="M12 21s-7-4.35-7-10a4.5 4.5 0 0 1 7-3 4.5 4.5 0 0 1 7 3c0 5.65-7 10-7 10Z"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconClose(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      aria-hidden
-      {...props}
-    >
-      <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function EmptyBagIllustration() {
   return (
@@ -110,9 +63,14 @@ export function CartDrawer({ cartCount = 0 }: CartDrawerProps) {
       >
         {/* Header */}
         <SheetHeader className="flex flex-row items-center justify-between border-b border-zinc-700 px-5 py-4">
-          <SheetTitle className="text-sm font-bold uppercase tracking-widest text-white">
-            Your Bag
-          </SheetTitle>
+          <div>
+            <SheetTitle className="text-sm font-bold uppercase tracking-widest text-white">
+              Your Bag
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              View and manage items in your shopping bag.
+            </SheetDescription>
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"

@@ -1,4 +1,4 @@
-const User = require("@/models/User.model");
+const User = require("@/models/User.model").default;
 const { signToken } = require("@/utils/jwt");
 
 async function register(req, res, next) {

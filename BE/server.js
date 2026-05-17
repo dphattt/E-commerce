@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("tsx/cjs/api").register();
 require("module-alias/register");
 
 const app = require("@/app");

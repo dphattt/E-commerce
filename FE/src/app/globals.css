@@ -1,10 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-/*
-  ---break---
-*/
-@custom-variant dark (&:is(.dark *));
+
+@custom-variant dark (&:where(html.dark, html.dark *));
 
 /*
   Store palette — athletic commerce UI (paper / ink / soft surfaces / accent blue).
@@ -23,6 +21,9 @@
   --store-accent: #1a56ff;
   --store-accent-hover: #1547d6;
   --store-on-accent: #ffffff;
+  --store-icon-box: 28px;
+  --store-payment-w: 42px;
+  --store-payment-h: 25px;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -60,7 +61,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-store-paper: var(--store-paper);
   --color-store-ink: var(--store-ink);
@@ -74,6 +75,9 @@
   --color-store-accent: var(--store-accent);
   --color-store-accent-hover: var(--store-accent-hover);
   --color-store-on-accent: var(--store-on-accent);
+  --size-store-icon: var(--store-icon-box);
+  --width-store-payment: var(--store-payment-w);
+  --height-store-payment: var(--store-payment-h);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -113,30 +117,21 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --store-paper: #0a0a0a;
-    --store-ink: #fafafa;
-    --store-ink-strong: #ffffff;
-    --store-surface: #171717;
-    --store-surface-2: #141414;
-    --store-border: #262626;
-    --store-border-strong: #404040;
-    --store-fg-muted: #a3a3a3;
-    --store-fg-subtle: #737373;
-    --store-accent: #4d8dff;
-    --store-accent-hover: #7aa8ff;
-    --store-on-accent: #0a0a0a;
-  }
-}
-
-/*
-  ---break---
-*/
-
-.dark {
+html.dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
+  --store-paper: #0a0a0a;
+  --store-ink: #fafafa;
+  --store-ink-strong: #ffffff;
+  --store-surface: #171717;
+  --store-surface-2: #141414;
+  --store-border: #262626;
+  --store-border-strong: #404040;
+  --store-fg-muted: #a3a3a3;
+  --store-fg-subtle: #737373;
+  --store-accent: #4d8dff;
+  --store-accent-hover: #7aa8ff;
+  --store-on-accent: #0a0a0a;
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
@@ -168,16 +163,13 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/*
-  ---break---
-*/
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
   html {
     @apply font-sans;

@@ -31,7 +31,11 @@
     "mongoose": "^9.6.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
     "migrate-mongo": "^14.0.7",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
   }
 }
