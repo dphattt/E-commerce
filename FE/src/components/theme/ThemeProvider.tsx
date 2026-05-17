@@ -24,19 +24,14 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function getInitialTheme(): ThemeMode {
-  if (typeof window === "undefined") return "system";
-  return readStoredTheme();
-}
-
-function getInitialSystemDark(): boolean {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>(getInitialTheme);
-  const [systemDark, setSystemDark] = useState(getInitialSystemDark);
+  const [theme, setThemeState] = useState<ThemeMode>("system");
+  const [systemDark, setSystemDark] = useState(false);
+
+  useEffect(() => {
+    setThemeState(readStoredTheme());
+    setSystemDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }, []);
 
   const setTheme = useCallback((mode: ThemeMode) => {
     setThemeState(mode);

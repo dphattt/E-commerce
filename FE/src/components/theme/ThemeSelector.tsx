@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "./ThemeProvider";
-import { iconBlockClassName, iconGlyphClassName } from "../../lib/icon-block";
+import { iconBlockClassName, iconGlyphClassName } from "@/lib/icon-block";
 import type { ThemeMode } from "@/lib/theme";
 
 type ThemeOption = {

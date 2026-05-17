@@ -6,6 +6,7 @@ import {
   Sheet,
   SheetClose,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -62,9 +63,14 @@ export function CartDrawer({ cartCount = 0 }: CartDrawerProps) {
       >
         {/* Header */}
         <SheetHeader className="flex flex-row items-center justify-between border-b border-zinc-700 px-5 py-4">
-          <SheetTitle className="text-sm font-bold uppercase tracking-widest text-white">
-            Your Bag
-          </SheetTitle>
+          <div>
+            <SheetTitle className="text-sm font-bold uppercase tracking-widest text-white">
+              Your Bag
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              View and manage items in your shopping bag.
+            </SheetDescription>
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
