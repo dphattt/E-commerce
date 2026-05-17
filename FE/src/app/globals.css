@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(html.dark, html.dark *));
+
 /*
   Store palette — athletic commerce UI (paper / ink / soft surfaces / accent blue).
   Utilities: bg-store-paper, text-store-ink, border-store-border, bg-store-accent, …
@@ -19,6 +21,9 @@
   --store-accent: #1a56ff;
   --store-accent-hover: #1547d6;
   --store-on-accent: #ffffff;
+  --store-icon-box: 28px;
+  --store-payment-w: 42px;
+  --store-payment-h: 25px;
 }
 
 @theme inline {
@@ -38,29 +43,31 @@
   --color-store-accent: var(--store-accent);
   --color-store-accent-hover: var(--store-accent-hover);
   --color-store-on-accent: var(--store-on-accent);
+  --size-store-icon: var(--store-icon-box);
+  --width-store-payment: var(--store-payment-w);
+  --height-store-payment: var(--store-payment-h);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --store-paper: #0a0a0a;
-    --store-ink: #fafafa;
-    --store-ink-strong: #ffffff;
-    --store-surface: #171717;
-    --store-surface-2: #141414;
-    --store-border: #262626;
-    --store-border-strong: #404040;
-    --store-fg-muted: #a3a3a3;
-    --store-fg-subtle: #737373;
-    --store-accent: #4d8dff;
-    --store-accent-hover: #7aa8ff;
-    --store-on-accent: #0a0a0a;
-  }
+html.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --store-paper: #0a0a0a;
+  --store-ink: #fafafa;
+  --store-ink-strong: #ffffff;
+  --store-surface: #171717;
+  --store-surface-2: #141414;
+  --store-border: #262626;
+  --store-border-strong: #404040;
+  --store-fg-muted: #a3a3a3;
+  --store-fg-subtle: #737373;
+  --store-accent: #4d8dff;
+  --store-accent-hover: #7aa8ff;
+  --store-on-accent: #0a0a0a;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }

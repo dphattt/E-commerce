@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { iconBlockClassName, iconGlyphClassName } from "../../lib/icon-block";
 
 export type SiteHeaderNavItem = {
   label: string;
@@ -193,13 +194,13 @@ export function SiteHeader({
           <div className="flex min-w-0 items-center gap-2 lg:min-w-[200px]">
             <button
               type="button"
-              className="inline-flex size-10 items-center justify-center rounded-md hover:bg-store-surface lg:hidden"
+              className={`${iconBlockClassName} rounded-md hover:bg-store-surface lg:hidden`}
               aria-expanded={menuOpen}
               aria-controls={menuId}
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
             >
-              <IconMenu className="size-6" />
+              <IconMenu className={iconGlyphClassName} />
             </button>
             <nav className="hidden min-w-0 lg:flex lg:items-center lg:gap-6" aria-label="Main">
               {navItems.map((item) => {
@@ -254,33 +255,33 @@ export function SiteHeader({
 
             <button
               type="button"
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-store-surface lg:hidden"
+              className={`${iconBlockClassName} rounded-full hover:bg-store-surface lg:hidden`}
               aria-label="Open search"
               onClick={() => setSearchOpen(true)}
             >
-              <IconSearch className="size-6 text-store-ink" />
+              <IconSearch className={`${iconGlyphClassName} text-store-ink`} />
             </button>
 
             <Link
               href="/wishlist"
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-store-surface"
+              className={`${iconBlockClassName} rounded-full hover:bg-store-surface`}
               aria-label="Wishlist"
             >
-              <IconHeart className="size-6" />
+              <IconHeart className={iconGlyphClassName} />
             </Link>
             <Link
               href="/account"
-              className="inline-flex size-10 items-center justify-center rounded-full hover:bg-store-surface"
+              className={`${iconBlockClassName} rounded-full hover:bg-store-surface`}
               aria-label="Account"
             >
-              <IconUser className="size-6" />
+              <IconUser className={iconGlyphClassName} />
             </Link>
             <Link
               href="/cart"
-              className="relative inline-flex size-10 items-center justify-center rounded-full hover:bg-store-surface"
+              className={`relative ${iconBlockClassName} rounded-full hover:bg-store-surface`}
               aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
             >
-              <IconBag className="size-6" />
+              <IconBag className={iconGlyphClassName} />
               {cartCount > 0 && (
                 <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-store-accent text-[10px] font-semibold leading-none text-store-on-accent">
                   {cartCount > 9 ? "9+" : cartCount}
@@ -357,11 +358,11 @@ export function SiteHeader({
               <span className="text-sm font-semibold uppercase tracking-wide">Menu</span>
               <button
                 type="button"
-                className="inline-flex size-10 items-center justify-center rounded-md hover:bg-store-surface"
+                className={`${iconBlockClassName} rounded-md hover:bg-store-surface`}
                 onClick={() => setMenuOpen(false)}
                 aria-label="Close menu"
               >
-                <IconClose className="size-6" />
+                <IconClose className={iconGlyphClassName} />
               </button>
             </div>
             <nav className="flex flex-col p-2" aria-label="Mobile">
