@@ -1,4 +1,4 @@
-const User = require("@/models/User.model");
+const User = require("@/models/User.model").default;
 
 async function me(req, res, next) {
   try {
