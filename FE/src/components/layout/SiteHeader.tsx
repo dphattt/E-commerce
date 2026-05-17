@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { iconBlockClassName, iconGlyphClassName } from "../../lib/icon-block";
+import {
+  IconClose,
+  IconHeart,
+  IconMenu,
+  IconPause,
+  IconPlay,
+  IconSearch,
+  IconUser,
+} from "@/components/icons";
+import { iconBlockClassName, iconGlyphClassName } from "@/lib/icon-block";
+import { CartDrawer } from "./CartDrawer";
 
 export type SiteHeaderNavItem = {
   label: string;
@@ -35,77 +45,6 @@ const defaultNav: SiteHeaderNavItem[] = [
   { label: "Accessories", href: "/accessories" },
   { label: "Explore", href: "/explore" },
 ];
-
-function IconSearch(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden {...props}>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconHeart(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden {...props}>
-      <path
-        d="M12 21s-7-4.35-7-10a4.5 4.5 0 0 1 7-3 4.5 4.5 0 0 1 7 3c0 5.65-7 10-7 10Z"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconUser(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden {...props}>
-      <path d="M20 21a8 8 0 0 0-16 0" strokeLinecap="round" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
-function IconBag(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden {...props}>
-      <path d="M9 11V8a3 3 0 0 1 6 0v3" strokeLinecap="round" />
-      <path d="M5 11h14l-1 10H6L5 11Z" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconMenu(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden {...props}>
-      <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconClose(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} aria-hidden {...props}>
-      <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconPause(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-      <rect x="6" y="5" width="4" height="14" rx="1" />
-      <rect x="14" y="5" width="4" height="14" rx="1" />
-    </svg>
-  );
-}
-
-function IconPlay(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
-      <path d="M8 5v14l11-7-11-7Z" />
-    </svg>
-  );
-}
 
 export function SiteHeader({
   brandName = "GYMSHARK",
@@ -163,13 +102,18 @@ export function SiteHeader({
   const line = lines[index] ?? announcement;
 
   return (
-    <header className={`sticky top-0 z-40 w-full bg-store-paper text-store-ink-strong ${className}`}>
+    <header
+      className={`sticky top-0 z-40 w-full bg-store-paper text-store-ink-strong ${className}`}
+    >
       {/* Announcement */}
       <div className="border-b border-store-border/80 bg-store-surface">
         <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 sm:px-6 lg:px-8">
           <div className="min-w-0 flex-1 overflow-x-auto text-center">
             <p className="inline-block min-w-0 whitespace-nowrap text-xs sm:text-sm">
-              <Link href="/refer" className="underline underline-offset-2 hover:no-underline">
+              <Link
+                href="/refer"
+                className="underline underline-offset-2 hover:no-underline"
+              >
                 {line}
               </Link>
             </p>
@@ -181,7 +125,11 @@ export function SiteHeader({
               onClick={() => setPaused((p) => !p)}
               aria-label={paused ? "Play announcements" : "Pause announcements"}
             >
-              {paused ? <IconPlay className="size-4" /> : <IconPause className="size-4" />}
+              {paused ? (
+                <IconPlay className="size-4" />
+              ) : (
+                <IconPause className="size-4" />
+              )}
             </button>
           )}
         </div>
@@ -202,7 +150,10 @@ export function SiteHeader({
             >
               <IconMenu className={iconGlyphClassName} />
             </button>
-            <nav className="hidden min-w-0 lg:flex lg:items-center lg:gap-6" aria-label="Main">
+            <nav
+              className="hidden min-w-0 lg:flex lg:items-center lg:gap-6"
+              aria-label="Main"
+            >
               {navItems.map((item) => {
                 const active = activeHref === item.href;
                 return (
@@ -210,7 +161,9 @@ export function SiteHeader({
                     key={item.href}
                     href={item.href}
                     className={`relative shrink-0 text-sm font-medium tracking-wide text-store-ink-strong after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:bg-store-ink-strong after:transition-opacity ${
-                      active ? "after:w-full after:opacity-100" : "after:w-full after:opacity-0 hover:after:opacity-60"
+                      active
+                        ? "after:w-full after:opacity-100"
+                        : "after:w-full after:opacity-0 hover:after:opacity-60"
                     }`}
                   >
                     {item.label}
@@ -276,25 +229,18 @@ export function SiteHeader({
             >
               <IconUser className={iconGlyphClassName} />
             </Link>
-            <Link
-              href="/cart"
-              className={`relative ${iconBlockClassName} rounded-full hover:bg-store-surface`}
-              aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
-            >
-              <IconBag className={iconGlyphClassName} />
-              {cartCount > 0 && (
-                <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-store-accent text-[10px] font-semibold leading-none text-store-on-accent">
-                  {cartCount > 9 ? "9+" : cartCount}
-                </span>
-              )}
-            </Link>
+            <CartDrawer cartCount={cartCount} />
           </div>
         </div>
       </div>
 
       {/* Mobile / tablet search overlay */}
       {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-store-ink/40 lg:hidden" role="presentation" onClick={() => setSearchOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 bg-store-ink/40 lg:hidden"
+          role="presentation"
+          onClick={() => setSearchOpen(false)}
+        >
           <div
             className="border-b border-store-border bg-store-paper p-4 shadow-md"
             role="dialog"
@@ -355,7 +301,9 @@ export function SiteHeader({
             aria-label="Site menu"
           >
             <div className="flex items-center justify-between border-b border-store-border px-4 py-3">
-              <span className="text-sm font-semibold uppercase tracking-wide">Menu</span>
+              <span className="text-sm font-semibold uppercase tracking-wide">
+                Menu
+              </span>
               <button
                 type="button"
                 className={`${iconBlockClassName} rounded-md hover:bg-store-surface`}
