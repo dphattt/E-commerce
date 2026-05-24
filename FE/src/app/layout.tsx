@@ -29,12 +29,15 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      suppressHydrationWarning
+      suppressHydrationWarning={true}
     >
       <head>
         <ThemeScript />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body
+        className="min-h-full flex flex-col bg-background text-foreground"
+        suppressHydrationWarning={true}
+      >
         <AppProviders>
           <SiteHeader activeHref="/explore" />
           <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-9 sm:px-6 lg:px-8">
