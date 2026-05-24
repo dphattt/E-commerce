@@ -1,12 +1,9 @@
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const cookieParser = require("cookie-parser");
-const routes = require("@/routes");
-const {
-  notFoundHandler,
-  errorHandler,
-} = require("@/middlewares/error.middleware");
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import routes from "@/routes";
+import { notFoundHandler, errorHandler } from "@/middlewares/error.middleware";
 
 const app = express();
 
@@ -30,4 +27,4 @@ app.use("/api", routes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

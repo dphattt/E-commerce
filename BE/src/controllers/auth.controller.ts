@@ -1,26 +1,32 @@
-const User = require("@/models/User.model");
-const { signToken } = require("@/utils/jwt");
+import type { NextFunction, Request, Response } from "express";
+import User from "@/models/User.model";
+import { signToken } from "@/utils/jwt";
+import { httpError } from "@/utils/http-error";
 
-async function register(req, res, next) {
+export async function register(req: Request, res: Response, next: NextFunction) {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name } = req.body as {
+      email?: string;
+      password?: string;
+      name?: string;
+    };
+
     if (!email || !password) {
-      const err = new Error("email and password are required");
-      err.status = 400;
-      throw err;
+      throw httpError("email and password are required", 400);
     }
+
     const exists = await User.findOne({ email: email.toLowerCase() });
     if (exists) {
-      const err = new Error("Email already registered");
-      err.status = 409;
-      throw err;
+      throw httpError("Email already registered", 409);
     }
+
     const passwordHash = await User.hashPassword(password);
     const user = await User.create({
       email: email.toLowerCase(),
       passwordHash,
       name: name || "",
     });
+
     const token = signToken({ sub: user.id, email: user.email });
     res.status(201).json({
       token,
@@ -31,28 +37,26 @@ async function register(req, res, next) {
   }
 }
 
-async function login(req, res, next) {
+export async function login(req: Request, res: Response, next: NextFunction) {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body as { email?: string; password?: string };
+
     if (!email || !password) {
-      const err = new Error("email and password are required");
-      err.status = 400;
-      throw err;
+      throw httpError("email and password are required", 400);
     }
+
     const user = await User.findOne({ email: email.toLowerCase() }).select(
       "+passwordHash",
     );
     if (!user) {
-      const err = new Error("Invalid credentials");
-      err.status = 401;
-      throw err;
+      throw httpError("Invalid credentials", 401);
     }
+
     const ok = await user.comparePassword(password);
     if (!ok) {
-      const err = new Error("Invalid credentials");
-      err.status = 401;
-      throw err;
+      throw httpError("Invalid credentials", 401);
     }
+
     const token = signToken({ sub: user.id, email: user.email });
     res.json({
       token,
@@ -62,5 +66,3 @@ async function login(req, res, next) {
     next(e);
   }
 }
-
-module.exports = { register, login };

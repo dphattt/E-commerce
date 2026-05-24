@@ -1,9 +1,12 @@
-require("dotenv").config({ path: require("path").join(__dirname, ".env") });
+import path from "path";
+import dotenv from "dotenv";
+
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const url = process.env.MONGODB_URL || "mongodb://127.0.0.1:27017";
 const databaseName = process.env.MONGODB_DATABASE || "ecommerce";
 
-module.exports = {
+export = {
   mongodb: {
     url,
     databaseName,
@@ -11,5 +14,5 @@ module.exports = {
   },
   migrationsDir: "migrations",
   changelogCollectionName: "migration_changelog",
-  migrationFileExtension: ".js",
+  migrationFileExtension: ".ts",
 };

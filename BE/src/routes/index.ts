@@ -1,0 +1,14 @@
+import { Router } from "express";
+import healthRoutes from "@/routes/health.routes";
+import authRoutes from "@/routes/auth.routes";
+import userRoutes from "@/routes/user.routes";
+import productsRoutes from "@/routes/products.routes";
+
+const router = Router();
+
+router.use(healthRoutes);
+router.use("/auth", authRoutes);
+router.use("/users", userRoutes);
+router.use("/products", productsRoutes);
+
+export default router;
