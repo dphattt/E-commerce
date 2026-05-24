@@ -12,5 +12,10 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts"]
+  "include": [
+    "server.ts",
+    "migrate-mongo-config.ts",
+    "src/**/*.ts",
+    "migrations/**/*.ts"
+  ]
 }
