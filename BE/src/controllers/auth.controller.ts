@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import User from "@/models/User.model";
+import User from "@/services/User.service";
 import { signToken } from "@/utils/jwt";
 import { httpError } from "@/utils/http-error";
 
