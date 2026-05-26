@@ -74,3 +74,6 @@
 {"name":"crew_neck","slug":"womens-apparel-ss-tops-crew-neck","level":3,"parentSlug":"womens-apparel-ss-tops","path":"Womens > Apparel > SS Tops > crew_neck","pathSegments":["Womens","Apparel","SS Tops","crew_neck"],"productCount":28}
 {"name":"crop","slug":"womens-apparel-ss-tops-crop","level":3,"parentSlug":"womens-apparel-ss-tops","path":"Womens > Apparel > SS Tops > crop","pathSegments":["Womens","Apparel","SS Tops","crop"],"productCount":5}
 {"name":"bra","slug":"womens-apparel-underwear-bra","level":3,"parentSlug":"womens-apparel-underwear","path":"Womens > Apparel > Underwear > bra","pathSegments":["Womens","Apparel","Underwear","bra"],"productCount":2}
+{"name":"Trending","slug":"womens-apparel-trending","level":2,"parentSlug":"womens-apparel","path":"Womens > Apparel > Trending","pathSegments":["Womens","Apparel","Trending"],"productCount":10}
+{"name":"Form Now Live","slug":"womens-apparel-trending-form-now-live","level":3,"parentSlug":"womens-apparel-trending","path":"Womens > Apparel > Trending > Form Now Live","pathSegments":["Womens","Apparel","Trending","Form Now Live"],"productCount":5}
+{"name":"Pilates","slug":"womens-apparel-trending-pilates","level":3,"parentSlug":"womens-apparel-trending","path":"Womens > Apparel > Trending > Pilates","pathSegments":["Womens","Apparel","Trending","Pilates"],"productCount":5}
