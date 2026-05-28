@@ -1,5 +1,9 @@
+import dynamic from "next/dynamic";
 import type { Metadata } from "next";
-import { ProductDetail } from "@/components/pages";
+
+const ProductDetail = dynamic(() =>
+  import("@/components/pages/ProductDetail").then((m) => m.ProductDetail),
+);
 
 type RouteParams = { slug: string };
 
