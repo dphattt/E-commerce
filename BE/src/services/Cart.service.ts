@@ -41,7 +41,7 @@ const cartSchema = new Schema<ICart>(
     items: { type: [cartItemSchema], default: [] },
     subtotal: { type: unitPriceSchema, required: true, default: { amount: 0, currency: "USD" } },
   },
-  { timestamps: { createdAt: false, updatedAt: "updatedAt" }, collection: "cart" },
+  { timestamps: { createdAt: false, updatedAt: "updatedAt" }, collection: "carts" },
 );
 
 // Tự tính lại subtotal trước khi lưu
