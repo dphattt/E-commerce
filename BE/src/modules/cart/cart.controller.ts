@@ -1,11 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
-import Cart from "@/models/Cart.model";
+import Cart from "@/modules/cart/Cart.model";
 import ProductVariant from "@/modules/products/ProductVariant.model";
 import { httpError } from "@/utils/http-error";
 import type {
   AddItemBody,
   UpdateItemBody,
-} from "@/validations/cart.validation";
+} from "@/modules/cart/cart.validation";
 
 /** GET /api/cart — Lấy giỏ hàng của user hiện tại */
 export async function getCart(req: Request, res: Response, next: NextFunction) {
