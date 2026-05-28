@@ -2,29 +2,25 @@ import type { NextFunction, Request, Response } from "express";
 import User from "@/models/User.model";
 import { signToken } from "@/utils/jwt";
 import { httpError } from "@/utils/http-error";
+import type {
+  LoginBody,
+  RegisterBody,
+} from "@/validations/auth.validation";
 
 export async function register(req: Request, res: Response, next: NextFunction) {
   try {
-    const { email, password, name } = req.body as {
-      email?: string;
-      password?: string;
-      name?: string;
-    };
+    const { email, password, name } = req.body as RegisterBody;
 
-    if (!email || !password) {
-      throw httpError("email and password are required", 400);
-    }
-
-    const exists = await User.findOne({ email: email.toLowerCase() });
+    const exists = await User.findOne({ email });
     if (exists) {
       throw httpError("Email already registered", 409);
     }
 
     const passwordHash = await User.hashPassword(password);
     const user = await User.create({
-      email: email.toLowerCase(),
+      email,
       passwordHash,
-      name: name || "",
+      name,
     });
 
     const token = signToken({ sub: user.id, email: user.email });
@@ -39,15 +35,9 @@ export async function register(req: Request, res: Response, next: NextFunction) 
 
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
-    const { email, password } = req.body as { email?: string; password?: string };
+    const { email, password } = req.body as LoginBody;
 
-    if (!email || !password) {
-      throw httpError("email and password are required", 400);
-    }
-
-    const user = await User.findOne({ email: email.toLowerCase() }).select(
-      "+passwordHash",
-    );
+    const user = await User.findOne({ email }).select("+passwordHash");
     if (!user) {
       throw httpError("Invalid credentials", 401);
     }

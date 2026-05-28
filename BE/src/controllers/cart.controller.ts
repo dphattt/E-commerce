@@ -2,15 +2,10 @@ import type { NextFunction, Request, Response } from "express";
 import Cart from "@/models/Cart.model";
 import ProductVariant from "@/models/ProductVariant.model";
 import { httpError } from "@/utils/http-error";
-
-type AddItemBody = {
-  sku?: string;
-  quantity?: number;
-};
-
-type UpdateItemBody = {
-  quantity?: number;
-};
+import type {
+  AddItemBody,
+  UpdateItemBody,
+} from "@/validations/cart.validation";
 
 /** GET /api/cart — Lấy giỏ hàng của user hiện tại */
 export async function getCart(req: Request, res: Response, next: NextFunction) {
@@ -30,11 +25,7 @@ export async function getCart(req: Request, res: Response, next: NextFunction) {
 export async function addItem(req: Request, res: Response, next: NextFunction) {
   try {
     const email = req.user!.email;
-    const { sku, quantity = 1 } = req.body as AddItemBody;
-
-    if (!sku) throw httpError("sku is required", 400);
-    if (!Number.isInteger(quantity) || quantity < 1)
-      throw httpError("quantity must be a positive integer", 400);
+    const { sku, quantity } = req.body as AddItemBody;
 
     // Server-side price lookup: never trust prices from the client.
     const variant = await ProductVariant.findOne({ sku, isActive: true }).lean();
@@ -68,16 +59,13 @@ export async function updateItem(req: Request, res: Response, next: NextFunction
     const { sku } = req.params;
     const { quantity } = req.body as UpdateItemBody;
 
-    if (!Number.isInteger(quantity) || (quantity as number) < 1)
-      throw httpError("quantity must be a positive integer", 400);
-
     const cart = await Cart.findOne({ userEmail: email });
     if (!cart) throw httpError("Cart not found", 404);
 
     const item = cart.items.find((i) => i.sku === sku);
     if (!item) throw httpError("Item not found in cart", 404);
 
-    item.quantity = quantity as number;
+    item.quantity = quantity;
     await cart.save();
     res.json(cart);
   } catch (e) {
