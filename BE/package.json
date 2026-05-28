@@ -8,6 +8,9 @@
     "start": "tsx server.ts",
     "dev": "nodemon --watch src --watch server.ts --ext ts --exec tsx server.ts",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "migrate:up": "tsx ./node_modules/migrate-mongo/bin/migrate-mongo.js up -f migrate-mongo-config.ts",
     "migrate:down": "tsx ./node_modules/migrate-mongo/bin/migrate-mongo.js down -f migrate-mongo-config.ts",
     "migrate:status": "tsx ./node_modules/migrate-mongo/bin/migrate-mongo.js status -f migrate-mongo-config.ts",
@@ -36,9 +39,11 @@
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
+    "@vitest/coverage-v8": "^4.1.7",
     "migrate-mongo": "^14.0.7",
     "nodemon": "^3.1.14",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.7"
   }
 }
