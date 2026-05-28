@@ -1,13 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: true, // chỉ dùng khi dev cho nhanh
-  },
-  // eslint: {
-  //   ignoreDuringBuilds: true,
-  // },
+  // typescript.ignoreBuildErrors intentionally left off so type errors
+  // fail the build instead of shipping silently to production.
 };
 
 export default nextConfig;

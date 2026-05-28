@@ -4,7 +4,7 @@ export {
   type SiteHeaderProps,
 } from "./SiteHeader";
 export { MegaMenuPanel, type MegaMenuPanelProps } from "./MegaMenuPanel";
-export { CartDrawer, type CartDrawerProps } from "./CartDrawer";
+export { CartDrawer } from "./CartDrawer";
 export {
   SiteFooter,
   type FooterColumn,

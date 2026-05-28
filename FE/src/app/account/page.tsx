@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/account/SignOutButton";
 
 /* ── types ── */
 type MockUser = {
@@ -112,26 +113,6 @@ function ChevronDown(props: React.SVGProps<SVGSVGElement>) {
         strokeLinejoin="round"
         strokeWidth={1.5}
         d="M19 9l-7 7-7-7"
-      />
-    </svg>
-  );
-}
-
-function SignOutIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      aria-hidden
-      {...props}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.75}
-        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
       />
     </svg>
   );
@@ -378,13 +359,7 @@ export default function AccountPage() {
 
         {/* Sign Out */}
         <div className="mx-auto max-w-[1600px] mt-10 border-t border-zinc-200 pt-6 pb-10">
-          <button
-            type="button"
-            className="flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
-          >
-            <SignOutIcon />
-            Sign Out
-          </button>
+          <SignOutButton />
         </div>
       </div>
     </div>

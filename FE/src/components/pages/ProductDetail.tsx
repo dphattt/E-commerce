@@ -67,7 +67,35 @@ function IconChevronDown(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export function ProductDetail() {
+type BackendProduct = {
+  _id: string;
+  title: string;
+  price: { amount: number; currency: string };
+  imageUrls: string[];
+};
+
+type ProductDetailProps = {
+  slug?: string;
+  product?: BackendProduct;
+};
+
+export function ProductDetail({ slug, product }: ProductDetailProps = {}) {
+  // When the RSC parent fetched a real BE product, show its real
+  // title above the mock content so the route renders something
+  // user-visible from the BE end-to-end. The mock gallery / sizes /
+  // accordion are kept until they get their own data in a later
+  // commit (tracked in CONTRIBUTING.md).
+  const livePrice = product
+    ? new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: product.price.currency,
+      }).format(product.price.amount)
+    : null;
+
+  if (process.env.NODE_ENV !== "production" && slug) {
+    console.debug("[ProductDetail] slug:", slug, "live:", !!product);
+  }
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState(PRODUCT.variants[0]);
   const [activeAccordion, setActiveAccordion] = useState<string | null>(
@@ -95,21 +123,32 @@ export function ProductDetail() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Live BE data banner — visible only when the RSC parent
+          actually fetched a product from /api/products/:id. */}
+      {product ? (
+        <div className="rounded-lg border border-store-border/60 bg-store-surface px-4 py-3 text-sm">
+          <div className="font-semibold text-store-ink-strong">
+            {product.title}
+          </div>
+          <div className="text-store-fg-subtle">
+            {livePrice} · live from /api/products/{product._id}
+          </div>
+        </div>
+      ) : null}
+
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-store-fg-subtle">
         <Link href="/" className="hover:text-store-ink">
           Home
         </Link>
         <span>/</span>
-        <a href="/men" className="hover:text-store-ink">
-          Men
-        </a>
+        <Link href="/products" className="hover:text-store-ink">
+          Products
+        </Link>
         <span>/</span>
-        <a href="/men/tops" className="hover:text-store-ink">
-          Tops
-        </a>
-        <span>/</span>
-        <span className="text-store-ink-strong">{PRODUCT.name}</span>
+        <span className="text-store-ink-strong">
+          {product?.title ?? PRODUCT.name}
+        </span>
       </nav>
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 xl:gap-16">
