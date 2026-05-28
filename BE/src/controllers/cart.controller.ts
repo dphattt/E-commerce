@@ -1,11 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
 import Cart from "@/services/Cart.service";
+import ProductVariant from "@/services/ProductVariant.service";
 import { httpError } from "@/utils/http-error";
 
 type AddItemBody = {
   sku?: string;
   quantity?: number;
-  unitPrice?: { amount: number; currency: string };
 };
 
 type UpdateItemBody = {
@@ -30,13 +30,16 @@ export async function getCart(req: Request, res: Response, next: NextFunction) {
 export async function addItem(req: Request, res: Response, next: NextFunction) {
   try {
     const email = req.user!.email;
-    const { sku, quantity = 1, unitPrice } = req.body as AddItemBody;
+    const { sku, quantity = 1 } = req.body as AddItemBody;
 
     if (!sku) throw httpError("sku is required", 400);
-    if (!unitPrice?.amount || !unitPrice?.currency)
-      throw httpError("unitPrice.amount and unitPrice.currency are required", 400);
     if (!Number.isInteger(quantity) || quantity < 1)
       throw httpError("quantity must be a positive integer", 400);
+
+    // Server-side price lookup: never trust prices from the client.
+    const variant = await ProductVariant.findOne({ sku, isActive: true }).lean();
+    if (!variant) throw httpError("Variant not found or inactive", 404);
+    const unitPrice = variant.price;
 
     let cart = await Cart.findOne({ userEmail: email });
     if (!cart) {
@@ -46,6 +49,7 @@ export async function addItem(req: Request, res: Response, next: NextFunction) {
     const existing = cart.items.find((i) => i.sku === sku);
     if (existing) {
       existing.quantity += quantity;
+      existing.unitPrice = unitPrice;
     } else {
       cart.items.push({ sku, quantity, unitPrice });
     }
