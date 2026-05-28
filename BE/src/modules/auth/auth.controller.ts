@@ -10,7 +10,7 @@ import { httpError } from "@/utils/http-error";
 import type {
   LoginBody,
   RegisterBody,
-} from "@/validations/auth.validation";
+} from "@/modules/auth/auth.validation";
 
 const REFRESH_COOKIE = "refreshToken";
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
