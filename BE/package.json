@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "seed": "tsx scripts/seed.ts",
+    "seed:reset": "tsx scripts/seed.ts --reset",
     "migrate:up": "tsx ./node_modules/migrate-mongo/bin/migrate-mongo.js up -f migrate-mongo-config.ts",
     "migrate:down": "tsx ./node_modules/migrate-mongo/bin/migrate-mongo.js down -f migrate-mongo-config.ts",
     "migrate:status": "tsx ./node_modules/migrate-mongo/bin/migrate-mongo.js status -f migrate-mongo-config.ts",
