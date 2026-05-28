@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+const noopSubscribe = () => () => {};
 
 /**
  * Returns true once the component has hydrated on the client. Use
@@ -16,9 +18,5 @@ import { useEffect, useState } from "react";
  *   return <span>{hasHydrated ? count : 0}</span>;
  */
 export function useHasHydrated(): boolean {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-  return hydrated;
+  return useSyncExternalStore(noopSubscribe, () => true, () => false);
 }
