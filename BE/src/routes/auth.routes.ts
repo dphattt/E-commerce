@@ -2,13 +2,27 @@ import { Router } from "express";
 import * as authController from "@/controllers/auth.controller";
 import { validate } from "@/middlewares/validate.middleware";
 import {
+  loginLimiter,
+  registerLimiter,
+} from "@/middlewares/rate-limit.middleware";
+import {
   loginBodySchema,
   registerBodySchema,
 } from "@/validations/auth.validation";
 
 const router = Router();
 
-router.post("/register", validate(registerBodySchema), authController.register);
-router.post("/login", validate(loginBodySchema), authController.login);
+router.post(
+  "/register",
+  registerLimiter,
+  validate(registerBodySchema),
+  authController.register,
+);
+router.post(
+  "/login",
+  loginLimiter,
+  validate(loginBodySchema),
+  authController.login,
+);
 
 export default router;
