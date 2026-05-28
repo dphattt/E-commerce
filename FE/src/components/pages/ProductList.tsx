@@ -13,6 +13,8 @@ import {
   Check
 } from "lucide-react";
 import { IconHeart } from "@/components/icons";
+import { useWishlist } from "@/features/wishlist";
+import { useHasHydrated } from "@/shared/hooks";
 
 // Sizes definition from XS to 3XL
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
@@ -312,7 +314,8 @@ const PRODUCTS_MOCK: Product[] = [
 export function ProductList() {
   // --- States ---
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
-  const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
+  const wishlist = useWishlist();
+  const hasHydrated = useHasHydrated();
   
   // Filtering & Sorting
   const [sortOption, setSortOption] = useState<string>("popular");
@@ -344,14 +347,6 @@ export function ProductList() {
         behavior: "smooth",
       });
     }
-  };
-
-  // Toggle wishlist
-  const toggleWishlist = (productId: string) => {
-    setWishlist(prev => ({
-      ...prev,
-      [productId]: !prev[productId]
-    }));
   };
 
   // Switch product variant
@@ -676,7 +671,7 @@ export function ProductList() {
               {filteredProducts.map((product) => {
                 const activeIndex = activeVariants[product.id] ?? 0;
                 const activeVariant = product.variants[activeIndex] || product.variants[0];
-                const isWishlisted = wishlist[product.id] ?? false;
+                const isWishlisted = hasHydrated && wishlist.isWishlisted(product.id);
 
                 return (
                   <article key={product.id} className="flex flex-col gap-3 group relative cursor-pointer">
@@ -699,10 +694,11 @@ export function ProductList() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          toggleWishlist(product.id);
+                          wishlist.toggle(product.id);
                         }}
                         className="absolute top-3 right-3 z-10 flex items-center justify-center size-9 rounded-full bg-store-paper hover:scale-105 active:scale-95 transition-all shadow-md group/wish cursor-pointer"
-                        aria-label="Add to Wishlist"
+                        aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                        aria-pressed={isWishlisted}
                       >
                         <IconHeart 
                           className={`size-5 transition-colors ${
