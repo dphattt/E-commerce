@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import Product from "@/services/Product.service";
+import Product from "@/models/Product.model";
 
 const DEFAULT_LIMIT = 10;
 

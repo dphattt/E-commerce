@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
-import Cart from "@/services/Cart.service";
-import ProductVariant from "@/services/ProductVariant.service";
+import Cart from "@/models/Cart.model";
+import ProductVariant from "@/models/ProductVariant.model";
 import { httpError } from "@/utils/http-error";
 
 type AddItemBody = {

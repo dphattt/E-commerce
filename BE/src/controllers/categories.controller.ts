@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import Category from "@/services/Category.model";
+import Category from "@/models/Category.model";
 
 export async function getCategories(
   req: Request,
