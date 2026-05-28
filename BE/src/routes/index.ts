@@ -14,6 +14,5 @@ router.use("/users", userRoutes);
 router.use("/products", productsRoutes);
 router.use("/cart", cartRoutes);
 router.use("/categories", categoriesRoutes);
-router.use("/cart", cartRoutes);
 
 export default router;
