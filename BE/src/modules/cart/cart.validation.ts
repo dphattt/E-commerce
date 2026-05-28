@@ -15,3 +15,4 @@ export const itemParamsSchema = z.object({
 
 export type AddItemBody = z.infer<typeof addItemBodySchema>;
 export type UpdateItemBody = z.infer<typeof updateItemBodySchema>;
+export type ItemParams = z.infer<typeof itemParamsSchema>;
