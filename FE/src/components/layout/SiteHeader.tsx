@@ -30,7 +30,6 @@ export type SiteHeaderProps = {
   announcement?: string;
   announcements?: string[];
   searchPlaceholder?: string;
-  cartCount?: number;
   className?: string;
   onSearchSubmit?: (query: string) => void;
 };
@@ -215,7 +214,6 @@ export function SiteHeader({
   announcement = "Get $10 off when you refer a friend",
   announcements,
   searchPlaceholder = "What are you looking for tod…",
-  cartCount = 1,
   className = "",
   onSearchSubmit,
 }: SiteHeaderProps) {
@@ -488,7 +486,7 @@ export function SiteHeader({
               >
                 <IconUser className={iconGlyphClassName} />
               </Link>
-              <CartDrawer cartCount={cartCount} />
+              <CartDrawer />
             </div>
           </div>
         </div>
