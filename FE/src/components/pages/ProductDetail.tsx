@@ -67,7 +67,18 @@ function IconChevronDown(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-export function ProductDetail() {
+type ProductDetailProps = {
+  slug?: string;
+};
+
+export function ProductDetail({ slug }: ProductDetailProps = {}) {
+  // TODO(Phase 2): fetch product by `slug` from the BE catalog API.
+  // For now the slug is logged so the dynamic route at /products/[slug]
+  // no longer silently ignores its parameter.
+  if (process.env.NODE_ENV !== "production" && slug) {
+    console.debug("[ProductDetail] slug:", slug);
+  }
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState(PRODUCT.variants[0]);
   const [activeAccordion, setActiveAccordion] = useState<string | null>(

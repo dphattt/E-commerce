@@ -1,36 +1,29 @@
+import type { Metadata } from "next";
 import { ProductDetail } from "@/components/pages";
 
-// app/blog/[slug]/page.tsx
-// import { Metadata } from 'next'
+type RouteParams = { slug: string };
 
-// export async function generateMetadata({
-//   params,
-// }: {
-//   params: { slug: string }
-// }): Promise<Metadata> {
-//   const post = await getBlogPost(params.slug) // fetch từ API/DB
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<RouteParams>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  return {
+    title: `${slug} | Product`,
+  };
+}
 
-//   return {
-//     title: post.title,
-//     description: post.metaDescription,
-//     openGraph: {
-//       title: post.title,
-//       description: post.metaDescription,
-//       url: `https://myblog.com/blog/${params.slug}`,
-//       type: 'article',
-//       publishedTime: post.publishDate,
-//     },
-//     twitter: {
-//       card: 'summary_large_image',
-//       title: post.title,
-//     },
-//   }
-// }
-//
-export default function ProductPage() {
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<RouteParams>;
+}) {
+  const { slug } = await params;
+
   return (
-    <main className="mx-auto max-w-400 w-full px-4 py-8 sm:px-6 lg:px-8">
-      <ProductDetail />
+    <main className="mx-auto max-w-7xl w-full px-4 py-8 sm:px-6 lg:px-8">
+      <ProductDetail slug={slug} />
     </main>
   );
 }
