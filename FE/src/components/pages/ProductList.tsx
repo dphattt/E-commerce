@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { 
@@ -10,8 +10,7 @@ import {
   X, 
   ChevronDown, 
   ChevronUp, 
-  Check, 
-  ArrowUpDown 
+  Check
 } from "lucide-react";
 import { IconHeart } from "@/components/icons";
 
@@ -312,7 +311,6 @@ const PRODUCTS_MOCK: Product[] = [
 
 export function ProductList() {
   // --- States ---
-  const [products, setProducts] = useState<Product[]>(PRODUCTS_MOCK);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
   const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
   
@@ -765,7 +763,6 @@ export function ProductList() {
                       <div className="flex gap-1.5 py-0.5 items-center">
                         {product.variants.map((v, idx) => {
                           const isActive = idx === activeIndex;
-                          const isWhiteVariant = v.hex === "#f4f4f5" || v.name.toLowerCase().includes("white");
                           return (
                             <button
                               key={v.name}

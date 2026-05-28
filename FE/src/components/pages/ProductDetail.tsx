@@ -4,22 +4,6 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-// button
-import { Button } from "@/components/ui/button";
-import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
-
-type ProductVariant = {
-  id: string;
-  color: string;
-  image: string;
-};
-
-type ProductSize = {
-  id: string;
-  label: string;
-  inStock: boolean;
-};
-
 const PRODUCT = {
   name: "Gymshark Power T-Shirt",
   price: "$34",
@@ -69,20 +53,6 @@ function IconHeart(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function IconChevronUp(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      {...props}
-    >
-      <path d="M18 15l-6-6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function IconChevronDown(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -116,20 +86,6 @@ export function ProductDetail() {
       const trackHeight = scrollHeight - clientHeight;
       const progress = trackHeight > 0 ? (scrollTop / trackHeight) * 100 : 0;
       setScrollProgress(progress);
-    }
-  };
-
-  const scrollThumbnails = (direction: "up" | "down") => {
-    if (thumbnailScrollRef.current) {
-      const scrollAmount = 150;
-      const currentScroll = thumbnailScrollRef.current.scrollTop;
-      thumbnailScrollRef.current.scrollTo({
-        top:
-          direction === "up"
-            ? currentScroll - scrollAmount
-            : currentScroll + scrollAmount,
-        behavior: "smooth",
-      });
     }
   };
 

@@ -383,9 +383,11 @@ export function SiteHeader({
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            activeNav?.href === item.href
-                              ? setActiveNav(null)
-                              : setActiveNav(item);
+                            if (activeNav?.href === item.href) {
+                              setActiveNav(null);
+                            } else {
+                              setActiveNav(item);
+                            }
                           }
                         }}
                         className={cn(
