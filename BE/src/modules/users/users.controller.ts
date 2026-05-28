@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import User from "@/models/User.model";
+import User from "@/modules/users/User.model";
 import { httpError } from "@/utils/http-error";
 
 export async function me(req: Request, res: Response, next: NextFunction) {

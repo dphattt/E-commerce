@@ -1,5 +1,5 @@
 import type { CookieOptions, NextFunction, Request, Response } from "express";
-import User from "@/models/User.model";
+import User from "@/modules/users/User.model";
 import {
   signAccessToken,
   signRefreshToken,
