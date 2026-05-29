@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
-import * as cartService from "@/modules/cart/cart.service";
+import * as cartService from "@/models/cart/cart.service";
 import type {
   AddItemBody,
   ItemParams,
   UpdateItemBody,
-} from "@/modules/cart/cart.validation";
+} from "@/models/cart/cart.validation";
 
 const EMPTY_CART_BODY = (email: string) => ({
   userEmail: email,
@@ -37,7 +37,11 @@ export async function addItem(req: Request, res: Response, next: NextFunction) {
 }
 
 /** PATCH /api/cart/items/:sku — Cập nhật quantity của item */
-export async function updateItem(req: Request, res: Response, next: NextFunction) {
+export async function updateItem(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const email = req.user!.email;
     const { sku } = req.params as unknown as ItemParams;
@@ -50,7 +54,11 @@ export async function updateItem(req: Request, res: Response, next: NextFunction
 }
 
 /** DELETE /api/cart/items/:sku — Xoá một item khỏi giỏ */
-export async function removeItem(req: Request, res: Response, next: NextFunction) {
+export async function removeItem(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const email = req.user!.email;
     const { sku } = req.params as unknown as ItemParams;
@@ -62,7 +70,11 @@ export async function removeItem(req: Request, res: Response, next: NextFunction
 }
 
 /** DELETE /api/cart — Xoá toàn bộ giỏ hàng */
-export async function clearCart(req: Request, res: Response, next: NextFunction) {
+export async function clearCart(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const email = req.user!.email;
     const cart = await cartService.clearCart(email);

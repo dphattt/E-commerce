@@ -12,9 +12,9 @@ export interface Category {
 
 /** Map top-level category slugs to the nav label + href */
 const TOP_LEVEL_MAP: Record<string, { label: string; href: string }> = {
-  womens: { label: "Women", href: "/women" },
-  mens: { label: "Men", href: "/men" },
-  unisex: { label: "Accessories", href: "/accessories" },
+  women: { label: "Women", href: "/women" },
+  men: { label: "Men", href: "/men" },
+  accessories: { label: "Accessories", href: "/accessories" },
 };
 
 /** Static Explore nav item — not driven by categories */
@@ -31,8 +31,9 @@ const EXPLORE_ITEM: NavItem = {
 
 /**
  * Build SiteHeader nav items from a flat categories list.
- * Top-level nav = level-0 slugs in TOP_LEVEL_MAP.
- * Sub-items     = level-2 categories whose pathSegments[0] matches the top-level name.
+ * Top-level nav  = level-0 slugs in TOP_LEVEL_MAP.
+ * Sub-items      = level-1 categories (Apparel, Accessories…) that are direct children.
+ * Children       = level-2 categories (Leggings, Shorts…) under each sub-item.
  */
 export function buildNavFromCategories(categories: Category[]): NavItem[] {
   const navItems: NavItem[] = [];
@@ -42,23 +43,18 @@ export function buildNavFromCategories(categories: Category[]): NavItem[] {
     if (!topCat) continue;
 
     const subItems = categories
-      .filter(
-        (c) =>
-          c.level === 2 &&
-          c.pathSegments[0] === topCat.name &&
-          c.productCount > 0,
-      )
+      .filter((c) => c.level === 1 && c.parentSlug === topCat.slug)
       .map((sub) => {
         const children = categories
           .filter(
             (c) =>
-              c.level === 3 &&
+              c.level === 2 &&
               c.parentSlug === sub.slug &&
               c.productCount > 0,
           )
           .map((child) => ({
             label: child.name,
-            href: `/categories/${child.slug}`,
+            href: `/products?categorySlug=${child.slug}`,
           }));
 
         return {
@@ -82,7 +78,9 @@ export async function fetchNavItems(): Promise<NavItem[]> {
 
   try {
     const res = await fetch(`${baseUrl}/api/categories`, {
-      next: { revalidate: 3600 }, // re-validate every hour
+      next: process.env.NODE_ENV === "production"
+        ? { revalidate: 3600 }
+        : { revalidate: 0 },
     });
 
     if (!res.ok) throw new Error(`categories API ${res.status}`);

@@ -61,13 +61,11 @@ export function MegaMenuPanel({
             onMouseEnter={() => openSub(sub)}
             onMouseLeave={scheduleSub}
           >
-            <Link
-              href={sub.href}
-              onClick={onNavigate}
+            <span
               className={cn(
                 "flex items-center justify-between gap-3 px-6 py-4",
                 "text-xs font-bold uppercase tracking-widest text-nav-mega-text",
-                "transition-colors",
+                "transition-colors select-none",
                 activeSub?.href === sub.href
                   ? "text-white"
                   : "hover:text-white/60",
@@ -75,7 +73,7 @@ export function MegaMenuPanel({
             >
               {sub.label}
               <ChevronRightIcon className="size-4 shrink-0 opacity-40" />
-            </Link>
+            </span>
           </div>
         ))}
       </div>

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import * as authController from "@/modules/auth/auth.controller";
+import * as authController from "@/models/auth/auth.controller";
 import { validate } from "@/middlewares/validate.middleware";
 import {
   loginLimiter,
@@ -8,7 +8,7 @@ import {
 import {
   loginBodySchema,
   registerBodySchema,
-} from "@/modules/auth/auth.validation";
+} from "@/models/auth/auth.validation";
 
 const router = Router();
 

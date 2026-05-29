@@ -4,7 +4,7 @@ import {
   addItemBodySchema,
   itemParamsSchema,
   updateItemBodySchema,
-} from "@/modules/cart/cart.validation";
+} from "@/models/cart/cart.validation";
 
 describe("addItemBodySchema", () => {
   it("defaults quantity to 1", () => {
@@ -28,9 +28,7 @@ describe("addItemBodySchema", () => {
   });
 
   it("rejects quantity below 1", () => {
-    expect(() =>
-      addItemBodySchema.parse({ sku: "A1", quantity: 0 }),
-    ).toThrow();
+    expect(() => addItemBodySchema.parse({ sku: "A1", quantity: 0 })).toThrow();
   });
 });
 

@@ -1,10 +1,10 @@
 import { Router } from "express";
-import healthRoutes from "@/modules/health/health.routes";
-import authRoutes from "@/modules/auth/auth.routes";
-import userRoutes from "@/modules/users/users.routes";
-import productsRoutes from "@/modules/products/products.routes";
-import cartRoutes from "@/modules/cart/cart.routes";
-import categoriesRoutes from "@/modules/categories/categories.routes";
+import healthRoutes from "@/models/health/health.routes";
+import authRoutes from "@/models/auth/auth.routes";
+import userRoutes from "@/models/users/users.routes";
+import productsRoutes from "@/models/products/products.routes";
+import cartRoutes from "@/models/cart/cart.routes";
+import categoriesRoutes from "@/models/categories/categories.routes";
 
 const router = Router();
 

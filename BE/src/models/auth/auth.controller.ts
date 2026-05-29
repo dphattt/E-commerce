@@ -1,5 +1,5 @@
 import type { CookieOptions, NextFunction, Request, Response } from "express";
-import User from "@/modules/users/User.model";
+import User from "@/models/users/User.model";
 import {
   signAccessToken,
   signRefreshToken,
@@ -7,10 +7,7 @@ import {
   type JwtPayload,
 } from "@/utils/jwt";
 import { httpError } from "@/utils/http-error";
-import type {
-  LoginBody,
-  RegisterBody,
-} from "@/modules/auth/auth.validation";
+import type { LoginBody, RegisterBody } from "@/models/auth/auth.validation";
 
 const REFRESH_COOKIE = "refreshToken";
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -32,7 +29,11 @@ function issueTokens(res: Response, payload: JwtPayload): string {
   return accessToken;
 }
 
-export async function register(req: Request, res: Response, next: NextFunction) {
+export async function register(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const { email, password, name } = req.body as RegisterBody;
 

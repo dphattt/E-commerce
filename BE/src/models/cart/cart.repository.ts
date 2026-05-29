@@ -1,4 +1,4 @@
-import Cart from "@/modules/cart/Cart.model";
+import Cart from "@/models/cart/Cart.model";
 
 export async function findCartByEmail(email: string) {
   return Cart.findOne({ userEmail: email });

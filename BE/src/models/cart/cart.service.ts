@@ -1,6 +1,6 @@
 import { httpError } from "@/utils/http-error";
-import * as cartRepo from "@/modules/cart/cart.repository";
-import * as productsRepo from "@/modules/products/products.repository";
+import * as cartRepo from "@/models/cart/cart.repository";
+import * as productsRepo from "@/models/products/products.repository";
 
 export async function getCart(email: string) {
   return cartRepo.findCartByEmail(email);

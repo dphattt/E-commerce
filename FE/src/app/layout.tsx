@@ -42,8 +42,11 @@ export default async function RootLayout({
         suppressHydrationWarning={true}
       >
         <AppProviders>
-          <SiteHeader navItems={navItems.length > 0 ? navItems : undefined} />
-          <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-9 sm:px-6 lg:px-8">
+          <SiteHeader navItems={navItems} />
+          <div
+            suppressHydrationWarning={true}
+            className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col px-4 py-9 sm:px-6 lg:px-8"
+          >
             {children}
           </div>
           <SiteFooter />

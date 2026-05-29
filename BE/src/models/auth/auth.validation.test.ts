@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   loginBodySchema,
   registerBodySchema,
-} from "@/modules/auth/auth.validation";
+} from "@/models/auth/auth.validation";
 
 describe("registerBodySchema", () => {
   it("accepts a valid payload and normalizes the email", () => {
@@ -28,7 +28,10 @@ describe("registerBodySchema", () => {
 
   it("rejects invalid emails", () => {
     expect(() =>
-      registerBodySchema.parse({ email: "not-an-email", password: "supersecret" }),
+      registerBodySchema.parse({
+        email: "not-an-email",
+        password: "supersecret",
+      }),
     ).toThrow();
   });
 

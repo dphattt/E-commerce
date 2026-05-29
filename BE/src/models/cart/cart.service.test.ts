@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/modules/cart/cart.repository");
 vi.mock("@/modules/products/products.repository");
 
-import * as cartRepo from "@/modules/cart/cart.repository";
-import * as productsRepo from "@/modules/products/products.repository";
-import * as cartService from "@/modules/cart/cart.service";
+import * as cartRepo from "@/models/cart/cart.repository";
+import * as productsRepo from "@/models/products/products.repository";
+import * as cartService from "@/models/cart/cart.service";
 
 type CartItemLike = {
   sku: string;
@@ -57,7 +57,9 @@ describe("cart.service.addCartItem", () => {
   it("rejects unknown SKUs with 404", async () => {
     vi.mocked(productsRepo.findActiveVariantBySku).mockResolvedValue(null);
 
-    await expect(cartService.addCartItem(EMAIL, "ghost", 1)).rejects.toMatchObject({
+    await expect(
+      cartService.addCartItem(EMAIL, "ghost", 1),
+    ).rejects.toMatchObject({
       status: 404,
       message: "Variant not found or inactive",
     });
@@ -137,9 +139,11 @@ describe("cart.service.updateCartItemQuantity", () => {
 describe("cart.service.removeCartItem", () => {
   it("404s when the cart does not exist", async () => {
     vi.mocked(cartRepo.findCartByEmail).mockResolvedValue(null as never);
-    await expect(cartService.removeCartItem(EMAIL, "A1")).rejects.toMatchObject({
-      status: 404,
-    });
+    await expect(cartService.removeCartItem(EMAIL, "A1")).rejects.toMatchObject(
+      {
+        status: 404,
+      },
+    );
   });
 
   it("404s when the SKU is not in the cart", async () => {

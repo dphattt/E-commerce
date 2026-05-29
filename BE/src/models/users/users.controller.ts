@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import User from "@/modules/users/User.model";
+import User from "@/models/users/User.model";
 import { httpError } from "@/utils/http-error";
 
 export async function me(req: Request, res: Response, next: NextFunction) {
@@ -8,7 +8,9 @@ export async function me(req: Request, res: Response, next: NextFunction) {
       throw httpError("Unauthorized", 401);
     }
 
-    const user = await User.findById(req.user.id).select("email name createdAt");
+    const user = await User.findById(req.user.id).select(
+      "email name createdAt",
+    );
     if (!user) {
       throw httpError("User not found", 404);
     }

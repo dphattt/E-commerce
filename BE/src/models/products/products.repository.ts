@@ -1,8 +1,8 @@
 import { isValidObjectId } from "mongoose";
-import Product from "@/modules/products/Product.model";
+import Product from "@/models/products/Product.model";
 import ProductVariant, {
   type IProductVariant,
-} from "@/modules/products/ProductVariant.model";
+} from "@/models/products/ProductVariant.model";
 
 /**
  * Lean read for the cart pricing flow. Returns null when no active
@@ -21,6 +21,37 @@ export async function findActiveVariantBySku(
  */
 export async function findRecentProducts(limit: number) {
   return Product.find().sort({ createdAt: -1 }).limit(limit).lean();
+}
+
+function escapeRegex(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildCategoryQuery(categoryFilters: string[]) {
+  if (!categoryFilters.length) return {};
+  return {
+    $and: categoryFilters.map((f) => ({
+      categories: new RegExp(`^${escapeRegex(f)}$`, "i"),
+    })),
+  };
+}
+
+export async function findProductsByCategories(
+  categoryFilters: string[],
+  limit: number,
+  skip: number,
+) {
+  const query = buildCategoryQuery(categoryFilters);
+  return Product.find(query)
+    .sort({ scrapedAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+}
+
+export async function countProductsByCategories(categoryFilters: string[]) {
+  const query = buildCategoryQuery(categoryFilters);
+  return Product.countDocuments(query);
 }
 
 /**
