@@ -4,39 +4,12 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-const PRODUCT = {
-  name: "Gymshark Power T-Shirt",
-  price: "$34",
-  description:
-    "Built to perform, designed to last. The Power T-Shirt features a durable fabric blend and a fit that moves with you.",
-  variants: [
-    {
-      id: "black",
-      color: "Black",
-      image:
-        "https://cdn.shopify.com/s/files/1/1367/5207/files/images-GSxCBUMWashedGraphicT_ShirtGSSoftWhiteA4C4X_WCMY_1166_V1_3840x.jpg?v=1774351794",
-    },
-    {
-      id: "grey",
-      color: "Grey",
-      image:
-        "https://cdn.shopify.com/s/files/1/1367/5207/files/images-GSxCBUMWashedGraphicT_ShirtGSSoftWhiteA4C4X_WCMY_1148_V1_3840x.jpg?v=1774351794",
-    },
-  ],
-  sizes: [
-    { id: "xs", label: "XS", inStock: true },
-    { id: "s", label: "S", inStock: true },
-    { id: "m", label: "M", inStock: true },
-    { id: "l", label: "L", inStock: true },
-    { id: "xl", label: "XL", inStock: false },
-    { id: "xxl", label: "XXL", inStock: true },
-  ],
-  gallery: [
-    "https://cdn.shopify.com/s/files/1/1367/5207/files/images-GSxCBUMWashedGraphicT_ShirtGSSoftWhiteA4C4X_WCMY_1163_V1_3840x.jpg?v=1774351794",
-    "https://cdn.shopify.com/s/files/1/1367/5207/files/images-GSxCBUMWashedGraphicT_ShirtGSSoftWhiteA4C4X_WCMY_1194_V1_3840x.jpg?v=1774351794",
-    "https://cdn.shopify.com/s/files/1/1367/5207/files/images-GSxCBUMWashedGraphicT_ShirtGSSoftWhiteA4C4X_WCMY_1223_V1_3840x.jpg?v=1774351794",
-    "https://cdn.shopify.com/s/files/1/1367/5207/files/images-GSxCBUMWashedGraphicT_ShirtGSSoftWhiteA4C4X_WCMY_1148_V1_3840x.jpg?v=1774351794",
-  ],
+const productAPI = process.env.NEXT_PUBLIC_PRODUCT_API;
+
+const PRODUCT = () => {
+  fetch(`${productAPI}`)
+    .then((data) => data.json())
+    .catch((err) => console.error(err));
 };
 
 function IconHeart(props: React.SVGProps<SVGSVGElement>) {
@@ -192,7 +165,6 @@ export function ProductDetail({ slug, product }: ProductDetailProps = {}) {
             >
               <IconChevronDown className="size-5 group-hover:scale-110 transition-transform" />
             </button> */}
-
           </div>
 
           {/* Main Grid */}
@@ -257,10 +229,11 @@ export function ProductDetail({ slug, product }: ProductDetailProps = {}) {
                   <button
                     key={v.id}
                     onClick={() => setSelectedVariant(v)}
-                    className={`size-14 overflow-hidden rounded-md border-2 transition-all ${selectedVariant.id === v.id
-                      ? "border-store-ink-strong ring-1 ring-store-ink-strong"
-                      : "border-transparent opacity-80 hover:opacity-100 hover:border-store-border-strong"
-                      }`}
+                    className={`size-14 overflow-hidden rounded-md border-2 transition-all ${
+                      selectedVariant.id === v.id
+                        ? "border-store-ink-strong ring-1 ring-store-ink-strong"
+                        : "border-transparent opacity-80 hover:opacity-100 hover:border-store-border-strong"
+                    }`}
                   >
                     <Image
                       height={400}
@@ -290,10 +263,11 @@ export function ProductDetail({ slug, product }: ProductDetailProps = {}) {
                     key={size.id}
                     disabled={!size.inStock}
                     onClick={() => setSelectedSize(size.id)}
-                    className={`flex h-12 items-center justify-center border text-sm font-bold uppercase transition-all duration-200 ${selectedSize === size.id
-                      ? "border-store-ink-strong bg-store-ink-strong text-store-paper"
-                      : "border-store-border bg-store-paper hover:border-store-ink-strong"
-                      } ${!size.inStock ? "relative overflow-hidden opacity-30 cursor-not-allowed bg-store-surface after:absolute after:h-px after:w-[120%] after:rotate-35 after:bg-store-fg-muted" : ""}`}
+                    className={`flex h-12 items-center justify-center border text-sm font-bold uppercase transition-all duration-200 ${
+                      selectedSize === size.id
+                        ? "border-store-ink-strong bg-store-ink-strong text-store-paper"
+                        : "border-store-border bg-store-paper hover:border-store-ink-strong"
+                    } ${!size.inStock ? "relative overflow-hidden opacity-30 cursor-not-allowed bg-store-surface after:absolute after:h-px after:w-[120%] after:rotate-35 after:bg-store-fg-muted" : ""}`}
                   >
                     {size.label}
                   </button>
@@ -350,15 +324,17 @@ export function ProductDetail({ slug, product }: ProductDetailProps = {}) {
                       {item.title}
                     </span>
                     <IconChevronDown
-                      className={`size-5 transition-transform duration-300 ${activeAccordion === item.id ? "rotate-180" : ""
-                        }`}
+                      className={`size-5 transition-transform duration-300 ${
+                        activeAccordion === item.id ? "rotate-180" : ""
+                      }`}
                     />
                   </button>
                   <div
-                    className={`grid transition-all duration-300 ease-in-out ${activeAccordion === item.id
-                      ? "grid-rows-[1fr] opacity-100 pb-6"
-                      : "grid-rows-[0fr] opacity-0"
-                      }`}
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      activeAccordion === item.id
+                        ? "grid-rows-[1fr] opacity-100 pb-6"
+                        : "grid-rows-[0fr] opacity-0"
+                    }`}
                   >
                     <div className="overflow-hidden">
                       <p className="text-sm leading-relaxed text-store-fg-muted">

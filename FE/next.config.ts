@@ -1,17 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // typescript.ignoreBuildErrors intentionally left off so type errors
-  // fail the build instead of shipping silently to production.
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "cdn.shopify.com",
+        hostname: "images.unsplash.com",
+        port: "",
+        pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
+        hostname: "cdn.shopify.com",
+        port: "",
+        pathname: "/**",
       },
     ],
   },
