@@ -3,7 +3,7 @@
 Single-repo, two services:
 
 - `BE/` — Node.js + Express + TypeScript + MongoDB (Mongoose).
-- `FE/` — Next.js 16 App Router + TypeScript + Tailwind CSS v4 + Zustand.
+- `FE/` — Next.js 16 App Router + TypeScript + Tailwind CSS v4 + Redux Toolkit.
 
 Each side runs independently and talks over `/api/*`.
 
@@ -101,9 +101,10 @@ FE/src/
     layout.tsx                  server-side nav fetch + theme bootstrap
   components/         layout/header/footer/cart-drawer, theme/, ui/ (shadcn), pages/
   features/
-    auth/model/                 useAuth + auth.store (in-memory)
-    cart/model/                 useCart + cart.store (persisted)
-    wishlist/model/             useWishlist + wishlist.store (persisted)
+    auth/model/                 useAuth + auth.slice (in-memory)
+    cart/model/                 useCart + cart.slice (persisted)
+    wishlist/model/             useWishlist + wishlist.slice (persisted)
+  store/                      configureStore, typed hooks, StoreProvider
   shared/
     hooks/                      useDebouncedValue
     types/                      Money
@@ -116,11 +117,11 @@ FE/src/
 - Access token stored via `writeAccessToken` (localStorage today).
 - Refresh token stays in an httpOnly cookie set by the BE.
 - All cross-origin calls run with `withCredentials: true` so the cookie travels with refresh requests.
-- The auth zustand store is intentionally **not** persisted; on a reload the FE should re-validate the session before showing a "logged in" UI.
+- The auth Redux slice is intentionally **not** persisted; on a reload the FE should re-validate the session before showing a "logged in" UI.
 
 ### State management policy
 
-- **Persisted (`zustand/persist`)**: `cart`, `wishlist` — the same shape as the BE so it can be hydrated from the API later.
+- **Persisted (`redux-persist`)**: `cart`, `wishlist` — same localStorage keys as before (`ecommerce-cart`, `ecommerce-wishlist`); shape differs from the old Zustand persist format, so existing carts may reset once after this migration.
 - **Memory only**: `auth` (see above), `theme` (handled by `ThemeProvider`).
 - **No global store** for product / category lists; they live on the page (server fetch) or in feature hooks.
 

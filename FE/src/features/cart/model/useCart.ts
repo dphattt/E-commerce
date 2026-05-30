@@ -1,24 +1,42 @@
 "use client";
 
-import { useMemo } from "react";
-import { useCartStore } from "@/features/cart/model/cart.store";
-import type { CartSnapshot } from "@/features/cart/model/cart.types";
+import { useCallback, useMemo } from "react";
+import {
+  addItem as addItemAction,
+  clear as clearAction,
+  removeItem as removeItemAction,
+  updateQuantity as updateQuantityAction,
+} from "@/features/cart/model/cart.slice";
+import type { CartItem, CartSnapshot } from "@/features/cart/model/cart.types";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 /**
  * High-level cart hook used by widgets and pages. Computes the
  * derived snapshot (count, subtotal) on top of the raw store state.
  */
 export function useCart(): CartSnapshot & {
-  addItem: ReturnType<typeof useCartStore.getState>["addItem"];
-  removeItem: ReturnType<typeof useCartStore.getState>["removeItem"];
-  updateQuantity: ReturnType<typeof useCartStore.getState>["updateQuantity"];
-  clear: ReturnType<typeof useCartStore.getState>["clear"];
+  addItem: (item: CartItem) => void;
+  removeItem: (sku: string) => void;
+  updateQuantity: (sku: string, quantity: number) => void;
+  clear: () => void;
 } {
-  const items = useCartStore((s) => s.items);
-  const addItem = useCartStore((s) => s.addItem);
-  const removeItem = useCartStore((s) => s.removeItem);
-  const updateQuantity = useCartStore((s) => s.updateQuantity);
-  const clear = useCartStore((s) => s.clear);
+  const dispatch = useAppDispatch();
+  const items = useAppSelector((s) => s.cart.items);
+
+  const addItem = useCallback(
+    (item: CartItem) => dispatch(addItemAction(item)),
+    [dispatch],
+  );
+  const removeItem = useCallback(
+    (sku: string) => dispatch(removeItemAction(sku)),
+    [dispatch],
+  );
+  const updateQuantity = useCallback(
+    (sku: string, quantity: number) =>
+      dispatch(updateQuantityAction({ sku, quantity })),
+    [dispatch],
+  );
+  const clear = useCallback(() => dispatch(clearAction()), [dispatch]);
 
   const snapshot = useMemo<CartSnapshot>(() => {
     const count = items.reduce((sum, i) => sum + i.quantity, 0);

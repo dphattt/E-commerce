@@ -1,2 +1,9 @@
 export { useWishlist } from "@/features/wishlist/model/useWishlist";
-export { useWishlistStore } from "@/features/wishlist/model/wishlist.store";
+export {
+  add,
+  clear,
+  remove,
+  toggle,
+  wishlistReducer,
+  selectWishlistHas,
+} from "@/features/wishlist/model/wishlist.slice";

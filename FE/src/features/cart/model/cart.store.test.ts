@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { useCartStore } from "@/features/cart/model/cart.store";
+import {
+  addItem,
+  cartReducer,
+  clear,
+  removeItem,
+  updateQuantity,
+} from "@/features/cart/model/cart.slice";
 import type { CartItem } from "@/features/cart/model/cart.types";
+import { createTestStore } from "@/test-utils/store";
 
 function makeItem(overrides: Partial<CartItem> = {}): CartItem {
   return {
@@ -14,54 +21,70 @@ function makeItem(overrides: Partial<CartItem> = {}): CartItem {
   };
 }
 
+function cartItems(store: ReturnType<typeof createTestStore>) {
+  return store.getState().cart.items;
+}
+
 beforeEach(() => {
-  useCartStore.setState({ items: [] });
+  // fresh store per test via inline createTestStore calls
 });
 
-describe("useCartStore.addItem", () => {
+describe("cart slice addItem", () => {
   it("appends a new SKU", () => {
-    useCartStore.getState().addItem(makeItem({ sku: "A1" }));
-    expect(useCartStore.getState().items).toHaveLength(1);
-    expect(useCartStore.getState().items[0].sku).toBe("A1");
+    const store = createTestStore();
+    store.dispatch(addItem(makeItem({ sku: "A1" })));
+    expect(cartItems(store)).toHaveLength(1);
+    expect(cartItems(store)[0].sku).toBe("A1");
   });
 
   it("merges quantity when the SKU already exists", () => {
-    useCartStore.getState().addItem(makeItem({ sku: "A1", quantity: 1 }));
-    useCartStore.getState().addItem(makeItem({ sku: "A1", quantity: 3 }));
-    const { items } = useCartStore.getState();
+    const store = createTestStore();
+    store.dispatch(addItem(makeItem({ sku: "A1", quantity: 1 })));
+    store.dispatch(addItem(makeItem({ sku: "A1", quantity: 3 })));
+    const items = cartItems(store);
     expect(items).toHaveLength(1);
     expect(items[0].quantity).toBe(4);
   });
 });
 
-describe("useCartStore.removeItem", () => {
+describe("cart slice removeItem", () => {
   it("drops the matching SKU", () => {
-    useCartStore.getState().addItem(makeItem({ sku: "A1" }));
-    useCartStore.getState().addItem(makeItem({ sku: "B1" }));
-    useCartStore.getState().removeItem("A1");
-    expect(useCartStore.getState().items.map((i) => i.sku)).toEqual(["B1"]);
+    const store = createTestStore();
+    store.dispatch(addItem(makeItem({ sku: "A1" })));
+    store.dispatch(addItem(makeItem({ sku: "B1" })));
+    store.dispatch(removeItem("A1"));
+    expect(cartItems(store).map((i) => i.sku)).toEqual(["B1"]);
   });
 
   it("is a no-op for unknown SKUs", () => {
-    useCartStore.getState().addItem(makeItem({ sku: "A1" }));
-    useCartStore.getState().removeItem("nope");
-    expect(useCartStore.getState().items).toHaveLength(1);
+    const store = createTestStore();
+    store.dispatch(addItem(makeItem({ sku: "A1" })));
+    store.dispatch(removeItem("nope"));
+    expect(cartItems(store)).toHaveLength(1);
   });
 });
 
-describe("useCartStore.updateQuantity", () => {
+describe("cart slice updateQuantity", () => {
   it("replaces the quantity for the SKU", () => {
-    useCartStore.getState().addItem(makeItem({ sku: "A1", quantity: 1 }));
-    useCartStore.getState().updateQuantity("A1", 9);
-    expect(useCartStore.getState().items[0].quantity).toBe(9);
+    const store = createTestStore();
+    store.dispatch(addItem(makeItem({ sku: "A1", quantity: 1 })));
+    store.dispatch(updateQuantity({ sku: "A1", quantity: 9 }));
+    expect(cartItems(store)[0].quantity).toBe(9);
   });
 });
 
-describe("useCartStore.clear", () => {
+describe("cart slice clear", () => {
   it("empties the cart", () => {
-    useCartStore.getState().addItem(makeItem({ sku: "A1" }));
-    useCartStore.getState().addItem(makeItem({ sku: "B1" }));
-    useCartStore.getState().clear();
-    expect(useCartStore.getState().items).toEqual([]);
+    const store = createTestStore();
+    store.dispatch(addItem(makeItem({ sku: "A1" })));
+    store.dispatch(addItem(makeItem({ sku: "B1" })));
+    store.dispatch(clear());
+    expect(cartItems(store)).toEqual([]);
+  });
+});
+
+describe("cartReducer", () => {
+  it("exports a reducer for the root store", () => {
+    expect(typeof cartReducer).toBe("function");
   });
 });
