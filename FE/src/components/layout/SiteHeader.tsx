@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { iconBlockClassName, iconGlyphClassName } from "@/lib/icon-block";
 import { CartDrawer } from "./CartDrawer";
+import { DEFAULT_NAV } from "@/lib/default-nav";
 import type { NavItem, NavSubItem } from "@/types/nav";
 
 // Re-export for backward compat if used elsewhere
@@ -38,7 +39,7 @@ export function SiteHeader({
   brandName = "GYMSHARK",
   logoHref = "/",
   logo,
-  navItems = [],
+  navItems = DEFAULT_NAV,
   activeHref,
   announcement = "Get $10 off when you refer a friend",
   announcements,
