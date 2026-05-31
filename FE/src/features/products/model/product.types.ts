@@ -15,8 +15,9 @@ export interface Product {
 
 export interface ProductListResponse {
   products: Product[];
-  count: number;
+  total: number;
   limit: number;
+  skip?: number;
 }
 
 export interface ProductDetailResponse {

@@ -1,4 +1,4 @@
-export { fetchRecentProducts } from "@/features/products/api/products.api";
+export { fetchProductList, fetchRecentProducts } from "@/features/products/api/products.api";
 export { useCachedProduct } from "@/features/products/hooks/useCachedProduct";
 export {
   cacheProduct,

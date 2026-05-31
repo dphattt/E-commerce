@@ -191,7 +191,7 @@ export function ProductList({ products, total, categorySlug }: ProductListProps)
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-y-10 gap-x-6 w-full">
-              {sorted.map((product) => {
+              {sorted.map((product, index) => {
                 const primaryImg = product.imageUrls[0] ?? "";
                 const hoverImg = product.imageUrls[1] ?? primaryImg;
                 const isHovered = hoveredId === product._id;
@@ -245,6 +245,7 @@ export function ProductList({ products, total, categorySlug }: ProductListProps)
                               src={primaryImg}
                               alt={product.title}
                               fill
+                              priority={index < 3}
                               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                               className={`object-cover transition-[opacity,transform] duration-500 ease-out ${
                                 isHovered
