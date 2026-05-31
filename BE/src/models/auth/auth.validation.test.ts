@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  forgotPasswordBodySchema,
   loginBodySchema,
   registerBodySchema,
+  resetPasswordBodySchema,
 } from "@/models/auth/auth.validation";
 
 describe("registerBodySchema", () => {
@@ -57,5 +59,39 @@ describe("loginBodySchema", () => {
     expect(() =>
       loginBodySchema.parse({ email: "user@example.com", password: "" }),
     ).toThrow();
+  });
+});
+
+describe("forgotPasswordBodySchema", () => {
+  it("normalizes the email", () => {
+    const parsed = forgotPasswordBodySchema.parse({
+      email: "  USER@Example.com  ",
+    });
+    expect(parsed.email).toBe("user@example.com");
+  });
+
+  it("rejects invalid emails", () => {
+    expect(() =>
+      forgotPasswordBodySchema.parse({ email: "not-an-email" }),
+    ).toThrow();
+  });
+});
+
+describe("resetPasswordBodySchema", () => {
+  it("accepts a reset token and valid password", () => {
+    const parsed = resetPasswordBodySchema.parse({
+      token: "abc123",
+      password: "supersecret",
+    });
+    expect(parsed.token).toBe("abc123");
+  });
+
+  it("rejects short passwords", () => {
+    expect(() =>
+      resetPasswordBodySchema.parse({
+        token: "abc123",
+        password: "short",
+      }),
+    ).toThrow(/at least 8/i);
   });
 });

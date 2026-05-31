@@ -7,6 +7,13 @@ import axios, {
 
 const ACCESS_TOKEN_STORAGE_KEY = "accessToken";
 const REFRESH_PATH = "/auth/refresh";
+const REFRESH_EXCLUDED_PATHS = [
+  REFRESH_PATH,
+  "/auth/login",
+  "/auth/register",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+];
 
 type RetriableConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -67,6 +74,10 @@ async function refreshAccessToken(): Promise<string | null> {
   return refreshInFlight;
 }
 
+function shouldSkipRefresh(url: string): boolean {
+  return REFRESH_EXCLUDED_PATHS.some((path) => url.includes(path));
+}
+
 httpClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -80,7 +91,7 @@ httpClient.interceptors.response.use(
       status === 401 &&
       original &&
       !original._retry &&
-      !url.includes(REFRESH_PATH)
+      !shouldSkipRefresh(url)
     ) {
       original._retry = true;
       const next = await refreshAccessToken();

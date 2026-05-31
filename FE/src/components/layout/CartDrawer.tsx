@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/sheet";
 import { useCart } from "@/features/cart";
 import type { CartItem } from "@/features/cart";
+import { iconBlockClassName } from "@/lib/icon-block";
 import { useHasHydrated } from "@/shared/hooks";
+import { cn } from "@/lib/utils";
 
 function EmptyBagIllustration() {
   return (
@@ -145,7 +147,10 @@ export function CartDrawer() {
       <SheetTrigger asChild>
         <button
           type="button"
-          className="relative inline-flex size-7 items-center justify-center rounded-full hover:bg-store-surface"
+          className={cn(
+            iconBlockClassName,
+            "relative cursor-pointer rounded-full transition-all duration-150 hover:scale-105 hover:bg-store-ink-strong hover:text-store-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-store-ink/20 active:scale-95",
+          )}
           aria-label={`Shopping cart${visibleCount > 0 ? `, ${visibleCount} items` : ""}`}
         >
           <IconBag className="size-5" />

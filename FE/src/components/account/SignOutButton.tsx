@@ -1,7 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAuth } from "@/features/auth";
+import { logoutApi } from "@/features/auth/api/auth.api";
 
 function SignOutIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -27,23 +29,30 @@ function SignOutIcon(props: React.SVGProps<SVGSVGElement>) {
 export function SignOutButton() {
   const { clearSession } = useAuth();
   const router = useRouter();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
-  const handleSignOut = () => {
-    clearSession();
-    // Future commit: also call POST /api/auth/logout via http client
-    // to clear the refresh cookie on the server.
-    router.push("/");
-    router.refresh();
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    try {
+      await logoutApi();
+    } finally {
+      clearSession();
+      router.push("/");
+      router.refresh();
+    }
   };
 
   return (
     <button
       type="button"
       onClick={handleSignOut}
-      className="flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
+      disabled={isSigningOut}
+      className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-transparent px-4 py-2 text-sm text-zinc-700 transition-all duration-150 hover:scale-[1.02] hover:border-zinc-900 hover:bg-zinc-900 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
     >
       <SignOutIcon />
-      Sign Out
+      {isSigningOut ? "Signing Out..." : "Sign Out"}
     </button>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Mail } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { AuthFloatingInput } from "@/components/auth/AuthFloatingInput";
@@ -9,29 +9,36 @@ import {
   getAuthFormErrorMessage,
 } from "@/components/auth/auth-form-shared";
 import { GymsharkLogo } from "@/components/auth/GymsharkLogo";
-import { forgotPasswordApi } from "@/features/auth/api/auth.api";
+import { resetPasswordApi } from "@/features/auth/api/auth.api";
 
-export function ResetPasswordForm() {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
+type NewPasswordFormProps = {
+  token?: string;
+};
+
+export function NewPasswordForm({ token }: NewPasswordFormProps) {
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(
+    token ? null : "Password reset link is missing or invalid.",
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
+    if (!token) return;
 
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail) {
-      setError("Email address is required.");
+    setError(null);
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await forgotPasswordApi(normalizedEmail);
-      setEmail(normalizedEmail);
+      await resetPasswordApi(token, password);
       setIsSubmitted(true);
+      setPassword("");
     } catch (err) {
       setError(getAuthFormErrorMessage(err));
     } finally {
@@ -44,24 +51,14 @@ export function ResetPasswordForm() {
       <GymsharkLogo className="mb-6" />
 
       <h1 className="text-base font-bold uppercase tracking-[0.12em] text-store-ink-strong">
-        Reset password
+        Create new password
       </h1>
-
-      <p className="mt-3 max-w-sm text-center text-sm leading-relaxed text-store-fg-muted">
-        Enter your account email and we&apos;ll send instructions to get you
-        back in.
-      </p>
 
       {isSubmitted ? (
         <div className="mt-10 flex w-full flex-col items-center text-center">
-          <CheckCircle2
-            className="size-10 text-store-ink-strong"
-            strokeWidth={1.5}
-            aria-hidden="true"
-          />
-          <p className="mt-5 text-sm leading-relaxed text-store-fg-muted">
-            If an account exists for <span className="text-store-ink">{email}</span>,
-            password reset instructions have been sent.
+          <p className="text-sm leading-relaxed text-store-fg-muted">
+            Your password has been reset. You can now log in with your new
+            password.
           </p>
           <Link
             href="/account/login"
@@ -77,20 +74,28 @@ export function ResetPasswordForm() {
           noValidate
         >
           <AuthFloatingInput
-            id="reset-password-email"
-            label="Email address*"
-            type="email"
-            name="email"
-            autoComplete="email"
+            id="new-password"
+            label="New password*"
+            type={showPassword ? "text" : "password"}
+            name="password"
+            autoComplete="new-password"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             endAdornment={
-              <Mail
-                className="size-5 text-store-fg-muted"
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="text-store-fg-muted hover:text-store-ink"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="size-5" strokeWidth={1.5} />
+                ) : (
+                  <Eye className="size-5" strokeWidth={1.5} />
+                )}
+              </button>
             }
           />
 
@@ -102,22 +107,22 @@ export function ResetPasswordForm() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !token}
             className={authSubmitButtonClassName}
           >
-            {isSubmitting ? "Sending..." : "Send reset link"}
+            {isSubmitting ? "Resetting..." : "Reset password"}
           </button>
         </form>
       )}
 
       {!isSubmitted ? (
         <p className="mt-8 text-center text-sm text-store-ink">
-          Remembered your password?{" "}
+          Need a new link?{" "}
           <Link
-            href="/account/login"
+            href="/account/forgot-password"
             className="font-semibold underline underline-offset-2 hover:text-store-fg-muted"
           >
-            Log in
+            Request password reset
           </Link>
         </p>
       ) : null}

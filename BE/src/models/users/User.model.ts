@@ -6,6 +6,8 @@ interface IUser extends Document {
   email: string;
   passwordHash: string;
   name: string;
+  passwordResetTokenHash?: string;
+  passwordResetExpiresAt?: Date;
   comparePassword(plain: string): Promise<boolean>;
 }
 
@@ -19,8 +21,15 @@ const userSchema = new Schema<IUser, IUserModel>(
     email: { type: String, required: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true, select: false },
     name: { type: String, trim: true, default: "" },
+    passwordResetTokenHash: { type: String, select: false },
+    passwordResetExpiresAt: { type: Date, select: false },
   },
   { timestamps: true, collection: "users" },
+);
+
+userSchema.index(
+  { passwordResetTokenHash: 1 },
+  { name: "users_passwordResetTokenHash_sparse", sparse: true },
 );
 
 // Instance method

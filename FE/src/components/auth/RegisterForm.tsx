@@ -165,7 +165,7 @@ export function RegisterForm() {
           disabled={isSubmitting}
           className={authSubmitButtonClassName}
         >
-          {isSubmitting ? "Creating account…" : "Create account"}
+          {isSubmitting ? "Creating account..." : "Create account"}
         </button>
       </form>
 

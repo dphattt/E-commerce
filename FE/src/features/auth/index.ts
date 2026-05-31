@@ -1,5 +1,18 @@
-export { loginApi, logoutApi, registerApi } from "@/features/auth/api/auth.api";
-export type { LoginResponse, RegisterResponse } from "@/features/auth/api/auth.api";
+export {
+  forgotPasswordApi,
+  loginApi,
+  logoutApi,
+  meApi,
+  registerApi,
+  resetPasswordApi,
+} from "@/features/auth/api/auth.api";
+export type {
+  ForgotPasswordResponse,
+  LoginResponse,
+  RegisterResponse,
+  ResetPasswordResponse,
+} from "@/features/auth/api/auth.api";
+export { AuthSessionBootstrap } from "@/features/auth/model/AuthSessionBootstrap";
 export { useAuth } from "@/features/auth/model/useAuth";
 export {
   authReducer,

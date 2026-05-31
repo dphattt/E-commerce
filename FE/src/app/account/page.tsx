@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { SignOutButton } from "@/components/account/SignOutButton";
+import { useAuth } from "@/features/auth";
 
 /* ── types ── */
 type MockUser = {
@@ -195,7 +198,11 @@ function ClothesIllustration() {
 
 /* ── page ── */
 export default function AccountPage() {
-  const { name, xp, xpGoal, tier } = mockUser;
+  const { user } = useAuth();
+  const { xp, xpGoal, tier } = mockUser;
+  const name = (user?.name?.trim() || user?.email.split("@")[0] || "MY ACCOUNT")
+    .trim()
+    .toUpperCase();
   const xpToGo = xpGoal - xp;
   const xpPercent = Math.min((xp / xpGoal) * 100, 100);
 

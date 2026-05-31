@@ -6,8 +6,10 @@ import {
   registerLimiter,
 } from "@/middlewares/rate-limit.middleware";
 import {
+  forgotPasswordBodySchema,
   loginBodySchema,
   registerBodySchema,
+  resetPasswordBodySchema,
 } from "@/models/auth/auth.validation";
 
 const router = Router();
@@ -26,5 +28,17 @@ router.post(
 );
 router.post("/refresh", authController.refresh);
 router.post("/logout", authController.logout);
+router.post(
+  "/forgot-password",
+  loginLimiter,
+  validate(forgotPasswordBodySchema),
+  authController.forgotPassword,
+);
+router.post(
+  "/reset-password",
+  loginLimiter,
+  validate(resetPasswordBodySchema),
+  authController.resetPassword,
+);
 
 export default router;

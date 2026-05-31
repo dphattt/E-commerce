@@ -322,17 +322,17 @@ export function SiteHeader({
                 )}
                 aria-label="Wishlist"
               >
-                <IconHeart className={iconGlyphClassName} />
+                <IconHeart className="size-5" />
               </Link>
               <Link
-                href="/account"
+                href="/account/login"
                 className={cn(
                   iconBlockClassName,
                   "rounded-full hover:bg-store-surface",
                 )}
                 aria-label="Account"
               >
-                <IconUser className={iconGlyphClassName} />
+                <IconUser className="size-5" />
               </Link>
               <CartDrawer />
             </div>

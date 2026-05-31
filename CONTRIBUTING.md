@@ -20,6 +20,7 @@ npm run dev                 # http://localhost:3001
 
 # Frontend (new terminal)
 cd ../FE
+cp .env.example .env.local
 npm install
 npm run dev                 # http://localhost:3000
 ```

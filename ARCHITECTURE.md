@@ -49,7 +49,7 @@ Other shared modules:
 
 | Module | URL prefix | Wired | Notes |
 |---|---|---|---|
-| `auth` | `/api/auth` | yes | register, login, refresh, logout. Rate-limited. |
+| `auth` | `/api/auth` | yes | register, login, refresh, logout, forgot/reset password. Rate-limited. |
 | `cart` | `/api/cart` | yes | requireAuth. Service + repository pattern is fully implemented here as the template. |
 | `categories` | `/api/categories` | yes | read-only catalog. |
 | `health` | `/api/health` | yes | uptime / liveness. |
@@ -64,6 +64,8 @@ Other shared modules:
 3. Client stores the access token (via `writeAccessToken` in FE `http.ts`) and sends it as `Authorization: Bearer <token>`.
 4. On any 401, the FE response interceptor calls `POST /api/auth/refresh` once. The BE reads the cookie, verifies it, and issues a fresh access token (rotating the cookie). Single-flight on the FE so concurrent 401s share one refresh.
 5. `POST /api/auth/logout` clears the refresh cookie (204).
+6. `POST /api/auth/forgot-password` creates a short-lived reset token for matching accounts and returns a generic success message. In non-production it also returns `resetToken`/`resetUrl` for local testing; production email delivery still needs a mail provider decision.
+7. `POST /api/auth/reset-password` accepts `{ token, password }`, verifies the stored reset-token hash + expiry, updates the password hash, and clears the reset token fields.
 
 ### Cart pricing rule
 
@@ -74,6 +76,7 @@ Other shared modules:
 - MongoDB collection names (in order of size):
   `users`, `products`, `product_variants`, `categories`, `colors`, `sizes`, `inventory`, `carts`, `wishlists`, `loyalty_tiers`, `orders`.
 - Indexes are created by **migrate-mongo** files in `BE/migrations/`. Run with `npm run migrate:up` (config at `BE/migrate-mongo-config.ts`).
+- Password reset support adds a sparse `users.passwordResetTokenHash` index via migration.
 - Seed data lives at `BE/data/seed/*.ndjson` and is loaded with `npm run seed` (or `seed:reset` to wipe-then-insert).
 - A reference mongodump backup is checked in at `BE/data/backup/e-commerce/` for emergencies.
 
@@ -117,7 +120,8 @@ FE/src/
 - Access token stored via `writeAccessToken` (localStorage today).
 - Refresh token stays in an httpOnly cookie set by the BE.
 - All cross-origin calls run with `withCredentials: true` so the cookie travels with refresh requests.
-- The auth Redux slice is intentionally **not** persisted; on a reload the FE should re-validate the session before showing a "logged in" UI.
+- The auth Redux slice is intentionally **not** persisted; `AuthSessionBootstrap` calls `/users/me` on reload, letting the response interceptor refresh the access token first when the refresh cookie is still valid.
+- `/account/forgot-password` calls the forgot-password endpoint. `/account/reset-password?token=...` completes the password reset.
 
 ### State management policy
 
@@ -170,5 +174,6 @@ npm run lint
 | `JWT_ACCESS_EXPIRES_IN` | `15m` | Access TTL |
 | `JWT_REFRESH_EXPIRES_IN` | `7d` | Refresh cookie TTL |
 | `CORS_ORIGIN` | `http://localhost:3000` | Comma-separated list, or `*` |
+| `APP_ORIGIN` | falls back to first `CORS_ORIGIN` | Frontend origin used to build local/dev password reset links |
 
 `FE` reads one env: `NEXT_PUBLIC_BASE_API` (used by `utils/http.ts` as axios `baseURL`).

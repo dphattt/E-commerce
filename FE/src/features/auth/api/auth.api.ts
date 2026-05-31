@@ -7,8 +7,17 @@ export type LoginResponse = {
 };
 
 export type RegisterResponse = LoginResponse;
+export type ForgotPasswordResponse = {
+  message: string;
+  resetToken?: string;
+  resetUrl?: string;
+};
 
-/** Auth endpoints return `{ token, user }` — not the `{ data }` envelope used elsewhere. */
+export type ResetPasswordResponse = {
+  message: string;
+};
+
+/** Auth endpoints return `{ token, user }`, not the `{ data }` envelope used elsewhere. */
 export async function loginApi(
   email: string,
   password: string,
@@ -35,4 +44,30 @@ export async function registerApi(payload: {
 
 export async function logoutApi(): Promise<void> {
   await httpClient.post("/auth/logout");
+}
+
+export async function meApi(): Promise<AuthUser> {
+  const { data } = await httpClient.get<{ user: AuthUser }>("/users/me");
+  return data.user;
+}
+
+export async function forgotPasswordApi(
+  email: string,
+): Promise<ForgotPasswordResponse> {
+  const { data } = await httpClient.post<ForgotPasswordResponse>(
+    "/auth/forgot-password",
+    { email: email.trim().toLowerCase() },
+  );
+  return data;
+}
+
+export async function resetPasswordApi(
+  token: string,
+  password: string,
+): Promise<ResetPasswordResponse> {
+  const { data } = await httpClient.post<ResetPasswordResponse>(
+    "/auth/reset-password",
+    { token, password },
+  );
+  return data;
 }

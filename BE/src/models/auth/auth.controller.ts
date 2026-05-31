@@ -1,4 +1,5 @@
 import type { CookieOptions, NextFunction, Request, Response } from "express";
+import { createHash, randomBytes } from "node:crypto";
 import User from "@/models/users/User.model";
 import {
   signAccessToken,
@@ -7,10 +8,19 @@ import {
   type JwtPayload,
 } from "@/utils/jwt";
 import { httpError } from "@/utils/http-error";
-import type { LoginBody, RegisterBody } from "@/models/auth/auth.validation";
+import type {
+  ForgotPasswordBody,
+  LoginBody,
+  RegisterBody,
+  ResetPasswordBody,
+} from "@/models/auth/auth.validation";
 
 const REFRESH_COOKIE = "refreshToken";
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const PASSWORD_RESET_TOKEN_BYTES = 32;
+const PASSWORD_RESET_EXPIRES_MS = 60 * 60 * 1000;
+const PASSWORD_RESET_MESSAGE =
+  "If an account exists for this email, password reset instructions have been sent.";
 
 function refreshCookieOptions(): CookieOptions {
   return {
@@ -27,6 +37,21 @@ function issueTokens(res: Response, payload: JwtPayload): string {
   const refreshToken = signRefreshToken(payload);
   res.cookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions());
   return accessToken;
+}
+
+function hashResetToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+function buildResetUrl(token: string): string | undefined {
+  const origin =
+    process.env.APP_ORIGIN ||
+    process.env.FRONTEND_URL ||
+    process.env.CORS_ORIGIN?.split(",")[0]?.trim();
+  if (!origin || origin === "*") return undefined;
+  return `${origin.replace(/\/$/, "")}/account/reset-password?token=${encodeURIComponent(
+    token,
+  )}`;
 }
 
 export async function register(
@@ -126,4 +151,78 @@ export function logout(_req: Request, res: Response) {
     maxAge: undefined,
   });
   res.status(204).end();
+}
+
+export async function forgotPassword(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { email } = req.body as ForgotPasswordBody;
+    const user = await User.findOne({ email }).select("_id");
+    const response: {
+      message: string;
+      resetToken?: string;
+      resetUrl?: string;
+    } = { message: PASSWORD_RESET_MESSAGE };
+
+    if (user) {
+      const resetToken = randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString("hex");
+      await User.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            passwordResetTokenHash: hashResetToken(resetToken),
+            passwordResetExpiresAt: new Date(
+              Date.now() + PASSWORD_RESET_EXPIRES_MS,
+            ),
+          },
+        },
+      );
+
+      if (process.env.NODE_ENV !== "production") {
+        response.resetToken = resetToken;
+        response.resetUrl = buildResetUrl(resetToken);
+      }
+    }
+
+    res.json(response);
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function resetPassword(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { token, password } = req.body as ResetPasswordBody;
+    const user = await User.findOne({
+      passwordResetTokenHash: hashResetToken(token),
+      passwordResetExpiresAt: { $gt: new Date() },
+    }).select("_id");
+
+    if (!user) {
+      throw httpError("Invalid or expired password reset token", 400);
+    }
+
+    const passwordHash = await User.hashPassword(password);
+    await User.updateOne(
+      { _id: user._id },
+      {
+        $set: { passwordHash },
+        $unset: {
+          passwordResetTokenHash: "",
+          passwordResetExpiresAt: "",
+        },
+      },
+    );
+
+    res.json({ message: "Password has been reset." });
+  } catch (e) {
+    next(e);
+  }
 }

@@ -113,7 +113,7 @@ export function LoginForm() {
           disabled={isSubmitting}
           className={authSubmitButtonClassName}
         >
-          {isSubmitting ? "Logging in…" : "Log in"}
+          {isSubmitting ? "Logging in..." : "Log in"}
         </button>
       </form>
 
