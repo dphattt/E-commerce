@@ -1,18 +1,23 @@
 "use client";
 
-import { useAuthStore } from "@/features/auth/model/auth.store";
+import {
+  clearSession,
+  setSession,
+  setUser,
+} from "@/features/auth/model/auth.slice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import type { AuthUser } from "@/features/auth/model/auth.types";
 
 export function useAuth() {
-  const user = useAuthStore((s) => s.user);
-  const setSession = useAuthStore((s) => s.setSession);
-  const setUser = useAuthStore((s) => s.setUser);
-  const clearSession = useAuthStore((s) => s.clearSession);
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((s) => s.auth.user);
 
   return {
     user,
     isAuthenticated: user !== null,
-    setSession,
-    setUser,
-    clearSession,
+    setSession: (nextUser: AuthUser, accessToken: string) =>
+      dispatch(setSession({ user: nextUser, accessToken })),
+    setUser: (nextUser: AuthUser | null) => dispatch(setUser(nextUser)),
+    clearSession: () => dispatch(clearSession()),
   };
 }

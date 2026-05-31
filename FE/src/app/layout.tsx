@@ -3,7 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { SiteFooter, SiteHeader } from "@/components/layout";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { ThemeScript } from "@/components/theme";
-import { fetchNavItems } from "@/lib/nav-categories";
+import {
+  fetchNavItemsFromApi,
+  resolveNavItems,
+} from "@/lib/nav-categories";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,7 +29,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const navItems = await fetchNavItems();
+  const apiNav = await fetchNavItemsFromApi();
+  const navItems = resolveNavItems(apiNav);
 
   return (
     <html

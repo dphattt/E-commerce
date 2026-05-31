@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { iconBlockClassName, iconGlyphClassName } from "@/lib/icon-block";
 import { CartDrawer } from "./CartDrawer";
+import { DEFAULT_NAV } from "@/lib/default-nav";
 import type { NavItem, NavSubItem } from "@/types/nav";
 
 // Re-export for backward compat if used elsewhere
@@ -38,9 +39,9 @@ export function SiteHeader({
   brandName = "GYMSHARK",
   logoHref = "/",
   logo,
-  navItems = [],
+  navItems = DEFAULT_NAV,
   activeHref,
-  announcement = "Get $10 off when you refer a friend",
+  announcement = "Get 10% off when you sign up for emails",
   announcements,
   searchPlaceholder = "What are you looking for tod…",
   className = "",
@@ -53,7 +54,13 @@ export function SiteHeader({
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeNav, setActiveNav] = useState<SiteHeaderNavItem | null>(null);
-  const lines = announcements?.length ? announcements : [announcement];
+  const lines = announcements?.length
+    ? announcements
+    : [
+        announcement,
+        "Students get 15% off",
+        "Free standard shipping on orders over $100",
+      ];
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -80,7 +87,7 @@ export function SiteHeader({
     if (lines.length <= 1 || paused) return;
     const t = window.setInterval(() => {
       setIndex((i) => (i + 1) % lines.length);
-    }, 5000);
+    }, 4000);
     return () => window.clearInterval(t);
   }, [lines.length, paused]);
 
@@ -130,6 +137,7 @@ export function SiteHeader({
   }, [onSearchSubmit, query]);
 
   const line = lines[index] ?? announcement;
+  const nextLine = lines[(index + 1) % lines.length] ?? line;
 
   return (
     <>
@@ -142,21 +150,32 @@ export function SiteHeader({
       >
         {/* Announcement */}
         <div className="border-b border-store-border/80 bg-store-surface">
-          <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 sm:px-6 lg:px-8">
-            <div className="min-w-0 flex-1 overflow-x-auto text-center">
-              <p className="inline-block min-w-0 whitespace-nowrap text-xs sm:text-sm">
+          <div className="mx-auto grid h-14 max-w-400 grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:px-6 lg:px-8">
+            <div aria-hidden="true" />
+            <div className="flex h-full min-w-0 items-center justify-center overflow-hidden text-center">
+              <div
+                key={index}
+                className="animate-announcement-slide-up flex h-full min-w-0 flex-col"
+                style={{ animationPlayState: paused ? "paused" : "running" }}
+              >
                 <Link
                   href="/refer"
-                  className="underline underline-offset-2 hover:no-underline"
+                  className="flex h-full min-w-0 shrink-0 items-center justify-center whitespace-nowrap text-[11px] underline underline-offset-4 hover:no-underline sm:text-xs"
                 >
                   {line}
                 </Link>
-              </p>
+                <Link
+                  href="/refer"
+                  className="flex h-full min-w-0 shrink-0 items-center justify-center whitespace-nowrap text-[11px] underline underline-offset-4 hover:no-underline sm:text-xs"
+                >
+                  {nextLine}
+                </Link>
+              </div>
             </div>
             {lines.length > 1 && (
               <button
                 type="button"
-                className="shrink-0 p-1 text-store-fg-muted hover:text-store-ink-strong"
+                className="justify-self-end p-1 text-store-fg-muted hover:text-store-ink-strong"
                 onClick={() => setPaused((p) => !p)}
                 aria-label={
                   paused ? "Play announcements" : "Pause announcements"
@@ -174,9 +193,9 @@ export function SiteHeader({
 
         {/* Main bar */}
         <div className="border-b border-store-border/80">
-          <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6 lg:px-8">
+          <div className="mx-auto grid h-24 max-w-400 grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 sm:px-6 lg:h-auto lg:gap-6 lg:px-8 lg:py-3">
             {/* Left: hamburger (mobile) + desktop nav */}
-            <div className="flex min-w-0 items-center gap-2 lg:min-w-[200px]">
+            <div className="flex min-w-0 items-center gap-5 lg:min-w-50 lg:gap-2">
               <button
                 type="button"
                 className={cn(
@@ -189,6 +208,20 @@ export function SiteHeader({
                 aria-label="Open menu"
               >
                 <IconMenu className={iconGlyphClassName} />
+              </button>
+
+              <button
+                type="button"
+                className={cn(
+                  iconBlockClassName,
+                  "rounded-full hover:bg-store-surface lg:hidden",
+                )}
+                aria-label="Open search"
+                onClick={() => setSearchOpen(true)}
+              >
+                <IconSearch
+                  className={cn(iconGlyphClassName, "text-store-ink")}
+                />
               </button>
 
               {/* Desktop nav */}
@@ -249,10 +282,10 @@ export function SiteHeader({
             </div>
 
             {/* Logo */}
-            <div className="flex min-w-0 flex-1 justify-center lg:flex-none">
+            <div className="flex min-w-0 justify-center">
               <Link
                 href={logoHref}
-                className="font-sans text-xl font-black uppercase leading-none tracking-[-0.04em] sm:text-2xl"
+                className="font-sans text-2xl font-black uppercase leading-none tracking-[-0.04em] sm:text-2xl"
                 style={{ fontStretch: "condensed" }}
               >
                 {logo ?? brandName}
@@ -260,8 +293,8 @@ export function SiteHeader({
             </div>
 
             {/* Right: search + icons */}
-            <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2 lg:min-w-0 lg:justify-end lg:gap-3">
-              <div className="hidden min-w-0 max-w-md flex-1 lg:block lg:max-w-[320px] lg:flex-none xl:max-w-[380px]">
+            <div className="flex min-w-0 shrink-0 items-center justify-end gap-5 lg:gap-3">
+              <div className="hidden min-w-0 max-w-md flex-1 lg:block lg:max-w-[320px] lg:flex-none xl:max-w-95">
                 <form
                   className="relative"
                   onSubmit={(e) => {
@@ -281,25 +314,11 @@ export function SiteHeader({
                 </form>
               </div>
 
-              <button
-                type="button"
-                className={cn(
-                  iconBlockClassName,
-                  "rounded-full hover:bg-store-surface lg:hidden",
-                )}
-                aria-label="Open search"
-                onClick={() => setSearchOpen(true)}
-              >
-                <IconSearch
-                  className={cn(iconGlyphClassName, "text-store-ink")}
-                />
-              </button>
-
               <Link
                 href="/wishlist"
                 className={cn(
                   iconBlockClassName,
-                  "rounded-full hover:bg-store-surface",
+                  "hidden rounded-full hover:bg-store-surface lg:inline-flex",
                 )}
                 aria-label="Wishlist"
               >

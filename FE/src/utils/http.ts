@@ -140,4 +140,9 @@ const del = async <T>(
 
 const http = { get, post, put, patch, del };
 export default http;
-export { ACCESS_TOKEN_STORAGE_KEY, readAccessToken, writeAccessToken };
+export {
+  ACCESS_TOKEN_STORAGE_KEY,
+  httpClient,
+  readAccessToken,
+  writeAccessToken,
+};

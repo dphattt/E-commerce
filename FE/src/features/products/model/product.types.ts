@@ -1,5 +1,20 @@
 import type { Money } from "@/shared/types";
 
+export interface ProductVariantSize {
+  id: string;
+  label: string;
+  inStock: boolean;
+  sku: string;
+}
+
+export interface ProductVariant {
+  id: string;
+  color: string;
+  image: string;
+  hex: string;
+  sizes: ProductVariantSize[];
+}
+
 export interface Product {
   _id: string;
   sourceUrl: string;
@@ -11,12 +26,16 @@ export interface Product {
   scrapedAt: string;
   createdAt?: string;
   updatedAt?: string;
+  description?: string;
+  descTag?: string;
+  variants?: ProductVariant[];
 }
 
 export interface ProductListResponse {
   products: Product[];
-  count: number;
+  total: number;
   limit: number;
+  skip?: number;
 }
 
 export interface ProductDetailResponse {

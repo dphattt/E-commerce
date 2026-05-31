@@ -1,0 +1,60 @@
+"use client";
+
+import { cn } from "@/lib/utils";
+import type { InputHTMLAttributes, ReactNode } from "react";
+
+export type AuthFloatingInputProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "placeholder"
+> & {
+  label: string;
+  endAdornment?: ReactNode;
+};
+
+const labelBase =
+  "pointer-events-none absolute left-4 origin-left transition-all duration-200 ease-out";
+
+const labelResting =
+  "top-1/2 -translate-y-1/2 text-sm text-store-fg-subtle";
+
+/** Stacked floating label: label rests in the field, then slides up on focus or when filled. */
+export function AuthFloatingInput({
+  id,
+  label,
+  className,
+  endAdornment,
+  ...props
+}: AuthFloatingInputProps) {
+  const inputId = id ?? props.name;
+
+  return (
+    <div className="relative">
+      <input
+        id={inputId}
+        placeholder=" "
+        className={cn(
+          "peer w-full rounded border border-store-border bg-store-paper px-4 pt-6 pb-2.5 text-sm text-store-ink outline-none transition-[border-color,padding] duration-200 focus:border-store-ink-strong",
+          endAdornment && "pr-11",
+          className,
+        )}
+        {...props}
+      />
+      <label
+        htmlFor={inputId}
+        className={cn(
+          labelBase,
+          labelResting,
+          "peer-focus:top-2.5 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-store-ink",
+          "peer-not-placeholder-shown:top-2.5 peer-not-placeholder-shown:translate-y-0 peer-not-placeholder-shown:text-xs peer-not-placeholder-shown:text-store-ink",
+        )}
+      >
+        {label}
+      </label>
+      {endAdornment ? (
+        <div className="absolute top-1/2 right-3 -translate-y-1/2">
+          {endAdornment}
+        </div>
+      ) : null}
+    </div>
+  );
+}

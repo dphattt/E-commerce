@@ -6,7 +6,7 @@ const noopSubscribe = () => () => {};
 
 /**
  * Returns true once the component has hydrated on the client. Use
- * this to gate UI that depends on persisted zustand stores
+ * this to gate UI that depends on persisted Redux stores
  * (localStorage), so the server-rendered HTML and the first client
  * render agree on the same content and React does not log a
  * hydration mismatch.

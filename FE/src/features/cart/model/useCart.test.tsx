@@ -2,15 +2,29 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
 import { useCart } from "@/features/cart/model/useCart";
-import { useCartStore } from "@/features/cart/model/cart.store";
+import { TestStoreProvider } from "@/test-utils/store";
+
+function wrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <TestStoreProvider
+      preloadedState={{
+        cart: { items: [] },
+        wishlist: { slugs: [] },
+        auth: { user: null },
+      }}
+    >
+      {children}
+    </TestStoreProvider>
+  );
+}
 
 beforeEach(() => {
-  useCartStore.setState({ items: [] });
+  // Provider creates a fresh store per renderHook call when using inline wrapper
 });
 
 describe("useCart", () => {
   it("derives count and subtotal from the store", () => {
-    const { result } = renderHook(() => useCart());
+    const { result } = renderHook(() => useCart(), { wrapper });
 
     act(() => {
       result.current.addItem({
@@ -36,13 +50,13 @@ describe("useCart", () => {
   });
 
   it("falls back to USD with zero amount for an empty cart", () => {
-    const { result } = renderHook(() => useCart());
+    const { result } = renderHook(() => useCart(), { wrapper });
     expect(result.current.count).toBe(0);
     expect(result.current.subtotal).toEqual({ amount: 0, currency: "USD" });
   });
 
   it("updateQuantity recomputes the snapshot", () => {
-    const { result } = renderHook(() => useCart());
+    const { result } = renderHook(() => useCart(), { wrapper });
     act(() => {
       result.current.addItem({
         sku: "A1",

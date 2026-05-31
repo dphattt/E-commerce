@@ -1,3 +1,5 @@
+import { productListPathForCategory } from "@/features/products/lib/category-path";
+import { DEFAULT_NAV } from "@/lib/default-nav";
 import type { NavItem } from "@/types/nav";
 
 export interface Category {
@@ -29,6 +31,17 @@ const EXPLORE_ITEM: NavItem = {
   ],
 };
 
+/** Minimum catalog top-level items (Women/Men/Accessories) before trusting API nav. */
+const MIN_CATALOG_NAV_ITEMS = 2;
+
+/**
+ * Normalize NEXT_PUBLIC_BASE_API whether it is `http://host:3001` or `http://host:3001/api`.
+ */
+export function getApiOrigin(): string {
+  const raw = process.env.NEXT_PUBLIC_BASE_API ?? "http://localhost:3001";
+  return raw.replace(/\/api\/?$/, "").replace(/\/$/, "");
+}
+
 /**
  * Build SiteHeader nav items from a flat categories list.
  * Top-level nav  = level-0 slugs in TOP_LEVEL_MAP.
@@ -54,7 +67,7 @@ export function buildNavFromCategories(categories: Category[]): NavItem[] {
           )
           .map((child) => ({
             label: child.name,
-            href: `/products?categorySlug=${child.slug}`,
+            href: productListPathForCategory(child, categories),
           }));
 
         return {
@@ -71,16 +84,49 @@ export function buildNavFromCategories(categories: Category[]): NavItem[] {
   return navItems;
 }
 
-/** Server-side fetch — safe to call in Next.js Server Components / layouts */
-export async function fetchNavItems(): Promise<NavItem[]> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_API ?? "http://localhost:3001";
+/**
+ * Hybrid resolver: keep hardcoded nav unless API returns a usable catalog menu.
+ */
+export function resolveNavItems(apiNav: NavItem[] | null): NavItem[] {
+  if (!apiNav?.length) return DEFAULT_NAV;
+
+  const catalogItems = apiNav.filter((item) => item.href !== "/explore");
+  if (catalogItems.length < MIN_CATALOG_NAV_ITEMS) return DEFAULT_NAV;
+
+  return apiNav;
+}
+
+/** Server-side fetch of the flat categories catalog. */
+export async function fetchCategories(): Promise<Category[]> {
+  const baseUrl = getApiOrigin();
 
   try {
     const res = await fetch(`${baseUrl}/api/categories`, {
-      next: process.env.NODE_ENV === "production"
-        ? { revalidate: 3600 }
-        : { revalidate: 0 },
+      next:
+        process.env.NODE_ENV === "production"
+          ? { revalidate: 3600 }
+          : { revalidate: 0 },
+    });
+
+    if (!res.ok) return [];
+
+    const { categories }: { categories: Category[] } = await res.json();
+    return categories ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Server-side fetch — returns null when API unavailable (caller uses resolveNavItems). */
+export async function fetchNavItemsFromApi(): Promise<NavItem[] | null> {
+  const baseUrl = getApiOrigin();
+
+  try {
+    const res = await fetch(`${baseUrl}/api/categories`, {
+      next:
+        process.env.NODE_ENV === "production"
+          ? { revalidate: 3600 }
+          : { revalidate: 0 },
     });
 
     if (!res.ok) throw new Error(`categories API ${res.status}`);
@@ -88,7 +134,16 @@ export async function fetchNavItems(): Promise<NavItem[]> {
     const { categories }: { categories: Category[] } = await res.json();
     return buildNavFromCategories(categories);
   } catch (err) {
-    console.warn("[nav] Could not fetch categories, using component defaults:", err);
-    return [];
+    console.warn(
+      "[nav] Could not fetch categories, using default navigation:",
+      err,
+    );
+    return null;
   }
+}
+
+/** @deprecated Use fetchNavItemsFromApi + resolveNavItems */
+export async function fetchNavItems(): Promise<NavItem[]> {
+  const apiNav = await fetchNavItemsFromApi();
+  return resolveNavItems(apiNav);
 }

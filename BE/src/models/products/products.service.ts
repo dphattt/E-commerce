@@ -66,8 +66,124 @@ export async function listProductsByCategory(
   return { products, total, filters };
 }
 
+import ProductVariant from "@/models/products/ProductVariant.model";
+import mongoose from "mongoose";
+
+function escapeRegex(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function getProductById(id: string) {
   const product = await productsRepo.findProductById(id);
   if (!product) throw httpError("Product not found", 404);
-  return product;
+
+  // 1. Get all active variants for this product using its sourceUrl
+  const variants = await ProductVariant.find({
+    productSourceUrl: product.sourceUrl,
+    isActive: true,
+  }).lean();
+
+  // 2. Fetch inventory for these variants' SKUs
+  const skus = variants.map((v) => v.sku);
+  const db = mongoose.connection.db;
+  const inventoryItems = db
+    ? await db.collection("inventory").find({ sku: { $in: skus } }).toArray()
+    : [];
+  const inventoryMap = new Map(inventoryItems.map((item) => [item.sku, item]));
+
+  // 3. Fetch color metadata (hex values) from 'colors' collection
+  const colorSlugs = [...new Set(variants.map((v) => v.color).filter(Boolean))];
+  const colors = db
+    ? await db.collection("colors").find({ slug: { $in: colorSlugs } }).toArray()
+    : [];
+  const colorMap = new Map(colors.map((c) => [c.slug, c]));
+
+  // 4. Fetch size metadata (order) from 'sizes' collection
+  const sizeSlugs = [...new Set(variants.map((v) => v.size).filter(Boolean))];
+  const sizes = db
+    ? await db.collection("sizes").find({ slug: { $in: sizeSlugs } }).toArray()
+    : [];
+  const sizeMap = new Map(sizes.map((s) => [s.slug, s]));
+
+  // 5. Structure variants by color
+  const colorVariantsMap = new Map<string, {
+    id: string;
+    color: string;
+    image: string;
+    hex: string;
+    sizes: Array<{
+      id: string;
+      label: string;
+      inStock: boolean;
+      sku: string;
+    }>;
+  }>();
+
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  for (const v of variants) {
+    const colorSlug = v.color || "default";
+    const sizeSlug = v.size || "one-size";
+
+    const colorDoc = colorMap.get(colorSlug);
+    const sizeDoc = sizeMap.get(sizeSlug);
+
+    const inventoryDoc = inventoryMap.get(v.sku);
+    const inStock = inventoryDoc
+      ? (inventoryDoc.status !== "out_of_stock" && (inventoryDoc.quantity - inventoryDoc.reserved) > 0)
+      : false;
+
+    if (!colorVariantsMap.has(colorSlug)) {
+      let colorImage = product.imageUrls[0] || "";
+
+      if (db) {
+        const familyName = product.title.split("–")[0].split("-")[0].trim();
+        const matchingProduct = await db.collection("products").findOne({
+          title: { $regex: new RegExp(escapeRegex(familyName), "i") },
+          $or: [
+            { title: { $regex: new RegExp(`\\b${escapeRegex(colorSlug)}\\b`, "i") } },
+            { sourceUrl: { $regex: new RegExp(escapeRegex(colorSlug), "i") } }
+          ]
+        });
+        if (matchingProduct && matchingProduct.imageUrls?.[0]) {
+          colorImage = matchingProduct.imageUrls[0];
+        }
+      }
+
+      colorVariantsMap.set(colorSlug, {
+        id: colorSlug,
+        color: colorDoc?.name || capitalize(colorSlug),
+        image: colorImage,
+        hex: colorDoc?.hex || "#CCCCCC",
+        sizes: [],
+      });
+    }
+
+    const colorVariant = colorVariantsMap.get(colorSlug)!;
+    colorVariant.sizes.push({
+      id: sizeSlug,
+      label: sizeDoc?.name || sizeSlug.toUpperCase(),
+      inStock,
+      sku: v.sku,
+    });
+  }
+
+  for (const cv of colorVariantsMap.values()) {
+    cv.sizes.sort((a, b) => {
+      const orderA = sizeMap.get(a.id)?.order || 99;
+      const orderB = sizeMap.get(b.id)?.order || 99;
+      return orderA - orderB;
+    });
+  }
+
+  const genderTag = product.categories[0] || "Men's";
+  const catTag = product.categories[2] || "Training";
+  const descTag = `${genderTag} ${catTag}`;
+
+  return {
+    ...product,
+    description: `Built to perform, designed to last. The ${product.title} features a durable fabric blend and a fit that moves with you. Perfect for high intensity training.`,
+    descTag,
+    variants: Array.from(colorVariantsMap.values()),
+  };
 }
