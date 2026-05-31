@@ -12,8 +12,10 @@ import {
   persistStore,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import sessionStorage from "redux-persist/lib/storage/session";
 import { authReducer } from "@/features/auth/model/auth.slice";
 import { cartReducer } from "@/features/cart/model/cart.slice";
+import { productsReducer } from "@/features/products/model/products.slice";
 import { wishlistReducer } from "@/features/wishlist/model/wishlist.slice";
 
 const cartPersistConfig = {
@@ -28,9 +30,16 @@ const wishlistPersistConfig = {
   storage,
 };
 
+const productsPersistConfig = {
+  key: "ecommerce-product-cache",
+  version: 1,
+  storage: sessionStorage,
+};
+
 const rootReducer = combineReducers({
   auth: authReducer,
   cart: persistReducer(cartPersistConfig, cartReducer),
+  products: persistReducer(productsPersistConfig, productsReducer),
   wishlist: persistReducer(wishlistPersistConfig, wishlistReducer),
 });
 

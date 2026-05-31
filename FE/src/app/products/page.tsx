@@ -1,14 +1,5 @@
 import { ProductList } from "@/components/pages/ProductList";
-
-export interface ApiProduct {
-  _id: string;
-  title: string;
-  price: { amount: number; currency: string };
-  imageUrls: string[];
-  localImagePaths: string[];
-  categories: string[];
-  scrapedAt: string;
-}
+import type { Product } from "@/features/products";
 
 interface PageProps {
   searchParams: Promise<{ categorySlug?: string; limit?: string; skip?: string }>;
@@ -18,7 +9,7 @@ async function fetchProducts(
   categorySlug?: string,
   limit = 40,
   skip = 0,
-): Promise<{ products: ApiProduct[]; total: number }> {
+): Promise<{ products: Product[]; total: number }> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_API ?? "http://localhost:3001";
 
   const params = new URLSearchParams({ limit: String(limit), skip: String(skip) });

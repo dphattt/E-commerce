@@ -3,11 +3,13 @@ import type { ReactNode } from "react";
 import { Provider } from "react-redux";
 import { authReducer } from "@/features/auth/model/auth.slice";
 import { cartReducer } from "@/features/cart/model/cart.slice";
+import { productsReducer } from "@/features/products/model/products.slice";
 import { wishlistReducer } from "@/features/wishlist/model/wishlist.slice";
 
 const testRootReducer = combineReducers({
   auth: authReducer,
   cart: cartReducer,
+  products: productsReducer,
   wishlist: wishlistReducer,
 });
 
@@ -16,6 +18,7 @@ export type TestRootState = ReturnType<typeof testRootReducer>;
 const emptyTestState: TestRootState = {
   auth: { user: null },
   cart: { items: [] },
+  products: { bySlug: {} },
   wishlist: { slugs: [] },
 };
 
