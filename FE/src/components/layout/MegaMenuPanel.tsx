@@ -54,7 +54,7 @@ export function MegaMenuPanel({
       onMouseLeave={onRequestClose}
     >
       {/* Left column — level-2 categories */}
-      <div className="h-full w-[260px] overflow-y-auto bg-nav-mega-bg py-3 shadow-2xl">
+      <div className="h-full w-[260px] overflow-y-auto border-r border-store-border bg-nav-mega-bg py-3 shadow-2xl">
         {item.subItems?.map((sub) => (
           <div
             key={sub.href}
@@ -67,8 +67,8 @@ export function MegaMenuPanel({
                 "text-xs font-bold uppercase tracking-widest text-nav-mega-text",
                 "transition-colors select-none",
                 activeSub?.href === sub.href
-                  ? "text-white"
-                  : "hover:text-white/60",
+                  ? "bg-store-surface text-store-ink-strong"
+                  : "hover:bg-store-surface hover:text-store-fg-muted",
               )}
             >
               {sub.label}
@@ -81,7 +81,7 @@ export function MegaMenuPanel({
       {/* Right column — level-3 sub-categories of the hovered level-2 item */}
       {hasRightPanel && (
         <div
-          className="h-full w-[260px] overflow-y-auto border-l border-white/10 bg-nav-mega-bg py-3"
+          className="h-full w-[260px] overflow-y-auto border-l border-store-border bg-nav-mega-bg py-3 shadow-2xl"
           onMouseEnter={cancelSub}
           onMouseLeave={scheduleSub}
         >
@@ -90,7 +90,7 @@ export function MegaMenuPanel({
               key={child.href}
               href={child.href}
               onClick={onNavigate}
-              className="flex items-center justify-between gap-3 px-6 py-4 text-xs font-bold uppercase tracking-widest text-nav-mega-text transition-colors hover:text-white/60"
+              className="flex items-center justify-between gap-3 px-6 py-4 text-xs font-bold uppercase tracking-widest text-nav-mega-text transition-colors hover:bg-store-surface hover:text-store-fg-muted"
             >
               {child.label}
               <ChevronRightIcon className="size-4 shrink-0 opacity-30" />
