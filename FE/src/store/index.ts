@@ -11,26 +11,37 @@ import {
   persistReducer,
   persistStore,
 } from "redux-persist";
-import storage from "redux-persist/lib/storage";
 import { authReducer } from "@/features/auth/model/auth.slice";
 import { cartReducer } from "@/features/cart/model/cart.slice";
+import { productsReducer } from "@/features/products/model/products.slice";
 import { wishlistReducer } from "@/features/wishlist/model/wishlist.slice";
+import {
+  localPersistStorage,
+  sessionPersistStorage,
+} from "@/store/persist-storage";
 
 const cartPersistConfig = {
   key: "ecommerce-cart",
   version: 1,
-  storage,
+  storage: localPersistStorage,
 };
 
 const wishlistPersistConfig = {
   key: "ecommerce-wishlist",
   version: 1,
-  storage,
+  storage: localPersistStorage,
+};
+
+const productsPersistConfig = {
+  key: "ecommerce-product-cache",
+  version: 1,
+  storage: sessionPersistStorage,
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
   cart: persistReducer(cartPersistConfig, cartReducer),
+  products: persistReducer(productsPersistConfig, productsReducer),
   wishlist: persistReducer(wishlistPersistConfig, wishlistReducer),
 });
 
@@ -41,7 +52,9 @@ export function makeStore() {
       getDefaultMiddleware({
         serializableCheck: {
           ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+          warnAfter: 128,
         },
+        immutableCheck: { warnAfter: 128 },
       }),
   });
 }

@@ -1,3 +1,4 @@
+import { productListPathForCategory } from "@/features/products/lib/category-path";
 import { DEFAULT_NAV } from "@/lib/default-nav";
 import type { NavItem } from "@/types/nav";
 
@@ -66,7 +67,7 @@ export function buildNavFromCategories(categories: Category[]): NavItem[] {
           )
           .map((child) => ({
             label: child.name,
-            href: `/products?categorySlug=${child.slug}`,
+            href: productListPathForCategory(child, categories),
           }));
 
         return {
@@ -93,6 +94,27 @@ export function resolveNavItems(apiNav: NavItem[] | null): NavItem[] {
   if (catalogItems.length < MIN_CATALOG_NAV_ITEMS) return DEFAULT_NAV;
 
   return apiNav;
+}
+
+/** Server-side fetch of the flat categories catalog. */
+export async function fetchCategories(): Promise<Category[]> {
+  const baseUrl = getApiOrigin();
+
+  try {
+    const res = await fetch(`${baseUrl}/api/categories`, {
+      next:
+        process.env.NODE_ENV === "production"
+          ? { revalidate: 3600 }
+          : { revalidate: 0 },
+    });
+
+    if (!res.ok) return [];
+
+    const { categories }: { categories: Category[] } = await res.json();
+    return categories ?? [];
+  } catch {
+    return [];
+  }
 }
 
 /** Server-side fetch — returns null when API unavailable (caller uses resolveNavItems). */

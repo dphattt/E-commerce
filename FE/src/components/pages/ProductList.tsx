@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { SlidersHorizontal, X, ChevronDown, ChevronUp } from "lucide-react";
 import { IconHeart } from "@/components/icons";
 import { useWishlist } from "@/features/wishlist";
 import { useHasHydrated } from "@/shared/hooks";
-import type { ApiProduct } from "@/app/products/page";
+import {
+  productSlugFromSourceUrl,
+  useProductCache,
+  type Product,
+} from "@/features/products";
 
 type SortOption = "popular" | "low-to-high" | "high-to-low" | "newest";
 
@@ -64,7 +68,7 @@ function SortPanel({ isOpen, onToggle, sortOption, onSortChange }: SortPanelProp
 }
 
 interface ProductListProps {
-  products: ApiProduct[];
+  products: Product[];
   total: number;
   categorySlug?: string;
 }
@@ -87,6 +91,11 @@ function derivePageTitle(categorySlug?: string, categories?: string[][]): string
 export function ProductList({ products, total, categorySlug }: ProductListProps) {
   const wishlist = useWishlist();
   const hasHydrated = useHasHydrated();
+  const { cacheProduct, cacheProducts } = useProductCache();
+
+  useEffect(() => {
+    cacheProducts(products);
+  }, [products, cacheProducts]);
 
   const [sortOption, setSortOption] = useState<SortOption>("popular");
   const [isSortOpen, setIsSortOpen] = useState(true);
@@ -182,13 +191,14 @@ export function ProductList({ products, total, categorySlug }: ProductListProps)
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-y-10 gap-x-6 w-full">
-              {sorted.map((product) => {
+              {sorted.map((product, index) => {
                 const primaryImg = product.imageUrls[0] ?? "";
                 const hoverImg = product.imageUrls[1] ?? primaryImg;
                 const isHovered = hoveredId === product._id;
                 const isWishlisted =
                   hasHydrated && wishlist.isWishlisted(product._id);
                 const categoryLabel = deriveCategoryLabel(product.categories);
+                const slug = productSlugFromSourceUrl(product.sourceUrl);
 
                 return (
                   <article
@@ -224,7 +234,8 @@ export function ProductList({ products, total, categorySlug }: ProductListProps)
                       </button>
 
                       <Link
-                        href={`/products/${product._id}`}
+                        href={`/products/${slug}`}
+                        onClick={() => cacheProduct(product)}
                         className="absolute inset-0 block overflow-hidden rounded-2xl"
                       >
                         {/* Primary image — fades out + zooms in gently */}
@@ -234,6 +245,7 @@ export function ProductList({ products, total, categorySlug }: ProductListProps)
                               src={primaryImg}
                               alt={product.title}
                               fill
+                              priority={index < 3}
                               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                               className={`object-cover transition-[opacity,transform] duration-500 ease-out ${
                                 isHovered
@@ -271,7 +283,8 @@ export function ProductList({ products, total, categorySlug }: ProductListProps)
                       )}
                       <div className="flex items-start justify-between gap-4">
                         <Link
-                          href={`/products/${product._id}`}
+                          href={`/products/${slug}`}
+                          onClick={() => cacheProduct(product)}
                           className="hover:underline"
                         >
                           <h3 className="font-black text-sm uppercase text-store-ink-strong tracking-tight line-clamp-2 leading-snug">

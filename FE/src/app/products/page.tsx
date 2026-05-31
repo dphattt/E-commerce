@@ -1,52 +1,30 @@
+import { redirect } from "next/navigation";
 import { ProductList } from "@/components/pages/ProductList";
-
-export interface ApiProduct {
-  _id: string;
-  title: string;
-  price: { amount: number; currency: string };
-  imageUrls: string[];
-  localImagePaths: string[];
-  categories: string[];
-  scrapedAt: string;
-}
+import { fetchProductList } from "@/features/products/api/products.api";
+import { productListPathForCategory } from "@/features/products/lib/category-path";
+import { fetchCategories } from "@/lib/nav-categories";
 
 interface PageProps {
   searchParams: Promise<{ categorySlug?: string; limit?: string; skip?: string }>;
 }
 
-async function fetchProducts(
-  categorySlug?: string,
-  limit = 40,
-  skip = 0,
-): Promise<{ products: ApiProduct[]; total: number }> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_API ?? "http://localhost:3001";
-
-  const params = new URLSearchParams({ limit: String(limit), skip: String(skip) });
-  if (categorySlug) params.set("categorySlug", categorySlug);
-
-  try {
-    const res = await fetch(`${baseUrl}/api/products?${params}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return { products: [], total: 0 };
-    const data = await res.json();
-    return { products: data.products ?? [], total: data.total ?? 0 };
-  } catch {
-    return { products: [], total: 0 };
-  }
-}
-
 export default async function ProductListPage({ searchParams }: PageProps) {
   const { categorySlug } = await searchParams;
-  const { products, total } = await fetchProducts(categorySlug);
+
+  if (categorySlug) {
+    const categories = await fetchCategories();
+    const category = categories.find((c) => c.slug === categorySlug);
+
+    if (category) {
+      redirect(productListPathForCategory(category, categories));
+    }
+  }
+
+  const { products, total } = await fetchProductList();
 
   return (
     <main className="w-full flex-1 bg-store-paper">
-      <ProductList
-        products={products}
-        total={total}
-        categorySlug={categorySlug}
-      />
+      <ProductList products={products} total={total} />
     </main>
   );
 }
