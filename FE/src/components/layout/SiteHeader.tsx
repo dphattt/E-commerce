@@ -143,7 +143,7 @@ export function SiteHeader({
       >
         {/* Announcement */}
         <div className="border-b border-store-border/80 bg-store-surface">
-          <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 sm:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-400 items-center gap-2 px-4 py-2 sm:px-6 lg:px-8">
             <div className="min-w-0 flex-1 overflow-x-auto text-center">
               <p className="inline-block min-w-0 whitespace-nowrap text-xs sm:text-sm">
                 <Link
@@ -175,9 +175,9 @@ export function SiteHeader({
 
         {/* Main bar */}
         <div className="border-b border-store-border/80">
-          <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6 lg:px-8">
+          <div className="mx-auto flex max-w-400 items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-6 lg:px-8">
             {/* Left: hamburger (mobile) + desktop nav */}
-            <div className="flex min-w-0 items-center gap-2 lg:min-w-[200px]">
+            <div className="flex min-w-0 items-center gap-2 lg:min-w-50">
               <button
                 type="button"
                 className={cn(
@@ -262,7 +262,7 @@ export function SiteHeader({
 
             {/* Right: search + icons */}
             <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2 lg:min-w-0 lg:justify-end lg:gap-3">
-              <div className="hidden min-w-0 max-w-md flex-1 lg:block lg:max-w-[320px] lg:flex-none xl:max-w-[380px]">
+              <div className="hidden min-w-0 max-w-md flex-1 lg:block lg:max-w-[320px] lg:flex-none xl:max-w-95">
                 <form
                   className="relative"
                   onSubmit={(e) => {

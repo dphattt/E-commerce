@@ -17,7 +17,7 @@ import { useHasHydrated } from "@/shared/hooks";
 
 function EmptyBagIllustration() {
   return (
-    <div className="mx-auto flex size-[120px] items-center justify-center rounded-lg bg-zinc-700">
+    <div className="mx-auto flex size-30 items-center justify-center rounded-lg bg-zinc-700">
       <svg
         viewBox="0 0 60 60"
         fill="none"
@@ -39,9 +39,10 @@ function EmptyBagIllustration() {
 
 function formatMoney(amount: number, currency: string) {
   try {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(
-      amount,
-    );
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    }).format(amount);
   } catch {
     return `${currency} ${amount.toFixed(2)}`;
   }
@@ -144,10 +145,10 @@ export function CartDrawer() {
       <SheetTrigger asChild>
         <button
           type="button"
-          className="relative inline-flex size-10 items-center justify-center rounded-full hover:bg-store-surface"
+          className="relative inline-flex size-7 items-center justify-center rounded-full hover:bg-store-surface"
           aria-label={`Shopping cart${visibleCount > 0 ? `, ${visibleCount} items` : ""}`}
         >
-          <IconBag className="size-6" />
+          <IconBag className="size-5" />
           {visibleCount > 0 && (
             <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-store-accent text-[10px] font-semibold leading-none text-store-on-accent">
               {visibleCount > 9 ? "9+" : visibleCount}
@@ -159,7 +160,7 @@ export function CartDrawer() {
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="flex w-full flex-col gap-0 border-0 bg-zinc-900 p-0 text-white sm:max-w-[500px]"
+        className="flex w-full flex-col gap-0 border-0 bg-zinc-900 p-0 text-white sm:max-w-125"
       >
         <SheetHeader className="flex flex-row items-center justify-between border-b border-zinc-700 px-5 py-4">
           <div>
