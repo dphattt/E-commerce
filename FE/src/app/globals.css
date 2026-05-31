@@ -9,8 +9,6 @@
   Utilities: bg-store-paper, text-store-ink, border-store-border, bg-store-accent, …
 */
 :root {
-  --nav-mega-bg: #ffffff;
-  --nav-mega-text: #0a0a0a;
   --store-paper: #ffffff;
   --store-ink: #0a0a0a;
   --store-ink-strong: #000000;
@@ -61,8 +59,6 @@
 }
 
 @theme inline {
-  --color-nav-mega-bg: var(--nav-mega-bg);
-  --color-nav-mega-text: var(--nav-mega-text);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -122,8 +118,6 @@
 }
 
 html.dark {
-  --nav-mega-bg: #0a0a0a;
-  --nav-mega-text: #fafafa;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --store-paper: #0a0a0a;
