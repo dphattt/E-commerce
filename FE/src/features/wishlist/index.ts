@@ -1,4 +1,5 @@
 export { useWishlist } from "@/features/wishlist/model/useWishlist";
+export { useResolvedWishlistItems } from "@/features/wishlist/hooks/useResolvedWishlistItems";
 export {
   add,
   clear,

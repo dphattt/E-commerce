@@ -1,3 +1,4 @@
+import Script from "next/script";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 
 /** Runs before paint to avoid theme flash on load. */
@@ -20,9 +21,10 @@ export function ThemeScript() {
 `;
 
   return (
-    <script
+    <Script
+      id="theme-init"
+      strategy="beforeInteractive"
       dangerouslySetInnerHTML={{ __html: script }}
-      suppressHydrationWarning
     />
   );
 }
