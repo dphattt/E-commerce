@@ -1,41 +1,45 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { AuthFloatingInput } from "@/components/auth/AuthFloatingInput";
 import {
   authSubmitButtonClassName,
   getAuthFormErrorMessage,
 } from "@/components/auth/auth-form-shared";
 import { GymsharkLogo } from "@/components/auth/GymsharkLogo";
+import { loginSchema, type LoginFormValues } from "@/components/auth/validate";
 import { loginApi } from "@/features/auth/api/auth.api";
 import { useAuth } from "@/features/auth/model/useAuth";
 
 export function LoginForm() {
   const router = useRouter();
   const { setSession } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    mode: "onTouched",
+  });
 
+  async function onSubmit(values: LoginFormValues) {
+    setServerError(null);
     try {
-      const { token, user } = await loginApi(email, password);
+      const { token, user } = await loginApi(values.email, values.password);
       setSession(user, token);
       router.push("/account");
       router.refresh();
     } catch (err) {
-      setError(getAuthFormErrorMessage(err));
-    } finally {
-      setIsSubmitting(false);
+      setServerError(getAuthFormErrorMessage(err));
     }
   }
 
@@ -53,7 +57,7 @@ export function LoginForm() {
       </p>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="mt-10 flex w-full flex-col gap-4"
         noValidate
       >
@@ -61,22 +65,18 @@ export function LoginForm() {
           id="login-email"
           label="Email address*"
           type="email"
-          name="email"
           autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          error={errors.email?.message}
+          {...register("email")}
         />
 
         <AuthFloatingInput
           id="login-password"
           label="Password*"
           type={showPassword ? "text" : "password"}
-          name="password"
           autoComplete="current-password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          error={errors.password?.message}
+          {...register("password")}
           endAdornment={
             <button
               type="button"
@@ -102,9 +102,9 @@ export function LoginForm() {
           </Link>
         </div>
 
-        {error ? (
+        {serverError ? (
           <p role="alert" className="text-center text-sm text-destructive">
-            {error}
+            {serverError}
           </p>
         ) : null}
 

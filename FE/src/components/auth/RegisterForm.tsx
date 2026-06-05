@@ -1,53 +1,48 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { AuthFloatingInput } from "@/components/auth/AuthFloatingInput";
 import {
   authSubmitButtonClassName,
   getAuthFormErrorMessage,
 } from "@/components/auth/auth-form-shared";
 import { GymsharkLogo } from "@/components/auth/GymsharkLogo";
+import { registerSchema, type RegisterFormValues } from "@/components/auth/validate";
 import { registerApi } from "@/features/auth/api/auth.api";
 import { useAuth } from "@/features/auth/model/useAuth";
 
 export function RegisterForm() {
   const router = useRouter();
   const { setSession } = useAuth();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    mode: "onTouched",
+  });
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    const name = [firstName.trim(), lastName.trim()].filter(Boolean).join(" ");
-
+  async function onSubmit(values: RegisterFormValues) {
+    setServerError(null);
+    const name = [values.firstName?.trim(), values.lastName?.trim()]
+      .filter(Boolean)
+      .join(" ");
     try {
-      const { token, user } = await registerApi({ email, password, name });
+      const { token, user } = await registerApi({ email: values.email, password: values.password, name });
       setSession(user, token);
       router.push("/account");
       router.refresh();
     } catch (err) {
-      setError(getAuthFormErrorMessage(err));
-    } finally {
-      setIsSubmitting(false);
+      setServerError(getAuthFormErrorMessage(err));
     }
   }
 
@@ -64,7 +59,7 @@ export function RegisterForm() {
       </p>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         className="mt-10 flex w-full flex-col gap-4"
         noValidate
       >
@@ -72,53 +67,68 @@ export function RegisterForm() {
           id="register-first-name"
           label="First Name"
           type="text"
-          name="firstName"
           autoComplete="given-name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
+          error={errors.firstName?.message}
+          {...register("firstName")}
         />
 
         <AuthFloatingInput
           id="register-last-name"
           label="Last Name"
           type="text"
-          name="lastName"
           autoComplete="family-name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
+          error={errors.lastName?.message}
+          {...register("lastName")}
         />
 
         <AuthFloatingInput
           id="register-dob"
           label="Date Of Birth"
           type="text"
-          name="dateOfBirth"
           autoComplete="bday"
-          value={dateOfBirth}
-          onChange={(e) => setDateOfBirth(e.target.value)}
+          error={errors.dateOfBirth?.message}
+          {...register("dateOfBirth")}
         />
 
         <AuthFloatingInput
           id="register-email"
           label="Email address*"
           type="email"
-          name="email"
           autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          error={errors.email?.message}
+          {...register("email")}
         />
 
         <AuthFloatingInput
           id="register-password"
           label="Password*"
           type={showPassword ? "text" : "password"}
-          name="password"
           autoComplete="new-password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          error={errors.password?.message}
+          {...register("password")}
+          endAdornment={
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="text-store-fg-muted hover:text-store-ink"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeOff className="size-5" strokeWidth={1.5} />
+              ) : (
+                <Eye className="size-5" strokeWidth={1.5} />
+              )}
+            </button>
+          }
+        />
+
+        <AuthFloatingInput
+          id="register-confirm-password"
+          label="Confirm Password"
+          type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+          error={errors.confirmPassword?.message}
+          {...register("confirmPassword")}
           endAdornment={
             <button
               type="button"
@@ -138,9 +148,8 @@ export function RegisterForm() {
         <label className="flex cursor-pointer items-start gap-3 text-left text-xs leading-relaxed text-store-fg-muted">
           <input
             type="checkbox"
-            checked={marketingOptIn}
-            onChange={(e) => setMarketingOptIn(e.target.checked)}
             className="mt-0.5 size-4 shrink-0 rounded border-store-border accent-store-ink-strong"
+            {...register("marketingOptIn")}
           />
           <span>
             Tick here to receive emails about our products, apps, sales,
@@ -154,9 +163,9 @@ export function RegisterForm() {
           </span>
         </label>
 
-        {error ? (
+        {serverError ? (
           <p role="alert" className="text-center text-sm text-destructive">
-            {error}
+            {serverError}
           </p>
         ) : null}
 

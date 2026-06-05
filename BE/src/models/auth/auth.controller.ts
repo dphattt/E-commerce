@@ -1,6 +1,7 @@
 import type { CookieOptions, NextFunction, Request, Response } from "express";
 import { createHash, randomBytes } from "node:crypto";
 import User from "@/models/users/User.model";
+import RefreshToken from "@/models/auth/Auth.model";
 import {
   signAccessToken,
   signRefreshToken,
@@ -32,10 +33,21 @@ function refreshCookieOptions(): CookieOptions {
   };
 }
 
-function issueTokens(res: Response, payload: JwtPayload): string {
+async function issueTokens(
+  res: Response,
+  payload: JwtPayload,
+): Promise<string> {
   const accessToken = signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);
   res.cookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions());
+
+  await RefreshToken.create({
+    tokenHash: hashResetToken(refreshToken),
+    userId: payload.sub,
+    userEmail: payload.email,
+    expiresAt: new Date(Date.now() + SEVEN_DAYS_MS),
+  });
+
   return accessToken;
 }
 
@@ -74,7 +86,7 @@ export async function register(
       name,
     });
 
-    const token = issueTokens(res, { sub: user.id, email: user.email });
+    const token = await issueTokens(res, { sub: user.id, email: user.email });
     res.status(201).json({
       token,
       user: { id: user.id, email: user.email, name: user.name },
@@ -98,7 +110,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       throw httpError("Invalid credentials", 401);
     }
 
-    const token = issueTokens(res, { sub: user.id, email: user.email });
+    const token = await issueTokens(res, { sub: user.id, email: user.email });
     res.json({
       token,
       user: { id: user.id, email: user.email, name: user.name },
@@ -130,7 +142,18 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
       throw httpError("Invalid or expired refresh token", 401);
     }
 
-    const accessToken = issueTokens(res, {
+    // Kiểm tra token có tồn tại trong DB không (revocation check)
+    const stored = await RefreshToken.findOneAndDelete({
+      tokenHash: hashResetToken(token),
+    });
+    if (!stored) {
+      // Token đã bị revoke hoặc không hợp lệ — xoá cookie
+      res.clearCookie(REFRESH_COOKIE, refreshCookieOptions());
+      throw httpError("Refresh token revoked", 401);
+    }
+
+    // Rotation: issue hoàn toàn token mới
+    const accessToken = await issueTokens(res, {
       sub: payload.sub,
       email: payload.email,
     });
@@ -145,12 +168,24 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
  * Clears the refresh cookie. The client is also expected to drop its
  * in-memory access token.
  */
-export function logout(_req: Request, res: Response) {
-  res.clearCookie(REFRESH_COOKIE, {
-    ...refreshCookieOptions(),
-    maxAge: undefined,
-  });
-  res.status(204).end();
+export async function logout(req: Request, res: Response, next: NextFunction) {
+  try {
+    const cookies = (req as Request & { cookies?: Record<string, string> })
+      .cookies;
+    const token = cookies?.[REFRESH_COOKIE];
+
+    if (token) {
+      await RefreshToken.deleteOne({ tokenHash: hashResetToken(token) });
+    }
+
+    res.clearCookie(REFRESH_COOKIE, {
+      ...refreshCookieOptions(),
+      maxAge: undefined,
+    });
+    res.status(204).end();
+  } catch (e) {
+    next(e);
+  }
 }
 
 export async function forgotPassword(
