@@ -9,6 +9,9 @@ interface ICartItem {
   sku: string;
   quantity: number;
   unitPrice: IUnitPrice;
+  name: string;
+  image: string;
+  variantLabel?: string;
 }
 
 interface ICart extends Document {
@@ -31,6 +34,9 @@ const cartItemSchema = new Schema<ICartItem>(
     sku: { type: String, required: true, trim: true },
     quantity: { type: Number, required: true, min: 1, default: 1 },
     unitPrice: { type: unitPriceSchema, required: true },
+    name: { type: String, required: true, trim: true },
+    image: { type: String, required: true, trim: true },
+    variantLabel: { type: String, trim: true },
   },
   { _id: false },
 );

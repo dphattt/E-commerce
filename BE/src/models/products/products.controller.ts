@@ -27,6 +27,20 @@ export async function getProducts(
   }
 }
 
+export async function getProductBySlug(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { slug } = req.params as { slug: string };
+    const product = await productsService.getProductBySlug(slug);
+    res.json({ product });
+  } catch (e) {
+    next(e);
+  }
+}
+
 export async function getProductById(
   req: Request,
   res: Response,

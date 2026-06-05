@@ -1,4 +1,4 @@
-import type { ProductListResponse } from "@/features/products/model/product.types";
+import type { ProductDetailResponse, ProductListResponse } from "@/features/products/model/product.types";
 import { getApiOrigin } from "@/lib/nav-categories";
 
 const productsApiUrl = (query?: string): string => {
@@ -54,4 +54,19 @@ export async function fetchRecentProducts(options?: {
   }
 
   return (await res.json()) as ProductListResponse;
+}
+
+/**
+ * Fetch a single product with full variant enrichment (sizes + SKUs).
+ * Used by the product detail page to get real SKUs for the cart.
+ */
+export async function fetchProductBySlug(
+  slug: string,
+): Promise<ProductDetailResponse> {
+  const url = `${getApiOrigin()}/api/products/slug/${encodeURIComponent(slug)}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch product: ${res.status} ${res.statusText}`);
+  }
+  return (await res.json()) as ProductDetailResponse;
 }

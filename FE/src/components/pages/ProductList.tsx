@@ -635,9 +635,9 @@ export function ProductList({
               const primaryImg = product.imageUrls[0] ?? "";
               const hoverImg = product.imageUrls[1] ?? primaryImg;
               const isHovered = hoveredFeaturedId === product._id;
-              const isWishlisted =
-                hasHydrated && wishlist.isWishlisted(product._id);
               const slug = productSlugFromSourceUrl(product.sourceUrl);
+              const isWishlisted =
+                hasHydrated && wishlist.isWishlisted(slug);
               const badge =
                 idx % 2 === 0 ? "MOST POPULAR" : idx === 1 ? "NEW" : null;
 
@@ -662,7 +662,7 @@ export function ProductList({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        wishlist.toggle(product._id);
+                        wishlist.toggle(slug);
                       }}
                       className="absolute top-3 right-3 z-10 flex items-center justify-center size-9 rounded-full bg-store-paper hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
                       aria-label={
@@ -804,10 +804,10 @@ export function ProductList({
                 const primaryImg = product.imageUrls[0] ?? "";
                 const hoverImg = product.imageUrls[1] ?? primaryImg;
                 const isHovered = hoveredId === product._id;
-                const isWishlisted =
-                  hasHydrated && wishlist.isWishlisted(product._id);
-                const categoryLabel = deriveCategoryLabel(product.categories);
                 const slug = productSlugFromSourceUrl(product.sourceUrl);
+                const isWishlisted =
+                  hasHydrated && wishlist.isWishlisted(slug);
+                const categoryLabel = deriveCategoryLabel(product.categories);
 
                 return (
                   <article
@@ -823,7 +823,7 @@ export function ProductList({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          wishlist.toggle(product._id);
+                          wishlist.toggle(slug);
                         }}
                         className="absolute top-3 right-3 z-10 flex items-center justify-center size-9 rounded-full bg-store-paper hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
                         aria-label={

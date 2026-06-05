@@ -187,3 +187,13 @@ export async function getProductById(id: string) {
     variants: Array.from(colorVariantsMap.values()),
   };
 }
+
+/**
+ * Same enrichment as getProductById but looks up by URL slug instead of _id.
+ */
+export async function getProductBySlug(slug: string) {
+  const product = await productsRepo.findProductBySlug(slug);
+  if (!product) throw httpError("Product not found", 404);
+  // Reuse the same enrichment logic via getProductById
+  return getProductById(String(product._id));
+}

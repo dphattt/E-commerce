@@ -8,10 +8,15 @@ import {
   toggle as toggleAction,
 } from "@/features/wishlist/model/wishlist.slice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useAuth } from "@/features/auth/model/useAuth";
 
 export function useWishlist() {
   const dispatch = useAppDispatch();
-  const slugs = useAppSelector((s) => s.wishlist.slugs);
+  const { isAuthenticated } = useAuth();
+  const rawSlugs = useAppSelector((s) => s.wishlist.slugs);
+
+  // Khi không authenticated, luôn trả về empty — không show wishlist của user cũ
+  const slugs = isAuthenticated ? rawSlugs : [];
 
   const toggle = useCallback(
     (slug: string) => dispatch(toggleAction(slug)),

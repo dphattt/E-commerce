@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/features/auth";
 import { logoutApi } from "@/features/auth/api/auth.api";
+import { cartApi } from "@/features/cart";
+import { useAppDispatch } from "@/store/hooks";
+import { clear as clearWishlist } from "@/features/wishlist/model/wishlist.slice";
 
 function SignOutIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -28,6 +31,7 @@ function SignOutIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export function SignOutButton() {
   const { clearSession } = useAuth();
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -38,6 +42,9 @@ export function SignOutButton() {
     try {
       await logoutApi();
     } finally {
+      // Reset cả cart cache và wishlist đồng bộ TRƯỚC clearSession
+      dispatch(cartApi.util.resetApiState());
+      dispatch(clearWishlist());
       clearSession();
       router.push("/");
       router.refresh();

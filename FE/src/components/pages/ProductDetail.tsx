@@ -1,9 +1,16 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCachedProduct } from "@/features/products";
+import { useAppDispatch } from "@/store/hooks";
+import { cacheProduct } from "@/features/products/model/products.slice";
+import { fetchProductBySlug } from "@/features/products/api/products.api";
+import { useCart } from "@/features/cart";
+import { useAuth } from "@/features/auth/model/useAuth";
+import { useWishlist } from "@/features/wishlist";
+import { useRouter } from "next/navigation";
 
 function IconHeart(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -59,8 +66,25 @@ function categoryLabel(categories: string[]) {
 
 export function ProductDetail({ slug }: ProductDetailProps) {
   const product = useCachedProduct(slug);
+  const dispatch = useAppDispatch();
+  const { addItem } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { isWishlisted, toggle: toggleWishlist } = useWishlist();
+  const router = useRouter();
+
+  // Fetch full product detail (with real variant SKUs) on mount.
+  // The list endpoint doesn't include variants, so we fetch them here.
+  useEffect(() => {
+    fetchProductBySlug(slug)
+      .then(({ product: full }) => dispatch(cacheProduct(full)))
+      .catch(() => {
+        // Non-critical: fall back to cached product from list
+      });
+  }, [slug, dispatch]);
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [sizeError, setSizeError] = useState(false);
+  const [addedFeedback, setAddedFeedback] = useState(false);
   const [activeAccordion, setActiveAccordion] = useState<string | null>(
     "description",
   );
@@ -83,6 +107,47 @@ export function ProductDetail({ slug }: ProductDetailProps) {
   const toggleAccordion = (id: string) => {
     setActiveAccordion(activeAccordion === id ? null : id);
   };
+
+  function handleAddToBag() {
+    if (!isAuthenticated) {
+      router.push("/account/login");
+      return;
+    }
+    if (!selectedSize) {
+      setSizeError(true);
+      return;
+    }
+    if (!product) return;
+
+    // Dùng real variant size nếu có, fallback về placeholder
+    const variantSizes =
+      product.variants && product.variants.length > 0
+        ? product.variants[0].sizes
+        : PLACEHOLDER_SIZES.map((s) => ({
+            ...s,
+            sku: `${product._id}-${s.id}`,
+          }));
+
+    const sizeObj = variantSizes.find((s) => s.id === selectedSize);
+    const sku = sizeObj?.sku ?? `${product._id}-${selectedSize}`;
+    const variantImage =
+      product.variants && product.variants.length > 0
+        ? product.variants[0].image
+        : product.imageUrls[0] ?? "";
+
+    addItem({
+      sku,
+      name: product.title,
+      image: variantImage,
+      variantLabel: sizeObj?.label ?? selectedSize.toUpperCase(),
+      quantity: 1,
+      unitPrice: product.price,
+    });
+
+    setSizeError(false);
+    setAddedFeedback(true);
+    setTimeout(() => setAddedFeedback(false), 2000);
+  }
 
   if (!product) {
     return (
@@ -107,6 +172,14 @@ export function ProductDetail({ slug }: ProductDetailProps) {
     product.imageUrls.length > 0 ? product.imageUrls : [""];
   const subtitle = categoryLabel(product.categories);
   const priceLabel = formatPrice(product.price.amount, product.price.currency);
+
+  const displaySizes =
+    product.variants && product.variants.length > 0
+      ? product.variants[0].sizes
+      : PLACEHOLDER_SIZES.map((s) => ({
+          ...s,
+          sku: `${product._id}-${s.id}`,
+        }));
 
   return (
     <div className="flex flex-col gap-4">
@@ -180,8 +253,18 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                 <h1 className="text-3xl font-black uppercase italic leading-[0.9] tracking-tighter text-store-ink-strong xl:text-4xl">
                   {product.title}
                 </h1>
-                <button className="group rounded-full border border-store-border p-2.5 transition-colors hover:border-store-ink-strong">
-                  <IconHeart className="size-6 text-store-ink transition-transform group-hover:scale-110" />
+                <button
+                  onClick={() => toggleWishlist(slug)}
+                  aria-label={isWishlisted(slug) ? "Remove from wishlist" : "Add to wishlist"}
+                  className="group rounded-full border border-store-border p-2.5 transition-colors hover:border-store-ink-strong"
+                >
+                  <IconHeart
+                    className={`size-6 transition-transform group-hover:scale-110 ${
+                      isWishlisted(slug)
+                        ? "fill-red-500 stroke-red-500"
+                        : "text-store-ink"
+                    }`}
+                  />
                 </button>
               </div>
               {subtitle && (
@@ -194,7 +277,7 @@ export function ProductDetail({ slug }: ProductDetailProps) {
               </p>
             </div>
 
-            {/* Size Selection — placeholder until variant API */}
+            {/* Size Selection */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-[11px] font-black uppercase tracking-widest text-store-ink-strong">
@@ -205,11 +288,14 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                {PLACEHOLDER_SIZES.map((size) => (
+                {displaySizes.map((size) => (
                   <button
                     key={size.id}
                     disabled={!size.inStock}
-                    onClick={() => setSelectedSize(size.id)}
+                    onClick={() => {
+                      setSelectedSize(size.id);
+                      setSizeError(false);
+                    }}
                     className={`flex h-12 items-center justify-center border text-sm font-bold uppercase transition-all duration-200 ${
                       selectedSize === size.id
                         ? "border-store-ink-strong bg-store-ink-strong text-store-paper"
@@ -220,11 +306,19 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                   </button>
                 ))}
               </div>
+              {sizeError && (
+                <p className="text-xs font-semibold text-destructive">
+                  Please select a size before adding to bag.
+                </p>
+              )}
             </div>
 
             <div className="space-y-4">
-              <button className="w-full bg-store-accent hover:bg-store-accent-hover text-store-on-accent h-16 text-sm font-black uppercase tracking-[0.2em] transition-all rounded shadow-sm active:scale-[0.98]">
-                Add to Bag
+              <button
+                onClick={handleAddToBag}
+                className="w-full bg-store-accent hover:bg-store-accent-hover text-store-on-accent h-16 text-sm font-black uppercase tracking-[0.2em] transition-all rounded shadow-sm active:scale-[0.98]"
+              >
+                {addedFeedback ? "Added!" : "Add to Bag"}
               </button>
               <div className="flex items-center justify-center gap-6 py-2 border-y border-store-border/50">
                 <div className="flex items-center gap-2">

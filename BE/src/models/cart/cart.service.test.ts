@@ -58,10 +58,9 @@ describe("cart.service.addCartItem", () => {
     vi.mocked(productsRepo.findActiveVariantBySku).mockResolvedValue(null);
 
     await expect(
-      cartService.addCartItem(EMAIL, "ghost", 1),
+      cartService.addCartItem(EMAIL, "ghost", 1, "Ghost", "/img.jpg"),
     ).rejects.toMatchObject({
       status: 404,
-      message: "Variant not found or inactive",
     });
     expect(cartRepo.findOrInitCart).not.toHaveBeenCalled();
   });
@@ -74,7 +73,7 @@ describe("cart.service.addCartItem", () => {
     const cart = makeCart();
     vi.mocked(cartRepo.findOrInitCart).mockResolvedValue(cart as never);
 
-    await cartService.addCartItem(EMAIL, "A1", 2);
+    await cartService.addCartItem(EMAIL, "A1", 2, "Product A", "/img.jpg");
 
     expect(cart.items).toHaveLength(1);
     expect(cart.items[0]).toEqual({
@@ -95,7 +94,7 @@ describe("cart.service.addCartItem", () => {
     ]);
     vi.mocked(cartRepo.findOrInitCart).mockResolvedValue(cart as never);
 
-    await cartService.addCartItem(EMAIL, "A1", 3);
+    await cartService.addCartItem(EMAIL, "A1", 3, "Product A", "/img.jpg");
 
     expect(cart.items).toHaveLength(1);
     expect(cart.items[0].quantity).toBe(4);

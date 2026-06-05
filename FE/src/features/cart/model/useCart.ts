@@ -1,42 +1,36 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import {
-  addItem as addItemAction,
-  clear as clearAction,
-  removeItem as removeItemAction,
-  updateQuantity as updateQuantityAction,
-} from "@/features/cart/model/cart.slice";
+  useGetCartQuery,
+  useAddItemMutation,
+  useUpdateItemMutation,
+  useRemoveItemMutation,
+  useClearCartMutation,
+} from "@/features/cart/api/cart.api";
 import type { CartItem, CartSnapshot } from "@/features/cart/model/cart.types";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useAuth } from "@/features/auth/model/useAuth";
 
-/**
- * High-level cart hook used by widgets and pages. Computes the
- * derived snapshot (count, subtotal) on top of the raw store state.
- */
 export function useCart(): CartSnapshot & {
+  isLoading: boolean;
   addItem: (item: CartItem) => void;
   removeItem: (sku: string) => void;
   updateQuantity: (sku: string, quantity: number) => void;
   clear: () => void;
 } {
-  const dispatch = useAppDispatch();
-  const items = useAppSelector((s) => s.cart.items);
+  const { isAuthenticated } = useAuth();
 
-  const addItem = useCallback(
-    (item: CartItem) => dispatch(addItemAction(item)),
-    [dispatch],
-  );
-  const removeItem = useCallback(
-    (sku: string) => dispatch(removeItemAction(sku)),
-    [dispatch],
-  );
-  const updateQuantity = useCallback(
-    (sku: string, quantity: number) =>
-      dispatch(updateQuantityAction({ sku, quantity })),
-    [dispatch],
-  );
-  const clear = useCallback(() => dispatch(clearAction()), [dispatch]);
+  const { data: cart, isLoading } = useGetCartQuery(undefined, {
+    skip: !isAuthenticated,
+  });
+
+  const [addItemMutation] = useAddItemMutation();
+  const [updateItemMutation] = useUpdateItemMutation();
+  const [removeItemMutation] = useRemoveItemMutation();
+  const [clearCartMutation] = useClearCartMutation();
+
+  // Khi không authenticated, luôn trả về empty — không dùng cached data
+  const items = isAuthenticated ? (cart?.items ?? []) : [];
 
   const snapshot = useMemo<CartSnapshot>(() => {
     const count = items.reduce((sum, i) => sum + i.quantity, 0);
@@ -45,12 +39,24 @@ export function useCart(): CartSnapshot & {
       (sum, i) => sum + i.unitPrice.amount * i.quantity,
       0,
     );
-    return {
-      items,
-      count,
-      subtotal: { amount, currency },
-    };
+    return { items, count, subtotal: { amount, currency } };
   }, [items]);
 
-  return { ...snapshot, addItem, removeItem, updateQuantity, clear };
+  return {
+    ...snapshot,
+    isLoading,
+    addItem: (item: CartItem) =>
+      void addItemMutation({
+        sku: item.sku,
+        quantity: item.quantity,
+        name: item.name,
+        image: item.image,
+        variantLabel: item.variantLabel,
+      }),
+    removeItem: (sku: string) => void removeItemMutation(sku),
+    updateQuantity: (sku: string, quantity: number) =>
+      void updateItemMutation({ sku, quantity }),
+    clear: () => void clearCartMutation(),
+  };
 }
+

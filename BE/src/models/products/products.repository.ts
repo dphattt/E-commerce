@@ -17,6 +17,15 @@ export async function findActiveVariantBySku(
 }
 
 /**
+ * All active variants for a given product (by sourceUrl).
+ */
+export async function findVariantsBySourceUrl(sourceUrl: string) {
+  return ProductVariant.find({ productSourceUrl: sourceUrl, isActive: true })
+    .select("sku color size price isActive")
+    .lean();
+}
+
+/**
  * Recent products for the catalog landing.
  */
 export async function findRecentProducts(limit: number) {
@@ -70,5 +79,14 @@ export async function findProductById(id: string) {
  * external content).
  */
 export async function findProductBySourceUrl(sourceUrl: string) {
+  return Product.findOne({ sourceUrl }).lean();
+}
+
+/**
+ * Find a product by its URL slug (the path after /products/ in the sourceUrl).
+ * Reconstructs the full Gymshark sourceUrl to do the lookup.
+ */
+export async function findProductBySlug(slug: string) {
+  const sourceUrl = `https://www.gymshark.com/products/${slug}`;
   return Product.findOne({ sourceUrl }).lean();
 }

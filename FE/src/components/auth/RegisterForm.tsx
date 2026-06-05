@@ -29,6 +29,12 @@ export function RegisterForm() {
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     mode: "onTouched",
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
+      marketingOptIn: false,
+    },
   });
 
   async function onSubmit(values: RegisterFormValues) {

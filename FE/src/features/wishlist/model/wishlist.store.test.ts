@@ -23,7 +23,6 @@ describe("wishlist slice toggle", () => {
   it("removes a slug when present", () => {
     const store = createTestStore({
       wishlist: { slugs: ["hoodie"] },
-      cart: { items: [] },
       auth: { user: null },
     });
     store.dispatch(toggle("hoodie"));
@@ -42,7 +41,6 @@ describe("wishlist slice add and remove", () => {
   it("remove drops one slug", () => {
     const store = createTestStore({
       wishlist: { slugs: ["a", "b", "c"] },
-      cart: { items: [] },
       auth: { user: null },
     });
     store.dispatch(remove("b"));
@@ -54,7 +52,6 @@ describe("wishlist slice has and clear", () => {
   it("selectWishlistHas reflects membership", () => {
     const store = createTestStore({
       wishlist: { slugs: ["a"] },
-      cart: { items: [] },
       auth: { user: null },
     });
     const slugs = wishlistSlugs(store);
@@ -65,7 +62,6 @@ describe("wishlist slice has and clear", () => {
   it("clear empties the list", () => {
     const store = createTestStore({
       wishlist: { slugs: ["a", "b"] },
-      cart: { items: [] },
       auth: { user: null },
     });
     store.dispatch(clear());

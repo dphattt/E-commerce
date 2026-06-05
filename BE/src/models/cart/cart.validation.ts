@@ -3,6 +3,9 @@ import { z } from "zod";
 export const addItemBodySchema = z.object({
   sku: z.string().trim().min(1, "sku is required"),
   quantity: z.number().int().min(1).default(1),
+  name: z.string().trim().min(1, "name is required"),
+  image: z.string().trim().min(1, "image is required"),
+  variantLabel: z.string().trim().optional(),
 });
 
 export const updateItemBodySchema = z.object({
