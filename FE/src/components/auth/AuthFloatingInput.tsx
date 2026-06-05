@@ -9,6 +9,7 @@ export type AuthFloatingInputProps = Omit<
 > & {
   label: string;
   endAdornment?: ReactNode;
+  error?: string;
 };
 
 const labelBase =
@@ -23,6 +24,7 @@ export function AuthFloatingInput({
   label,
   className,
   endAdornment,
+  error,
   ...props
 }: AuthFloatingInputProps) {
   const inputId = id ?? props.name;
@@ -34,6 +36,7 @@ export function AuthFloatingInput({
         placeholder=" "
         className={cn(
           "peer w-full rounded border border-store-border bg-store-paper px-4 pt-6 pb-2.5 text-sm text-store-ink outline-none transition-[border-color,padding] duration-200 focus:border-store-ink-strong",
+          error && "border-destructive focus:border-destructive",
           endAdornment && "pr-11",
           className,
         )}
@@ -54,6 +57,11 @@ export function AuthFloatingInput({
         <div className="absolute top-1/2 right-3 -translate-y-1/2">
           {endAdornment}
         </div>
+      ) : null}
+      {error ? (
+        <p role="alert" className="mt-1 text-xs text-destructive">
+          {error}
+        </p>
       ) : null}
     </div>
   );

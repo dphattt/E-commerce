@@ -17,6 +17,7 @@ import { iconBlockClassName, iconGlyphClassName } from "@/lib/icon-block";
 import { CartDrawer } from "./CartDrawer";
 import { DEFAULT_NAV } from "@/lib/default-nav";
 import type { NavItem, NavSubItem } from "@/types/nav";
+import { useAuth } from "@/features/auth";
 
 // Re-export for backward compat if used elsewhere
 export type SiteHeaderNavSubItem = NavSubItem;
@@ -47,6 +48,7 @@ export function SiteHeader({
   className = "",
   onSearchSubmit,
 }: SiteHeaderProps) {
+  const { isAuthenticated } = useAuth();
   const menuId = useId();
   const headerRef = useRef<HTMLElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -325,7 +327,7 @@ export function SiteHeader({
                 <IconHeart className="size-5" />
               </Link>
               <Link
-                href="/account/login"
+                href={isAuthenticated ? "/account" : "/account/login"}
                 className={cn(
                   iconBlockClassName,
                   "rounded-full hover:bg-store-surface",
