@@ -81,9 +81,14 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
     return DEFAULT_COLORS;
   }, [product]);
 
+  const effectiveSelectedColor =
+    selectedColor && colors.includes(selectedColor)
+      ? selectedColor
+      : (colors[0] ?? "");
+
   const selectedVariant = useMemo(
-    () => product?.variants?.find((v) => v.color === selectedColor),
-    [product, selectedColor],
+    () => product?.variants?.find((v) => v.color === effectiveSelectedColor),
+    [product, effectiveSelectedColor],
   );
 
   const sizes = useMemo(() => {
@@ -92,6 +97,11 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
     }
     return DEFAULT_SIZES;
   }, [selectedVariant]);
+
+  const effectiveSelectedSize =
+    selectedSize && sizes.includes(selectedSize)
+      ? selectedSize
+      : (sizes[0] ?? "");
 
   useEffect(() => {
     if (!product?._id || product.variants?.length) return;
@@ -104,21 +114,6 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
     return () => controller.abort();
   }, [product?._id, product?.variants?.length, cacheProduct]);
 
-  useEffect(() => {
-    if (!product) return;
-
-    if (product.variants?.length) {
-      const first = product.variants[0];
-      setSelectedColor(first.color);
-      const firstInStock = first.sizes.find((s) => s.inStock);
-      setSelectedSize(firstInStock?.label ?? first.sizes[0]?.label ?? "");
-      return;
-    }
-
-    setSelectedColor(DEFAULT_COLORS[0]);
-    setSelectedSize(DEFAULT_SIZES[2]);
-  }, [product]);
-
   const handleColorChange = useCallback(
     (color: string) => {
       setSelectedColor(color);
@@ -126,7 +121,7 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
       if (!variant?.sizes.length) return;
 
       const stillValid = variant.sizes.some(
-        (s) => s.label === selectedSize && s.inStock,
+        (s) => s.label === effectiveSelectedSize && s.inStock,
       );
       if (stillValid) return;
 
@@ -134,7 +129,7 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
         variant.sizes.find((s) => s.inStock) ?? variant.sizes[0];
       setSelectedSize(nextSize.label);
     },
-    [product, selectedSize],
+    [product, effectiveSelectedSize],
   );
 
   const imageUrl = useMemo(() => {
@@ -227,7 +222,7 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
                   <Image
                     key={imageUrl}
                     src={imageUrl}
-                    alt={`${product.title} — ${selectedColor || "default"}`}
+                    alt={`${product.title} — ${effectiveSelectedColor || "default"}`}
                     fill
                     sizes="128px"
                     className="object-cover transition-opacity duration-300"
@@ -255,7 +250,7 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
                         type="button"
                         onClick={() => handleColorChange(color)}
                         className={`rounded-lg border px-3 py-1.5 text-xs font-bold uppercase transition-colors ${
-                          selectedColor === color
+                          effectiveSelectedColor === color
                             ? "border-store-ink-strong bg-store-ink-strong text-store-paper"
                             : "border-store-border bg-store-paper hover:border-store-ink-strong"
                         }`}
@@ -277,7 +272,7 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
                         type="button"
                         onClick={() => setSelectedSize(size)}
                         className={`min-w-10 rounded-lg border px-3 py-1.5 text-xs font-bold uppercase transition-colors ${
-                          selectedSize === size
+                          effectiveSelectedSize === size
                             ? "border-store-ink-strong bg-store-ink-strong text-store-paper"
                             : "border-store-border bg-store-paper hover:border-store-ink-strong"
                         }`}

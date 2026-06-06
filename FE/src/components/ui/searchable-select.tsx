@@ -38,6 +38,8 @@ export function SearchableSelect({
   const [query, setQuery] = useState("");
 
   const selected = options.find((o) => o.value === value);
+  const selectedLabel = selected?.label ?? "";
+  const inputValue = open ? query : selectedLabel;
 
   const filtered = useMemo(() => {
     const q = normalizeSearch(query);
@@ -46,15 +48,6 @@ export function SearchableSelect({
       .filter((o) => normalizeSearch(o.label).includes(q))
       .slice(0, 80);
   }, [options, query]);
-
-  useEffect(() => {
-    if (selected && !open) {
-      setQuery(selected.label);
-    }
-    if (!value && !open) {
-      setQuery("");
-    }
-  }, [selected, value, open]);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -78,10 +71,14 @@ export function SearchableSelect({
         <input
           id={inputId}
           type="text"
-          value={query}
+          value={inputValue}
           disabled={disabled}
           placeholder={placeholder}
-          onFocus={() => !disabled && setOpen(true)}
+          onFocus={() => {
+            if (disabled) return;
+            setQuery(selectedLabel);
+            setOpen(true);
+          }}
           onChange={(e) => {
             setQuery(e.target.value);
             setOpen(true);

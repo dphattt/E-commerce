@@ -418,17 +418,11 @@ export function ProductList({
 
   // Best Sellers — seed from SSR products so the hero does not pop in after
   // back-navigation (which would shift scroll position below the saved offset).
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(() =>
-    products.slice(0, 8),
-  );
+  const featuredProducts = useMemo(() => products.slice(0, 8), [products]);
   const [hoveredFeaturedId, setHoveredFeaturedId] = useState<string | null>(
     null,
   );
   const sliderRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setFeaturedProducts(products.slice(0, 8));
-  }, [products]);
 
   const gender = useMemo(() => {
     if (products && products.length > 0) {
@@ -592,7 +586,7 @@ export function ProductList({
               const isHovered = hoveredFeaturedId === product._id;
               const slug = productSlugFromSourceUrl(product.sourceUrl);
               const isWishlisted =
-                hasHydrated && wishlist.isWishlisted(slug);
+                hasHydrated && wishlist.isWishlisted(product._id);
               const badge =
                 idx % 2 === 0 ? "MOST POPULAR" : idx === 1 ? "NEW" : null;
 
@@ -617,7 +611,7 @@ export function ProductList({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        wishlist.toggle(slug);
+                        wishlist.toggle(product._id);
                       }}
                       className="absolute top-3 right-3 z-10 flex items-center justify-center size-9 rounded-full bg-store-paper hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
                       aria-label={
@@ -761,7 +755,7 @@ export function ProductList({
                 const isHovered = hoveredId === product._id;
                 const slug = productSlugFromSourceUrl(product.sourceUrl);
                 const isWishlisted =
-                  hasHydrated && wishlist.isWishlisted(slug);
+                  hasHydrated && wishlist.isWishlisted(product._id);
                 const categoryLabel = deriveCategoryLabel(product.categories);
 
                 return (
@@ -778,7 +772,7 @@ export function ProductList({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          wishlist.toggle(slug);
+                          wishlist.toggle(product._id);
                         }}
                         className="absolute top-3 right-3 z-10 flex items-center justify-center size-9 rounded-full bg-store-paper hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
                         aria-label={
