@@ -9,8 +9,8 @@ function wrapper({ children }: { children: React.ReactNode }) {
     <TestStoreProvider
       preloadedState={{
         cart: { items: [] },
-        wishlist: { slugs: [] },
-        auth: { user: null },
+        wishlist: { productIds: [], items: [] },
+        auth: { user: null, sessionChecked: true },
       }}
     >
       {children}

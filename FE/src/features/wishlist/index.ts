@@ -1,10 +1,10 @@
 export { useWishlist } from "@/features/wishlist/model/useWishlist";
 export { useResolvedWishlistItems } from "@/features/wishlist/hooks/useResolvedWishlistItems";
 export {
-  add,
+  addProductId,
   clear,
-  remove,
-  toggle,
+  removeProductId,
+  setWishlistFromApi,
   wishlistReducer,
   selectWishlistHas,
 } from "@/features/wishlist/model/wishlist.slice";

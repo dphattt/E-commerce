@@ -1,5 +1,3 @@
-1. Xem coi làm tiền việt hay tiền đô rồi chỉnh lại. Làm lại logic wishlist để khi add wishlist là thêm vào data luôn.
 2. Nhờ AI đọc data và tạo bảng orders.
 3. Tạo bảng đơn hàng chứa tất cả đơn hàng của người dùng.
-4. Trang nào cần user thì làm lại, nếu ko có user thì thông báo bạn chưa đăng nhập.
 5. Làm sao để khi 1 người nào trong team tạo ra dữ liệu thì tự thêm vô seed và pull về tự cập nhật vô data.

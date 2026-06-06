@@ -16,10 +16,10 @@ const testRootReducer = combineReducers({
 export type TestRootState = ReturnType<typeof testRootReducer>;
 
 const emptyTestState: TestRootState = {
-  auth: { user: null },
+  auth: { user: null, sessionChecked: true },
   cart: { items: [] },
   products: { bySlug: {} },
-  wishlist: { slugs: [] },
+  wishlist: { productIds: [], items: [] },
 };
 
 export function createTestStore(overrides?: Partial<TestRootState>) {

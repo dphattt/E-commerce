@@ -6,10 +6,12 @@ import type { AuthUser } from "@/features/auth/model/auth.types";
 
 export interface AuthState {
   user: AuthUser | null;
+  sessionChecked: boolean;
 }
 
 const initialState: AuthState = {
   user: null,
+  sessionChecked: false,
 };
 
 /**
@@ -30,16 +32,23 @@ const authSlice = createSlice({
     ) {
       writeAccessToken(action.payload.accessToken);
       state.user = action.payload.user;
+      state.sessionChecked = true;
     },
     setUser(state, action: PayloadAction<AuthUser | null>) {
       state.user = action.payload;
+      state.sessionChecked = true;
+    },
+    setSessionChecked(state, action: PayloadAction<boolean>) {
+      state.sessionChecked = action.payload;
     },
     clearSession(state) {
       writeAccessToken(null);
       state.user = null;
+      state.sessionChecked = true;
     },
   },
 });
 
-export const { setSession, setUser, clearSession } = authSlice.actions;
+export const { setSession, setUser, setSessionChecked, clearSession } =
+  authSlice.actions;
 export const authReducer = authSlice.reducer;

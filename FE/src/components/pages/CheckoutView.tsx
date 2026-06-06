@@ -2,22 +2,27 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { useCachedProduct } from "@/features/products";
+import {
+  fetchProductById,
+  useCachedProduct,
+  useProductCache,
+} from "@/features/products";
 import {
   getWardsByProvince,
   provinces,
   type Ward,
 } from "@/lib/vietnam-address";
+import { formatUsd } from "@/shared/lib/format-money";
 
 const DEFAULT_COLORS = ["Black", "Grey", "Navy"];
 const DEFAULT_SIZES = ["XS", "S", "M", "L", "XL"];
 
 const DELIVERY_OPTIONS = [
-  { id: "standard", label: "Giao hàng thường", fee: 30_000 },
-  { id: "express", label: "Giao hàng nhanh", fee: 90_000 },
+  { id: "standard", label: "Giao hàng thường", fee: 5 },
+  { id: "express", label: "Giao hàng nhanh", fee: 15 },
 ] as const;
 
 const VOUCHERS = [
@@ -29,10 +34,10 @@ const VOUCHERS = [
     value: 10,
   },
   {
-    id: "SAVE50K",
-    label: "SAVE50K — Giảm 50.000đ",
+    id: "SAVE50",
+    label: "SAVE50 — Giảm $50",
     type: "fixed" as const,
-    value: 50_000,
+    value: 50,
   },
   {
     id: "FREESHIP",
@@ -49,24 +54,17 @@ const PAYMENT_METHODS = [
   { id: "cod", label: "Thanh toán khi nhận hàng" },
 ] as const;
 
-function formatVnd(amount: number) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
 interface CheckoutViewProps {
   slug?: string;
 }
 
 export function CheckoutView({ slug }: CheckoutViewProps) {
   const product = useCachedProduct(slug ?? "");
+  const { cacheProduct } = useProductCache();
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLORS[0]);
-  const [selectedSize, setSelectedSize] = useState(DEFAULT_SIZES[2]);
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
   const [deliveryId, setDeliveryId] =
     useState<(typeof DELIVERY_OPTIONS)[number]["id"]>("standard");
   const [provinceCode, setProvinceCode] = useState("");
@@ -83,13 +81,66 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
     return DEFAULT_COLORS;
   }, [product]);
 
+  const selectedVariant = useMemo(
+    () => product?.variants?.find((v) => v.color === selectedColor),
+    [product, selectedColor],
+  );
+
   const sizes = useMemo(() => {
-    const variant = product?.variants?.find((v) => v.color === selectedColor);
-    if (variant?.sizes.length) {
-      return variant.sizes.filter((s) => s.inStock).map((s) => s.label);
+    if (selectedVariant?.sizes.length) {
+      return selectedVariant.sizes.filter((s) => s.inStock).map((s) => s.label);
     }
     return DEFAULT_SIZES;
-  }, [product, selectedColor]);
+  }, [selectedVariant]);
+
+  useEffect(() => {
+    if (!product?._id || product.variants?.length) return;
+
+    const controller = new AbortController();
+    fetchProductById(product._id, { signal: controller.signal })
+      .then((res) => cacheProduct(res.product))
+      .catch(() => {});
+
+    return () => controller.abort();
+  }, [product?._id, product?.variants?.length, cacheProduct]);
+
+  useEffect(() => {
+    if (!product) return;
+
+    if (product.variants?.length) {
+      const first = product.variants[0];
+      setSelectedColor(first.color);
+      const firstInStock = first.sizes.find((s) => s.inStock);
+      setSelectedSize(firstInStock?.label ?? first.sizes[0]?.label ?? "");
+      return;
+    }
+
+    setSelectedColor(DEFAULT_COLORS[0]);
+    setSelectedSize(DEFAULT_SIZES[2]);
+  }, [product]);
+
+  const handleColorChange = useCallback(
+    (color: string) => {
+      setSelectedColor(color);
+      const variant = product?.variants?.find((v) => v.color === color);
+      if (!variant?.sizes.length) return;
+
+      const stillValid = variant.sizes.some(
+        (s) => s.label === selectedSize && s.inStock,
+      );
+      if (stillValid) return;
+
+      const nextSize =
+        variant.sizes.find((s) => s.inStock) ?? variant.sizes[0];
+      setSelectedSize(nextSize.label);
+    },
+    [product, selectedSize],
+  );
+
+  const imageUrl = useMemo(() => {
+    if (selectedVariant?.image) return selectedVariant.image;
+    return product?.imageUrls[0] ?? "";
+  }, [product, selectedVariant]);
 
   const provinceOptions = useMemo(
     () => provinces.map((p) => ({ value: p.code, label: p.name })),
@@ -124,8 +175,6 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
   }
 
   const total = Math.max(0, subtotal - voucherDiscount) + effectiveShipping;
-
-  const imageUrl = product?.imageUrls[0] ?? product?.variants?.[0]?.image ?? "";
 
   if (!slug) {
     return (
@@ -176,11 +225,12 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
               <div className="relative aspect-2/3 w-28 shrink-0 overflow-hidden rounded-xl bg-store-surface sm:w-32">
                 {imageUrl ? (
                   <Image
+                    key={imageUrl}
                     src={imageUrl}
-                    alt={product.title}
+                    alt={`${product.title} — ${selectedColor || "default"}`}
                     fill
                     sizes="128px"
-                    className="object-cover"
+                    className="object-cover transition-opacity duration-300"
                   />
                 ) : null}
               </div>
@@ -190,7 +240,7 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
                     {product.title}
                   </h2>
                   <p className="mt-1 text-lg font-black text-store-ink-strong">
-                    {formatVnd(unitPrice)}
+                    {formatUsd(unitPrice)}
                   </p>
                 </div>
 
@@ -203,7 +253,7 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
                       <button
                         key={color}
                         type="button"
-                        onClick={() => setSelectedColor(color)}
+                        onClick={() => handleColorChange(color)}
                         className={`rounded-lg border px-3 py-1.5 text-xs font-bold uppercase transition-colors ${
                           selectedColor === color
                             ? "border-store-ink-strong bg-store-ink-strong text-store-paper"
@@ -288,7 +338,7 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
                       {opt.label}
                     </span>
                     <span className="text-xs text-store-fg-muted">
-                      {formatVnd(opt.fee)}
+                      {formatUsd(opt.fee)}
                     </span>
                   </button>
                 ))}
@@ -399,21 +449,21 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-store-fg-muted">
                   <span>Tạm tính</span>
-                  <span>{formatVnd(subtotal)}</span>
+                  <span>{formatUsd(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-store-fg-muted">
                   <span>Vận chuyển</span>
-                  <span>{formatVnd(effectiveShipping)}</span>
+                  <span>{formatUsd(effectiveShipping)}</span>
                 </div>
                 {voucherDiscount > 0 ? (
                   <div className="flex justify-between text-green-700">
                     <span>Giảm giá</span>
-                    <span>-{formatVnd(voucherDiscount)}</span>
+                    <span>-{formatUsd(voucherDiscount)}</span>
                   </div>
                 ) : null}
                 <div className="flex justify-between border-t border-store-border pt-3 text-base font-black text-store-ink-strong">
                   <span>Tổng cộng</span>
-                  <span>{formatVnd(total)}</span>
+                  <span>{formatUsd(total)}</span>
                 </div>
               </div>
 

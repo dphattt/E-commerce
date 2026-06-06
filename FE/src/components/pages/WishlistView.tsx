@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/features/auth/model/useAuth";
 import { useResolvedWishlistItems } from "@/features/wishlist/hooks/useResolvedWishlistItems";
 import { useWishlist } from "@/features/wishlist";
-import { useHasHydrated } from "@/shared/hooks";
 
 function WishlistIllustration() {
   return (
@@ -129,11 +129,37 @@ function WishlistCard({
 
 export function WishlistView() {
   const router = useRouter();
-  const hasHydrated = useHasHydrated();
+  const { isAuthenticated, sessionChecked } = useAuth();
   const { remove, clear } = useWishlist();
   const resolvedItems = useResolvedWishlistItems();
-  const items = hasHydrated ? resolvedItems : [];
-  const productCount = hasHydrated ? items.length : 0;
+  const items = sessionChecked && isAuthenticated ? resolvedItems : [];
+  const productCount = items.length;
+
+  if (sessionChecked && !isAuthenticated) {
+    return (
+      <div className="-mx-4 -mt-9 min-h-screen bg-zinc-950 sm:-mx-6 lg:-mx-8">
+        <div className="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <WishlistIllustration />
+            <h2 className="mt-6 text-sm font-bold uppercase tracking-widest text-white">
+              You are not logged in
+            </h2>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-zinc-400">
+              Sign in to view and manage your saved items.
+            </p>
+            <div className="mt-8 flex w-full max-w-xs flex-col gap-3">
+              <Link
+                href="/account/login"
+                className="flex h-12 w-full items-center justify-center rounded-full bg-black text-sm font-bold uppercase tracking-widest text-white transition-colors hover:bg-zinc-900"
+              >
+                Login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="-mx-4 -mt-9 min-h-screen bg-zinc-950 sm:-mx-6 lg:-mx-8">

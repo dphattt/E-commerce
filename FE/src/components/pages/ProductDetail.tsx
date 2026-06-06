@@ -3,21 +3,11 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { IconHeart } from "@/components/icons";
 import { useCachedProduct } from "@/features/products";
-
-function IconHeart(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      {...props}
-    >
-      <path d="M12 21s-7-4.35-7-10a4.5 4.5 0 0 1 7-3 4.5 4.5 0 0 1 7 3c0 5.65-7 10-7 10Z" />
-    </svg>
-  );
-}
+import { useWishlist } from "@/features/wishlist";
+import { useHasHydrated } from "@/shared/hooks";
+import { formatUsd } from "@/shared/lib/format-money";
 
 function IconChevronDown(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -46,19 +36,14 @@ type ProductDetailProps = {
   slug: string;
 };
 
-function formatPrice(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(amount);
-}
-
 function categoryLabel(categories: string[]) {
   return categories.slice(1).filter(Boolean).join(" · ");
 }
 
 export function ProductDetail({ slug }: ProductDetailProps) {
   const product = useCachedProduct(slug);
+  const wishlist = useWishlist();
+  const hasHydrated = useHasHydrated();
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [activeAccordion, setActiveAccordion] = useState<string | null>(
@@ -106,7 +91,9 @@ export function ProductDetail({ slug }: ProductDetailProps) {
   const gallery =
     product.imageUrls.length > 0 ? product.imageUrls : [""];
   const subtitle = categoryLabel(product.categories);
-  const priceLabel = formatPrice(product.price.amount, product.price.currency);
+  const priceLabel = formatUsd(product.price.amount);
+  const isWishlisted =
+    hasHydrated && wishlist.isWishlisted(product._id);
 
   return (
     <div className="flex flex-col gap-4">
@@ -180,8 +167,24 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                 <h1 className="text-3xl font-black uppercase italic leading-[0.9] tracking-tighter text-store-ink-strong xl:text-4xl">
                   {product.title}
                 </h1>
-                <button className="group rounded-full border border-store-border p-2.5 transition-colors hover:border-store-ink-strong">
-                  <IconHeart className="size-6 text-store-ink transition-transform group-hover:scale-110" />
+                <button
+                  type="button"
+                  onClick={() => wishlist.toggle(product._id)}
+                  className="group rounded-full border border-store-border p-2.5 transition-colors hover:border-store-ink-strong hover:scale-105 active:scale-95 cursor-pointer"
+                  aria-label={
+                    isWishlisted
+                      ? "Remove from Wishlist"
+                      : "Add to Wishlist"
+                  }
+                  aria-pressed={isWishlisted}
+                >
+                  <IconHeart
+                    className={`size-6 transition-colors ${
+                      isWishlisted
+                        ? "fill-red-500 stroke-red-500 text-red-500 scale-110"
+                        : "text-store-ink group-hover:scale-110 group-hover:text-red-500"
+                    }`}
+                  />
                 </button>
               </div>
               {subtitle && (

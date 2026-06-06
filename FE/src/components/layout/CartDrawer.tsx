@@ -15,6 +15,7 @@ import { useCart } from "@/features/cart";
 import type { CartItem } from "@/features/cart";
 import { iconBlockClassName } from "@/lib/icon-block";
 import { useHasHydrated } from "@/shared/hooks";
+import { formatUsd } from "@/shared/lib/format-money";
 import { cn } from "@/lib/utils";
 
 function EmptyBagIllustration() {
@@ -37,17 +38,6 @@ function EmptyBagIllustration() {
       </svg>
     </div>
   );
-}
-
-function formatMoney(amount: number, currency: string) {
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-    }).format(amount);
-  } catch {
-    return `${currency} ${amount.toFixed(2)}`;
-  }
 }
 
 function CartLine({
@@ -123,7 +113,7 @@ function CartLine({
             </button>
           </div>
           <p className="text-sm font-semibold tabular-nums text-white">
-            {formatMoney(lineTotal, item.unitPrice.currency)}
+            {formatUsd(lineTotal)}
           </p>
         </div>
       </div>
@@ -236,7 +226,7 @@ export function CartDrawer() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-zinc-400">Subtotal</span>
                 <span className="font-semibold text-white tabular-nums">
-                  {formatMoney(subtotal.amount, subtotal.currency)}
+                  {formatUsd(subtotal.amount)}
                 </span>
               </div>
               <SheetClose asChild>

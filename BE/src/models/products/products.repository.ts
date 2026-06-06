@@ -72,3 +72,13 @@ export async function findProductById(id: string) {
 export async function findProductBySourceUrl(sourceUrl: string) {
   return Product.findOne({ sourceUrl }).lean();
 }
+
+export async function findVariantBySku(sku: string) {
+  return ProductVariant.findOne({ sku }).lean();
+}
+
+export async function findActiveVariantsBySourceUrl(sourceUrl: string) {
+  return ProductVariant.find({ productSourceUrl: sourceUrl, isActive: true })
+    .select("sku")
+    .lean();
+}

@@ -26,12 +26,6 @@ const cartPersistConfig = {
   storage: localPersistStorage,
 };
 
-const wishlistPersistConfig = {
-  key: "ecommerce-wishlist",
-  version: 1,
-  storage: localPersistStorage,
-};
-
 const productsPersistConfig = {
   key: "ecommerce-product-cache",
   version: 1,
@@ -42,7 +36,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   cart: persistReducer(cartPersistConfig, cartReducer),
   products: persistReducer(productsPersistConfig, productsReducer),
-  wishlist: persistReducer(wishlistPersistConfig, wishlistReducer),
+  wishlist: wishlistReducer,
 });
 
 export function makeStore() {
