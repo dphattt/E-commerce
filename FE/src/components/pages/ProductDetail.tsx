@@ -103,15 +103,14 @@ export function ProductDetail({ slug }: ProductDetailProps) {
     );
   }
 
-  const gallery =
-    product.imageUrls.length > 0 ? product.imageUrls : [""];
+  const gallery = product.imageUrls.length > 0 ? product.imageUrls : [""];
   const subtitle = categoryLabel(product.categories);
   const priceLabel = formatPrice(product.price.amount, product.price.currency);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 -mx-8 -my-10">
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-store-fg-subtle">
+      <nav className="flex items-center mb-3 gap-2 text-[11px] font-bold uppercase tracking-widest text-store-fg-subtle">
         <Link href="/" className="hover:text-store-ink">
           Home
         </Link>
@@ -120,12 +119,14 @@ export function ProductDetail({ slug }: ProductDetailProps) {
           Products
         </Link>
         <span>/</span>
-        <span className="text-store-ink-strong line-clamp-1">{product.title}</span>
+        <span className="text-store-ink-strong line-clamp-1">
+          {product.title}
+        </span>
       </nav>
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 xl:gap-16">
         {/* Left: Gallery */}
-        <div className="relative flex-1 gallery flex gap-3 max-h-150">
+        <div className="relative flex-1 gallery flex gap-3 max-h-150 -mx-12">
           <div className="hidden md:flex flex-col items-center justify-center w-20 shrink-0 absolute top-2/5 left-2 h-50 rounded-xl z-10">
             <div className="flex-1 flex items-center justify-center p-4 my-3 relative rounded-full bg-store-ink">
               <div
@@ -150,7 +151,10 @@ export function ProductDetail({ slug }: ProductDetailProps) {
             className="a grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2 flex-1 overflow-auto scrollbar-hidden"
           >
             {gallery.map((src, i) => (
-              <div key={i} className="relative aspect-2/3 bg-store-surface">
+              <div
+                key={i}
+                className={`relative ${i > 3 ? "aspect-2/3" : "aspect-square"} bg-store-surface`}
+              >
                 {src && (
                   <Image
                     height={800}
@@ -180,7 +184,7 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                 <h1 className="text-3xl font-black uppercase italic leading-[0.9] tracking-tighter text-store-ink-strong xl:text-4xl">
                   {product.title}
                 </h1>
-                <button className="group rounded-full border border-store-border p-2.5 transition-colors hover:border-store-ink-strong">
+                <button className="group rounded-full border border-store-border p-2.5 transition-colors hover:border-store-ink-strong hover:cursor-pointer">
                   <IconHeart className="size-6 text-store-ink transition-transform group-hover:scale-110" />
                 </button>
               </div>
@@ -210,7 +214,7 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                     key={size.id}
                     disabled={!size.inStock}
                     onClick={() => setSelectedSize(size.id)}
-                    className={`flex h-12 items-center justify-center border text-sm font-bold uppercase transition-all duration-200 ${
+                    className={`flex h-12 items-center justify-center border text-sm font-bold hover:cursor-pointer uppercase transition-all duration-200 ${
                       selectedSize === size.id
                         ? "border-store-ink-strong bg-store-ink-strong text-store-paper"
                         : "border-store-border bg-store-paper hover:border-store-ink-strong"
@@ -223,7 +227,7 @@ export function ProductDetail({ slug }: ProductDetailProps) {
             </div>
 
             <div className="space-y-4">
-              <button className="w-full bg-store-accent hover:bg-store-accent-hover text-store-on-accent h-16 text-sm font-black uppercase tracking-[0.2em] transition-all rounded shadow-sm active:scale-[0.98]">
+              <button className="w-full bg-store-accent hover:bg-store-accent-hover hover:cursor-pointer text-store-on-accent h-16 text-sm font-black uppercase tracking-[0.2em] transition-all rounded shadow-sm active:scale-[0.98]">
                 Add to Bag
               </button>
               <div className="flex items-center justify-center gap-6 py-2 border-y border-store-border/50">

@@ -21,6 +21,13 @@ import {
   fetchProductList,
 } from "@/features/products";
 
+import Autoplay from "embla-carousel-auto-scroll";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+
 type SortOption = "popular" | "low-to-high" | "high-to-low" | "newest";
 type FilterGroupId =
   | "product"
@@ -467,7 +474,7 @@ export function ProductList({
         if (!active) return;
         if (res && res.products && res.products.length > 0) {
           const shuffled = [...res.products].sort(() => 0.5 - Math.random());
-          setFeaturedProducts(shuffled.slice(0, 8));
+          setFeaturedProducts(shuffled.slice(0, 30));
         }
       } catch (err) {
         console.error("Failed to fetch featured products:", err);
@@ -629,110 +636,124 @@ export function ProductList({
           {/* Featured Slider */}
           <div
             ref={sliderRef}
-            className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hidden pb-4"
+            className="flex gap-4 w-full overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hidden pb-4"
           >
-            {featuredProducts.map((product, idx) => {
-              const primaryImg = product.imageUrls[0] ?? "";
-              const hoverImg = product.imageUrls[1] ?? primaryImg;
-              const isHovered = hoveredFeaturedId === product._id;
-              const isWishlisted =
-                hasHydrated && wishlist.isWishlisted(product._id);
-              const slug = productSlugFromSourceUrl(product.sourceUrl);
-              const badge =
-                idx % 2 === 0 ? "MOST POPULAR" : idx === 1 ? "NEW" : null;
+            <Carousel
+              opts={{ loop: true, axis: "x" }}
+              plugins={[
+                Autoplay({
+                  delay: 3000,
+                  stopOnMouseEnter: true,
+                  stopOnInteraction: false,
+                }),
+              ]}
+              className="w-80"
+            >
+              <CarouselContent>
+                {featuredProducts.map((product, idx) => {
+                  const primaryImg = product.imageUrls[0] ?? "";
+                  const hoverImg = product.imageUrls[1] ?? primaryImg;
+                  const isHovered = hoveredFeaturedId === product._id;
+                  const isWishlisted =
+                    hasHydrated && wishlist.isWishlisted(product._id);
+                  const slug = productSlugFromSourceUrl(product.sourceUrl);
+                  const badge =
+                    idx % 2 === 0 ? "MOST POPULAR" : idx === 1 ? "NEW" : null;
 
-              return (
-                <div
-                  key={`featured-${product._id}`}
-                  className="w-70 sm:w-[320px] md:w-[23.5%] shrink-0 snap-start flex flex-col gap-3 group relative cursor-pointer"
-                  onMouseEnter={() => setHoveredFeaturedId(product._id)}
-                  onMouseLeave={() => setHoveredFeaturedId(null)}
-                >
-                  {/* Image Box */}
-                  <div className="relative aspect-2/3 w-full overflow-hidden bg-store-surface rounded-2xl border border-store-border/40 shadow-sm">
-                    {/* Badge */}
-                    {badge && (
-                      <span className="absolute top-3 left-3 z-10 bg-store-paper text-store-ink-strong text-[9px] font-black uppercase px-2.5 py-1.5 tracking-wider rounded-xs shadow-sm">
-                        {badge}
-                      </span>
-                    )}
-
-                    {/* Wishlist */}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        wishlist.toggle(product._id);
-                      }}
-                      className="absolute top-3 right-3 z-10 flex items-center justify-center size-9 rounded-full bg-store-paper hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
-                      aria-label={
-                        isWishlisted
-                          ? "Remove from Wishlist"
-                          : "Add to Wishlist"
-                      }
+                  return (
+                    <CarouselItem
+                      key={`featured-${product._id}`}
+                      className="w-70 sm:w-[320px] md:w-[23.5%] shrink-0 snap-start flex flex-col gap-3 group relative cursor-pointer scrollbar-hidden"
+                      onMouseEnter={() => setHoveredFeaturedId(product._id)}
+                      onMouseLeave={() => setHoveredFeaturedId(null)}
                     >
-                      <IconHeart
-                        className={`size-5 transition-colors ${
-                          isWishlisted
-                            ? "fill-red-500 stroke-red-500 text-red-500 scale-110"
-                            : "text-store-ink hover:text-red-500"
-                        }`}
-                      />
-                    </button>
+                      {/* Image Box */}
+                      <div className="relative aspect-2/3 w-full overflow-hidden bg-store-surface rounded-2xl border border-store-border/40 shadow-sm">
+                        {/* Badge */}
+                        {badge && (
+                          <span className="absolute top-3 left-3 z-10 bg-store-paper text-store-ink-strong text-[9px] font-black uppercase px-2.5 py-1.5 tracking-wider rounded-xs shadow-sm">
+                            {badge}
+                          </span>
+                        )}
 
-                    <Link
-                      href={`/products/${slug}`}
-                      onClick={() => cacheProduct(product)}
-                      className="absolute inset-0 block overflow-hidden rounded-2xl"
-                    >
-                      {/* Primary image */}
-                      <div className="absolute inset-0">
-                        {primaryImg && (
-                          <Image
-                            src={primaryImg}
-                            alt={product.title}
-                            fill
-                            sizes="(max-width: 640px) 280px, 320px"
-                            className={`object-cover transition-[opacity,transform] duration-500 ease-out ${
-                              isHovered
-                                ? "opacity-0 scale-105"
-                                : "opacity-100 scale-100"
+                        {/* Wishlist */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            wishlist.toggle(product._id);
+                          }}
+                          className="absolute top-3 right-3 z-10 flex items-center justify-center size-9 rounded-full bg-store-paper hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+                          aria-label={
+                            isWishlisted
+                              ? "Remove from Wishlist"
+                              : "Add to Wishlist"
+                          }
+                        >
+                          <IconHeart
+                            className={`size-5 transition-colors ${
+                              isWishlisted
+                                ? "fill-red-500 stroke-red-500 text-red-500 scale-110"
+                                : "text-store-ink hover:text-red-500"
                             }`}
                           />
-                        )}
-                      </div>
-                      {/* Hover image */}
-                      <div className="absolute inset-0">
-                        {hoverImg && (
-                          <Image
-                            src={hoverImg}
-                            alt={`${product.title} alternate`}
-                            fill
-                            sizes="(max-width: 640px) 280px, 320px"
-                            className={`object-cover transition-[opacity,transform] duration-500 ease-out delay-100 ${
-                              isHovered
-                                ? "opacity-100 scale-100"
-                                : "opacity-0 scale-100"
-                            }`}
-                          />
-                        )}
-                      </div>
-                    </Link>
-                  </div>
+                        </button>
 
-                  {/* Info */}
-                  <div className="flex flex-col gap-1.5 px-1">
-                    <div className="flex items-start justify-between gap-4">
-                      <Link
-                        href={`/products/${slug}`}
-                        onClick={() => cacheProduct(product)}
-                        className="hover:underline flex-1"
-                      ></Link>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                        <Link
+                          href={`/products/${slug}`}
+                          onClick={() => cacheProduct(product)}
+                          className="absolute inset-0 block overflow-hidden rounded-2xl"
+                        >
+                          {/* Primary image */}
+                          <div className="absolute inset-0">
+                            {primaryImg && (
+                              <Image
+                                src={primaryImg}
+                                alt={product.title}
+                                fill
+                                sizes="(max-width: 640px) 280px, 320px"
+                                className={`object-cover transition-[opacity,transform] duration-500 ease-out ${
+                                  isHovered
+                                    ? "opacity-0 scale-105"
+                                    : "opacity-100 scale-100"
+                                }`}
+                              />
+                            )}
+                          </div>
+                          {/* Hover image */}
+                          <div className="absolute inset-0">
+                            {hoverImg && (
+                              <Image
+                                src={hoverImg}
+                                alt={`${product.title} alternate`}
+                                fill
+                                sizes="(max-width: 640px) 280px, 320px"
+                                className={`object-cover transition-[opacity,transform] duration-500 ease-out delay-100 ${
+                                  isHovered
+                                    ? "opacity-100 scale-100"
+                                    : "opacity-0 scale-100"
+                                }`}
+                              />
+                            )}
+                          </div>
+                        </Link>
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex flex-col gap-1.5 px-1">
+                        <div className="flex items-start justify-between gap-4">
+                          <Link
+                            href={`/products/${slug}`}
+                            onClick={() => cacheProduct(product)}
+                            className="hover:underline flex-1"
+                          ></Link>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  );
+                })}
+              </CarouselContent>
+            </Carousel>
           </div>
         </div>
       )}
