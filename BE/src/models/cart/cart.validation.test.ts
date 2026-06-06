@@ -8,12 +8,20 @@ import {
 
 describe("addItemBodySchema", () => {
   it("defaults quantity to 1", () => {
-    const parsed = addItemBodySchema.parse({ sku: "A1-TSHIRT-BLK-M" });
+    const parsed = addItemBodySchema.parse({
+      sku: "A1-TSHIRT-BLK-M",
+      name: "Product A",
+      image: "/img.jpg",
+    });
     expect(parsed.quantity).toBe(1);
   });
 
   it("trims SKU", () => {
-    const parsed = addItemBodySchema.parse({ sku: "   A1   " });
+    const parsed = addItemBodySchema.parse({
+      sku: "   A1   ",
+      name: "Product A",
+      image: "/img.jpg",
+    });
     expect(parsed.sku).toBe("A1");
   });
 

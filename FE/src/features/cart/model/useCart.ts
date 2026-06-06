@@ -30,7 +30,10 @@ export function useCart(): CartSnapshot & {
   const [clearCartMutation] = useClearCartMutation();
 
   // Khi không authenticated, luôn trả về empty — không dùng cached data
-  const items = isAuthenticated ? (cart?.items ?? []) : [];
+  const items = useMemo(
+    () => (isAuthenticated ? (cart?.items ?? []) : []),
+    [isAuthenticated, cart?.items],
+  );
 
   const snapshot = useMemo<CartSnapshot>(() => {
     const count = items.reduce((sum, i) => sum + i.quantity, 0);

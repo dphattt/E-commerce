@@ -15,10 +15,7 @@ import { authReducer, clearSession, setSession, setUser } from "@/features/auth/
 import { cartApi } from "@/features/cart/api/cart.api";
 import { productsReducer } from "@/features/products/model/products.slice";
 import { wishlistReducer, setSlugs } from "@/features/wishlist/model/wishlist.slice";
-import {
-  localPersistStorage,
-  sessionPersistStorage,
-} from "@/store/persist-storage";
+import { sessionPersistStorage } from "@/store/persist-storage";
 
 // ── Per-user localStorage helpers (wishlist only) ──────────────────────────
 const GUEST_KEY = "guest";

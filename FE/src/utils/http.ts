@@ -11,6 +11,9 @@ const REFRESH_EXCLUDED_PATHS = [
   REFRESH_PATH,
   "/auth/login",
   "/auth/register",
+  "/auth/google",
+  "/auth/verify-email",
+  "/auth/resend-verification",
   "/auth/forgot-password",
   "/auth/reset-password",
 ];

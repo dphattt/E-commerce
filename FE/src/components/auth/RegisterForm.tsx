@@ -3,24 +3,27 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AuthFloatingInput } from "@/components/auth/AuthFloatingInput";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import {
   authSubmitButtonClassName,
   getAuthFormErrorMessage,
 } from "@/components/auth/auth-form-shared";
 import { GymsharkLogo } from "@/components/auth/GymsharkLogo";
-import { registerSchema, type RegisterFormValues } from "@/components/auth/validate";
+import {
+  registerSchema,
+  type RegisterFormValues,
+} from "@/components/auth/validate";
 import { registerApi } from "@/features/auth/api/auth.api";
-import { useAuth } from "@/features/auth/model/useAuth";
 
 export function RegisterForm() {
-  const router = useRouter();
-  const { setSession } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(
+    null,
+  );
 
   const {
     register,
@@ -43,13 +46,35 @@ export function RegisterForm() {
       .filter(Boolean)
       .join(" ");
     try {
-      const { token, user } = await registerApi({ email: values.email, password: values.password, name });
-      setSession(user, token);
-      router.push("/account");
-      router.refresh();
+      const res = await registerApi({
+        email: values.email,
+        password: values.password,
+        name,
+      });
+      setVerificationMessage(res.verificationUrl ?? res.message);
     } catch (err) {
       setServerError(getAuthFormErrorMessage(err));
     }
+  }
+
+  if (verificationMessage) {
+    return (
+      <div className="mx-auto flex w-full max-w-md flex-col items-center px-4 py-10 text-center sm:py-16">
+        <GymsharkLogo className="mb-6" />
+        <h1 className="text-base font-bold uppercase tracking-[0.12em] text-store-ink-strong">
+          Check your email
+        </h1>
+        <p className="mt-4 break-all text-sm leading-relaxed text-store-fg-muted">
+          {verificationMessage}
+        </p>
+        <Link
+          href="/account/login"
+          className={`${authSubmitButtonClassName} mt-8 inline-flex justify-center`}
+        >
+          Back to login
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -183,6 +208,10 @@ export function RegisterForm() {
           {isSubmitting ? "Creating account..." : "Create account"}
         </button>
       </form>
+
+      <div className="mt-6 w-full">
+        <GoogleAuthButton onError={setServerError} />
+      </div>
 
       <p className="mt-8 text-center text-sm text-store-ink">
         Already have an account?{" "}

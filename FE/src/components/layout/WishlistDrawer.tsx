@@ -47,15 +47,14 @@ function WishlistCard({
 }) {
   const dispatch = useAppDispatch();
   const cached = useAppSelector((s) => selectCachedProduct(s.products, slug));
-  const [product, setProduct] = useState<Product | null>(cached);
+  const [fetchedProduct, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(!cached);
+  const product = cached ?? fetchedProduct;
+  const isLoading = !product && loading;
 
   useEffect(() => {
-    if (cached) {
-      setProduct(cached);
-      setLoading(false);
-      return;
-    }
+    if (cached) return;
+
     let cancelled = false;
     fetchProductBySlug(slug)
       .then(({ product: p }) => {
@@ -68,12 +67,13 @@ function WishlistCard({
       .catch(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
   }, [slug, cached, dispatch]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <li className="flex animate-pulse gap-3 px-5 py-4">
         <div className="size-16 shrink-0 rounded-lg bg-zinc-700" />

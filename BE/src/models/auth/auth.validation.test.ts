@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   forgotPasswordBodySchema,
+  googleAuthBodySchema,
   loginBodySchema,
   registerBodySchema,
+  resendVerificationBodySchema,
   resetPasswordBodySchema,
+  verifyEmailBodySchema,
 } from "@/models/auth/auth.validation";
 
 describe("registerBodySchema", () => {
@@ -93,5 +96,32 @@ describe("resetPasswordBodySchema", () => {
         password: "short",
       }),
     ).toThrow(/at least 8/i);
+  });
+});
+
+describe("googleAuthBodySchema", () => {
+  it("accepts a Google credential", () => {
+    const parsed = googleAuthBodySchema.parse({ credential: "token" });
+    expect(parsed.credential).toBe("token");
+  });
+
+  it("rejects an empty credential", () => {
+    expect(() => googleAuthBodySchema.parse({ credential: "" })).toThrow();
+  });
+});
+
+describe("verifyEmailBodySchema", () => {
+  it("accepts a verification token", () => {
+    const parsed = verifyEmailBodySchema.parse({ token: "abc123" });
+    expect(parsed.token).toBe("abc123");
+  });
+});
+
+describe("resendVerificationBodySchema", () => {
+  it("normalizes the email", () => {
+    const parsed = resendVerificationBodySchema.parse({
+      email: "  USER@Example.com  ",
+    });
+    expect(parsed.email).toBe("user@example.com");
   });
 });

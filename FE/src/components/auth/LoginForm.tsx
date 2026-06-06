@@ -7,13 +7,18 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AuthFloatingInput } from "@/components/auth/AuthFloatingInput";
+import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import {
   authSubmitButtonClassName,
+  getAuthFormErrorCode,
   getAuthFormErrorMessage,
 } from "@/components/auth/auth-form-shared";
 import { GymsharkLogo } from "@/components/auth/GymsharkLogo";
 import { loginSchema, type LoginFormValues } from "@/components/auth/validate";
-import { loginApi } from "@/features/auth/api/auth.api";
+import {
+  loginApi,
+  resendVerificationApi,
+} from "@/features/auth/api/auth.api";
 import { useAuth } from "@/features/auth/model/useAuth";
 
 export function LoginForm() {
@@ -21,6 +26,8 @@ export function LoginForm() {
   const { setSession } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
 
   const {
     register,
@@ -33,11 +40,28 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     setServerError(null);
+    setUnverifiedEmail(null);
+    setResendMessage(null);
     try {
       const { token, user } = await loginApi(values.email, values.password);
       setSession(user, token);
       router.push("/account");
       router.refresh();
+    } catch (err) {
+      if (getAuthFormErrorCode(err) === "EMAIL_NOT_VERIFIED") {
+        setUnverifiedEmail(values.email.trim().toLowerCase());
+      }
+      setServerError(getAuthFormErrorMessage(err));
+    }
+  }
+
+  async function resendVerification() {
+    if (!unverifiedEmail) return;
+    setServerError(null);
+    setResendMessage(null);
+    try {
+      const res = await resendVerificationApi(unverifiedEmail);
+      setResendMessage(res.verificationUrl ?? res.message);
     } catch (err) {
       setServerError(getAuthFormErrorMessage(err));
     }
@@ -103,8 +127,25 @@ export function LoginForm() {
         </div>
 
         {serverError ? (
-          <p role="alert" className="text-center text-sm text-destructive">
-            {serverError}
+          <div className="flex flex-col items-center gap-3 text-center">
+            <p role="alert" className="text-sm text-destructive">
+              {serverError}
+            </p>
+            {unverifiedEmail ? (
+              <button
+                type="button"
+                onClick={resendVerification}
+                className="text-sm font-semibold text-store-ink underline underline-offset-2 hover:text-store-fg-muted"
+              >
+                Resend verification email
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {resendMessage ? (
+          <p className="break-all text-center text-sm text-store-fg-muted">
+            {resendMessage}
           </p>
         ) : null}
 
@@ -116,6 +157,10 @@ export function LoginForm() {
           {isSubmitting ? "Logging in..." : "Log in"}
         </button>
       </form>
+
+      <div className="mt-6 w-full">
+        <GoogleAuthButton onError={setServerError} />
+      </div>
 
       <p className="mt-8 text-center text-sm text-store-ink">
         Don&apos;t have an account?{" "}

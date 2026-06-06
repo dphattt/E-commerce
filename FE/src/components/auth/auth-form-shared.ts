@@ -13,3 +13,11 @@ export function getAuthFormErrorMessage(error: unknown): string {
   }
   return "Something went wrong. Please try again.";
 }
+
+export function getAuthFormErrorCode(error: unknown): string | null {
+  if (isAxiosError(error)) {
+    const code = error.response?.data?.code;
+    if (typeof code === "string") return code;
+  }
+  return null;
+}

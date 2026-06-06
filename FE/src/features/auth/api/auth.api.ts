@@ -6,7 +6,11 @@ export type LoginResponse = {
   user: AuthUser;
 };
 
-export type RegisterResponse = LoginResponse;
+export type RegisterResponse = {
+  message: string;
+  verificationToken?: string;
+  verificationUrl?: string;
+};
 export type ForgotPasswordResponse = {
   message: string;
   resetToken?: string;
@@ -15,6 +19,16 @@ export type ForgotPasswordResponse = {
 
 export type ResetPasswordResponse = {
   message: string;
+};
+
+export type VerifyEmailResponse = {
+  message: string;
+};
+
+export type ResendVerificationResponse = {
+  message: string;
+  verificationToken?: string;
+  verificationUrl?: string;
 };
 
 /** Auth endpoints return `{ token, user }`, not the `{ data }` envelope used elsewhere. */
@@ -38,6 +52,15 @@ export async function registerApi(payload: {
     email: payload.email.trim().toLowerCase(),
     password: payload.password,
     name: payload.name?.trim() ?? "",
+  });
+  return data;
+}
+
+export async function googleLoginApi(
+  credential: string,
+): Promise<LoginResponse> {
+  const { data } = await httpClient.post<LoginResponse>("/auth/google", {
+    credential,
   });
   return data;
 }
@@ -68,6 +91,26 @@ export async function resetPasswordApi(
   const { data } = await httpClient.post<ResetPasswordResponse>(
     "/auth/reset-password",
     { token, password },
+  );
+  return data;
+}
+
+export async function verifyEmailApi(
+  token: string,
+): Promise<VerifyEmailResponse> {
+  const { data } = await httpClient.post<VerifyEmailResponse>(
+    "/auth/verify-email",
+    { token },
+  );
+  return data;
+}
+
+export async function resendVerificationApi(
+  email: string,
+): Promise<ResendVerificationResponse> {
+  const { data } = await httpClient.post<ResendVerificationResponse>(
+    "/auth/resend-verification",
+    { email: email.trim().toLowerCase() },
   );
   return data;
 }

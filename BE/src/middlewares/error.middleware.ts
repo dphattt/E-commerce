@@ -8,6 +8,7 @@ interface MongoDuplicateError extends Error {
 interface AppError extends Error {
   status?: number;
   statusCode?: number;
+  code?: string | number;
 }
 
 export function notFoundHandler(req: Request, res: Response): void {
@@ -38,5 +39,8 @@ export function errorHandler(
     console.error(err);
   }
 
-  res.status(status).json({ message });
+  res.status(status).json({
+    message,
+    ...(typeof err.code === "string" && { code: err.code }),
+  });
 }

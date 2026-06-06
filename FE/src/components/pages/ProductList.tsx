@@ -250,20 +250,6 @@ function deriveCategoryLabel(categories: string[]): string {
   return categories.slice(1).filter(Boolean).join(" › ");
 }
 
-function derivePageTitle(
-  categorySlug?: string,
-  categories?: string[][],
-): string {
-  if (!categorySlug) return "All Products";
-  if (categories?.length) {
-    const first = categories[0];
-    return first.slice(1).filter(Boolean).join(" / ") || "Products";
-  }
-  return categorySlug
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 function formatOptionLabel(value: string): string {
   return value
     .replace(/[_-]/g, " ")
@@ -490,15 +476,6 @@ export function ProductList({
       sliderRef.current.scrollBy({ left: 320, behavior: "smooth" });
     }
   };
-
-  const pageTitle = useMemo(
-    () =>
-      derivePageTitle(
-        categorySlug,
-        products.map((p) => p.categories),
-      ),
-    [categorySlug, products],
-  );
 
   const filterOptions = useMemo(() => buildFilterOptions(products), [products]);
   const activeFilterCount = Object.values(selectedFilters).reduce(

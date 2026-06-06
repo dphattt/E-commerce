@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/modules/cart/cart.repository");
-vi.mock("@/modules/products/products.repository");
+vi.mock("@/models/cart/cart.repository");
+vi.mock("@/models/products/products.repository");
 
 import * as cartRepo from "@/models/cart/cart.repository";
 import * as productsRepo from "@/models/products/products.repository";
@@ -80,6 +80,9 @@ describe("cart.service.addCartItem", () => {
       sku: "A1",
       quantity: 2,
       unitPrice: { amount: 22, currency: "USD" },
+      name: "Product A",
+      image: "/img.jpg",
+      variantLabel: undefined,
     });
     expect(cart.save).toHaveBeenCalledTimes(1);
   });

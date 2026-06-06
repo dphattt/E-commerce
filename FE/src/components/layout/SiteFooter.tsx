@@ -56,6 +56,8 @@ export type SiteFooterProps = {
   regionHref?: string;
   socials?: FooterSocial[];
   paymentMethods?: string[];
+  languageLabel?: string;
+  languageHref?: string;
   className?: string;
 };
 
@@ -81,13 +83,19 @@ const defaultColumns: FooterColumn[] = [
   {
     title: "Pages",
     links: [
+      { label: "Stores", href: "/stores" },
+      { label: "Refer a Friend", href: "/refer" },
       { label: "Gymshark Central", href: "/central" },
       { label: "Gymshark Loyalty", href: "/loyalty" },
-      { label: "Careers", href: "/careers" },
       { label: "About Us", href: "/about" },
+      { label: "Careers", href: "/careers" },
       { label: "Student Discount", href: "/students" },
       { label: "Training App", href: "/app" },
+      { label: "GOVX ID", href: "/govx" },
+      { label: "Military Discount", href: "/military" },
+      { label: "Accessibility Statement", href: "/accessibility" },
       { label: "Factory List", href: "/factories" },
+      { label: "Sustainability", href: "/sustainability" },
     ],
   },
 ];
@@ -97,9 +105,9 @@ const defaultPromo = (brand: string): FooterPromoCard[] => [
   {
     href: "/students",
     headline: `${brand} Students`,
-    caption: "Students get 15% off",
+    caption: "Students get 12% off",
   },
-  { href: "/newsletter", headline: "✉", caption: "Email sign up" },
+  { href: "/newsletter", headline: "email", caption: "Email sign up" },
 ];
 
 const defaultLegal: FooterLegalLink[] = [
@@ -113,9 +121,11 @@ const defaultLegal: FooterLegalLink[] = [
 const defaultPaymentMethods = [
   "Visa",
   "Mastercard",
-  "Amex",
   "PayPal",
   "Apple Pay",
+  "Klarna",
+  "Amex",
+  "Afterpay",
 ];
 
 const defaultSocial: FooterSocial[] = [
@@ -135,10 +145,11 @@ function IconChevron({ open }: { open: boolean }) {
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
-      className={`size-5 shrink-0 text-store-fg-muted transition-transform ${open ? "rotate-180" : ""}`}
+      className="size-5 shrink-0 text-store-ink-strong"
       aria-hidden
     >
-      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 12h14" strokeLinecap="round" />
+      {!open && <path d="M12 5v14" strokeLinecap="round" />}
     </svg>
   );
 }
@@ -170,6 +181,38 @@ function IconGlobe(props: React.SVGProps<SVGSVGElement>) {
     >
       <circle cx="12" cy="12" r="10" />
       <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z" />
+    </svg>
+  );
+}
+
+function IconArrowUp(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      aria-hidden
+      {...props}
+    >
+      <path d="M12 19V5M6 11l6-6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconEnvelope(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      aria-hidden
+      {...props}
+    >
+      <path d="M4 8h16v11H4z" strokeLinejoin="round" />
+      <path d="M4 8l8 6 8-6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 8V5h6v3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -261,12 +304,12 @@ function SocialIcon({ name }: { name: FooterSocial["icon"] }) {
 
 function LinkList({ links }: { links: FooterLink[] }) {
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-3">
       {links.map((item) => (
         <li key={item.href + item.label}>
           <Link
             href={item.href}
-            className="text-sm text-store-fg-muted transition-colors hover:text-store-ink"
+            className="text-xs font-medium text-store-fg-muted transition-colors hover:text-store-ink"
           >
             {item.label}
           </Link>
@@ -301,6 +344,8 @@ const paymentBrandClass: Record<string, string> = {
   Amex: "border-transparent bg-[#006fcf] text-white",
   PayPal: "border-transparent bg-[#003087] text-white",
   "Apple Pay": "border-transparent bg-black text-white",
+  Klarna: "border-transparent bg-[#ffb3c7] text-black",
+  Afterpay: "border-transparent bg-[#b2fce4] text-black",
 };
 
 function PaymentBadge({ name }: { name: string }) {
@@ -326,50 +371,21 @@ function PaymentBadge({ name }: { name: string }) {
   );
 }
 
-function PaymentSocialBar({
-  paymentMethods,
-  socials,
-}: {
-  paymentMethods: string[];
-  socials: FooterSocial[];
-}) {
-  return (
-    <div className="mt-8 flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t border-store-border pt-8 sm:mt-10 lg:mt-0 lg:pt-10">
-      <div
-        className="flex flex-wrap items-center gap-2"
-        aria-label="Payment methods"
-      >
-        {paymentMethods.map((name) => (
-          <PaymentBadge key={name} name={name} />
-        ))}
-      </div>
-      <div
-        className="flex flex-wrap items-center gap-2"
-        aria-label="Social media"
-      >
-        <SocialRow socials={socials} />
-      </div>
-    </div>
-  );
-}
-
 function PromoCard({ card }: { card: FooterPromoCard }) {
-  const isEnvelope = card.headline.trim() === "✉" || card.headline === "✉";
+  const isEnvelope = card.headline.trim().toLowerCase() === "email";
   return (
     <Link
       href={card.href}
-      className="group block overflow-hidden rounded border border-store-border bg-store-paper shadow-sm transition-shadow hover:shadow-md"
+      className="group block overflow-hidden bg-store-paper transition-opacity hover:opacity-90"
     >
-      <div className="flex min-h-[72px] items-center justify-center bg-store-ink-strong px-3 py-4 text-center text-[11px] font-bold uppercase leading-tight tracking-wide text-store-on-accent group-hover:opacity-90 sm:min-h-[76px] sm:text-xs">
+      <div className="flex h-20 items-center justify-center bg-store-ink-strong px-3 py-4 text-center text-[11px] font-black uppercase leading-tight tracking-wide text-store-on-accent sm:h-[88px] sm:text-xs">
         {isEnvelope ? (
-          <span className="text-lg" aria-hidden>
-            ✉
-          </span>
+          <IconEnvelope className="size-8" />
         ) : (
-          <span>{card.headline}</span>
+          <span className="max-w-24">{card.headline}</span>
         )}
       </div>
-      <div className="border-t border-store-border bg-store-surface px-2 py-2.5 text-center text-[10px] font-semibold uppercase leading-snug tracking-wide text-store-ink-strong sm:text-[11px]">
+      <div className="bg-store-surface px-2 py-2.5 text-left text-[10px] font-black uppercase leading-snug tracking-tight text-store-ink-strong sm:text-[11px]">
         {card.caption}
       </div>
     </Link>
@@ -382,10 +398,12 @@ export function SiteFooter({
   promoCards,
   legalLinks = defaultLegal,
   copyrightSuffix = "Limited | All Rights Reserved. | We Do Gym.",
-  regionLabel = "ROW",
+  regionLabel = "US",
   regionHref = "/region",
   socials = defaultSocial,
   paymentMethods = defaultPaymentMethods,
+  languageLabel = "English",
+  languageHref = "/language",
   className = "",
 }: SiteFooterProps) {
   const cards = promoCards ?? defaultPromo(brandName);
@@ -396,32 +414,44 @@ export function SiteFooter({
     setOpenMobile((prev) => (prev === title ? null : title));
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const year = new Date().getFullYear();
 
   const columnHeadingClass =
-    "mb-4 text-sm font-bold uppercase leading-tight tracking-wide text-store-ink-strong";
+    "mb-4 text-xs font-black uppercase leading-tight tracking-wide text-store-ink-strong";
 
   return (
     <footer
-      className={`mt-auto border-t border-store-border bg-store-surface-2 text-store-ink ${className}`}
+      className={`mt-auto border-t border-store-border bg-store-paper text-store-ink ${className}`}
     >
-      <div className="mx-auto max-w-[1600px] px-4 pt-8 pb-0 sm:px-[30px] sm:pt-[30px] lg:px-8 lg:pt-8">
-        {/* lg+: nav cụm trái tối đa ~nửa khung; promo + social chiếm phần còn lại */}
-        <div className="hidden lg:grid lg:grid-cols-[minmax(0,50%)_minmax(280px,1fr)] lg:items-start lg:gap-x-10 lg:gap-y-0 lg:pb-[60px] xl:gap-x-12">
+      <div className="w-full px-4 pt-6 pb-0 sm:px-6 lg:px-10 lg:pt-10">
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className="mx-auto mb-6 flex items-center gap-2 text-xs font-black text-store-ink-strong hover:text-store-fg-muted lg:hidden"
+        >
+          <IconArrowUp className="size-3.5" />
+          Back to top
+        </button>
+
+        <div className="hidden lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(420px,440px)] lg:items-start lg:gap-x-16 lg:pb-20">
           <nav
-            className="flex min-w-0 w-full max-w-full justify-start gap-6 min-[1100px]:gap-8 xl:gap-10"
+            className="grid min-w-0 max-w-2xl grid-cols-[120px_120px_minmax(180px,1fr)] gap-x-16"
             aria-label="Footer navigation"
           >
             {columns.map((col) => (
-              <div key={col.title} className="min-w-0 flex-1 basis-0">
+              <div key={col.title} className="min-w-0">
                 <h2 className={columnHeadingClass}>{col.title}</h2>
                 <LinkList links={col.links} />
               </div>
             ))}
           </nav>
-          <div className="min-w-0 justify-self-stretch">
+          <div className="min-w-0 justify-self-end">
             <h2 className={columnHeadingClass}>More about {brandName}</h2>
-            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+            <div className="grid grid-cols-3 gap-2">
               {cards.map((card, i) => (
                 <PromoCard key={`${card.href}-${i}`} card={card} />
               ))}
@@ -429,28 +459,7 @@ export function SiteFooter({
           </div>
         </div>
 
-        {/* sm–md: 6-col grid — Help | Account | Pages then full-width promo + social */}
-        <div className="hidden sm:grid sm:grid-cols-6 sm:gap-x-8 sm:gap-y-10 sm:pb-12 lg:hidden">
-          <nav className="contents" aria-label="Footer navigation">
-            {columns.map((col) => (
-              <div key={col.title} className="col-span-2 min-w-0">
-                <h2 className={columnHeadingClass}>{col.title}</h2>
-                <LinkList links={col.links} />
-              </div>
-            ))}
-          </nav>
-          <div className="col-span-6 min-w-0">
-            <h2 className={columnHeadingClass}>More about {brandName}</h2>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 md:max-w-3xl md:grid-cols-3">
-              {cards.map((card, i) => (
-                <PromoCard key={`${card.href}-t-${i}`} card={card} />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile: accordion + stacked promos */}
-        <div className="sm:hidden">
+        <div className="lg:hidden">
           {columns.map((col) => {
             const id = `${baseId}-${col.title}`;
             const open = openMobile === col.title;
@@ -461,10 +470,10 @@ export function SiteFooter({
                   id={`${id}-btn`}
                   aria-expanded={open}
                   aria-controls={`${id}-panel`}
-                  className="flex w-full items-center justify-between py-4 text-left"
+                  className="flex w-full items-center justify-between py-5 text-left"
                   onClick={() => toggle(col.title)}
                 >
-                  <span className="text-sm font-bold uppercase tracking-wide text-store-ink-strong">
+                  <span className="text-sm font-black uppercase tracking-wide text-store-ink-strong">
                     {col.title}
                   </span>
                   <IconChevron open={open} />
@@ -474,7 +483,7 @@ export function SiteFooter({
                     id={`${id}-panel`}
                     role="region"
                     aria-labelledby={`${id}-btn`}
-                    className="pb-4"
+                    className="pb-5"
                   >
                     <LinkList links={col.links} />
                   </div>
@@ -482,49 +491,70 @@ export function SiteFooter({
               </div>
             );
           })}
-          <div className="pt-8">
+          <div className="pt-6">
             <h2 className={columnHeadingClass}>More about {brandName}</h2>
-            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+            <div className="grid grid-cols-3 gap-2">
               {cards.map((card, i) => (
-                <div
-                  key={`m-${card.href}-${i}`}
-                  className="w-[min(260px,78vw)] shrink-0 snap-start"
-                >
-                  <PromoCard card={card} />
-                </div>
+                <PromoCard key={`m-${card.href}-${i}`} card={card} />
               ))}
             </div>
           </div>
         </div>
 
-        <PaymentSocialBar paymentMethods={paymentMethods} socials={socials} />
+        <div className="mt-8 flex flex-col items-center gap-8 lg:mt-14 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            className="order-2 flex flex-wrap items-center justify-center gap-2 lg:order-1 lg:justify-start"
+            aria-label="Payment methods"
+          >
+            {paymentMethods.map((name) => (
+              <PaymentBadge key={name} name={name} />
+            ))}
+          </div>
+          <div
+            className="order-1 flex flex-wrap items-center justify-center gap-2 lg:order-2 lg:justify-end"
+            aria-label="Social media"
+          >
+            <SocialRow socials={socials} />
+          </div>
+        </div>
 
-        {/* Legal row */}
-        <div className="mt-6 flex flex-col gap-4 border-t border-store-border pt-6 text-xs text-store-fg-muted sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-y-3 lg:mt-8 lg:pb-[60px]">
-          <p className="order-2 sm:order-1">
-            © {year} | {brandName} {copyrightSuffix}
+        <div className="mt-8 grid border-t border-store-border py-6 text-xs text-store-fg-muted lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <p className="order-3 mt-6 text-center lg:order-1 lg:mt-0 lg:text-left">
+            &copy; {year} | {brandName} {copyrightSuffix}
           </p>
-          <div className="order-1 flex flex-col gap-3 sm:order-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2">
-            <nav aria-label="Legal" className="flex flex-wrap gap-x-3 gap-y-2">
+          <div className="order-1 flex flex-col items-center gap-5 lg:order-2 lg:flex-row lg:flex-wrap lg:justify-end lg:gap-x-4 lg:gap-y-2">
+            <nav
+              aria-label="Legal"
+              className="flex flex-col items-center gap-3 lg:flex-row lg:flex-wrap lg:gap-x-4 lg:gap-y-2"
+            >
               {legalLinks.map((l) => (
                 <Link
                   key={l.href}
                   href={l.href}
-                  className="whitespace-nowrap underline-offset-2 hover:text-store-ink hover:underline"
+                  className="whitespace-nowrap font-medium underline-offset-2 hover:text-store-ink hover:underline"
                 >
                   {l.label}
                 </Link>
               ))}
             </nav>
-            <ThemeSelector className="self-start sm:self-center" />
-            <Link
-              href={regionHref}
-              className="inline-flex items-center gap-1.5 self-start font-medium text-store-ink hover:text-store-fg-muted sm:self-center"
-            >
-              <IconGlobe className="size-4 shrink-0" aria-hidden />
-              <span>{regionLabel}</span>
-              <IconChevronDown />
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <ThemeSelector />
+              <Link
+                href={regionHref}
+                className="inline-flex items-center gap-1.5 font-medium text-store-ink hover:text-store-fg-muted"
+              >
+                <IconGlobe className="size-4 shrink-0" aria-hidden />
+                <span>{regionLabel}</span>
+                <IconChevronDown />
+              </Link>
+              <Link
+                href={languageHref}
+                className="inline-flex items-center gap-1.5 font-medium text-store-ink hover:text-store-fg-muted"
+              >
+                <span>{languageLabel}</span>
+                <IconChevronDown />
+              </Link>
+            </div>
           </div>
         </div>
       </div>

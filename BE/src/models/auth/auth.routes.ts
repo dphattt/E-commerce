@@ -7,9 +7,12 @@ import {
 } from "@/middlewares/rate-limit.middleware";
 import {
   forgotPasswordBodySchema,
+  googleAuthBodySchema,
   loginBodySchema,
   registerBodySchema,
+  resendVerificationBodySchema,
   resetPasswordBodySchema,
+  verifyEmailBodySchema,
 } from "@/models/auth/auth.validation";
 
 const router = Router();
@@ -26,8 +29,27 @@ router.post(
   validate(loginBodySchema),
   authController.login,
 );
+router.post(
+  "/google",
+  loginLimiter,
+  validate(googleAuthBodySchema),
+  authController.google,
+);
 router.post("/refresh", authController.refresh);
 router.post("/logout", authController.logout);
+router.get("/verify-email", authController.verifyEmail);
+router.post(
+  "/verify-email",
+  loginLimiter,
+  validate(verifyEmailBodySchema),
+  authController.verifyEmail,
+);
+router.post(
+  "/resend-verification",
+  loginLimiter,
+  validate(resendVerificationBodySchema),
+  authController.resendVerification,
+);
 router.post(
   "/forgot-password",
   loginLimiter,

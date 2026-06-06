@@ -1,7 +1,10 @@
 import type { CookieOptions, NextFunction, Request, Response } from "express";
+import { OAuth2Client } from "google-auth-library";
+import type { Types } from "mongoose";
 import { createHash, randomBytes } from "node:crypto";
 import User from "@/models/users/User.model";
 import RefreshToken from "@/models/auth/Auth.model";
+import { sendVerificationEmail } from "@/models/auth/email.service";
 import {
   signAccessToken,
   signRefreshToken,
@@ -11,17 +14,25 @@ import {
 import { httpError } from "@/utils/http-error";
 import type {
   ForgotPasswordBody,
+  GoogleAuthBody,
   LoginBody,
   RegisterBody,
+  ResendVerificationBody,
   ResetPasswordBody,
+  VerifyEmailBody,
 } from "@/models/auth/auth.validation";
 
 const REFRESH_COOKIE = "refreshToken";
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const EMAIL_VERIFICATION_TOKEN_BYTES = 32;
+const EMAIL_VERIFICATION_EXPIRES_MS = 24 * 60 * 60 * 1000;
 const PASSWORD_RESET_TOKEN_BYTES = 32;
 const PASSWORD_RESET_EXPIRES_MS = 60 * 60 * 1000;
 const PASSWORD_RESET_MESSAGE =
   "If an account exists for this email, password reset instructions have been sent.";
+const VERIFICATION_SENT_MESSAGE =
+  "If an account exists and needs verification, a verification email has been sent.";
+const googleClient = new OAuth2Client();
 
 function refreshCookieOptions(): CookieOptions {
   return {
@@ -66,6 +77,65 @@ function buildResetUrl(token: string): string | undefined {
   )}`;
 }
 
+function appOrigin(): string | undefined {
+  const origin =
+    process.env.APP_ORIGIN ||
+    process.env.FRONTEND_URL ||
+    process.env.CORS_ORIGIN?.split(",")[0]?.trim();
+  if (!origin || origin === "*") return undefined;
+  return origin.replace(/\/$/, "");
+}
+
+function buildVerificationUrl(token: string): string | undefined {
+  const origin = appOrigin();
+  if (!origin) return undefined;
+  return `${origin}/account/verify-email?token=${encodeURIComponent(token)}`;
+}
+
+async function issueEmailVerification(user: {
+  _id: Types.ObjectId;
+  email: string;
+  name?: string;
+}): Promise<{ verificationToken?: string; verificationUrl?: string }> {
+  const verificationToken = randomBytes(EMAIL_VERIFICATION_TOKEN_BYTES).toString(
+    "hex",
+  );
+  const verificationUrl = buildVerificationUrl(verificationToken);
+
+  await User.updateOne(
+    { _id: user._id },
+    {
+      $set: {
+        emailVerificationTokenHash: hashResetToken(verificationToken),
+        emailVerificationExpiresAt: new Date(
+          Date.now() + EMAIL_VERIFICATION_EXPIRES_MS,
+        ),
+      },
+    },
+  );
+
+  if (verificationUrl) {
+    await sendVerificationEmail({
+      to: user.email,
+      name: user.name,
+      verificationUrl,
+    });
+  } else if (process.env.NODE_ENV === "production") {
+    throw new Error("APP_ORIGIN is required for email verification");
+  } else if (process.env.NODE_ENV !== "production") {
+    console.info(
+      `[auth] Email verification token for ${user.email}: ${verificationToken}`,
+    );
+  }
+
+  if (process.env.NODE_ENV === "production") return {};
+  return { verificationToken, verificationUrl };
+}
+
+function authUser(user: { id: string; email: string; name?: string }) {
+  return { id: user.id, email: user.email, name: user.name };
+}
+
 export async function register(
   req: Request,
   res: Response,
@@ -84,12 +154,14 @@ export async function register(
       email,
       passwordHash,
       name,
+      authProvider: "local",
+      emailVerified: false,
     });
 
-    const token = await issueTokens(res, { sub: user.id, email: user.email });
+    const devVerification = await issueEmailVerification(user);
     res.status(201).json({
-      token,
-      user: { id: user.id, email: user.email, name: user.name },
+      message: "Account created. Please verify your email before logging in.",
+      ...devVerification,
     });
   } catch (e) {
     next(e);
@@ -105,16 +177,90 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       throw httpError("Invalid credentials", 401);
     }
 
+    if (!user.passwordHash) {
+      throw httpError("Please continue with Google sign in", 401);
+    }
+
     const ok = await user.comparePassword(password);
     if (!ok) {
       throw httpError("Invalid credentials", 401);
     }
 
+    if (!user.emailVerified) {
+      throw httpError(
+        "Please verify your email before logging in",
+        403,
+        "EMAIL_NOT_VERIFIED",
+      );
+    }
+
     const token = await issueTokens(res, { sub: user.id, email: user.email });
     res.json({
       token,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: authUser(user),
     });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function google(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { credential } = req.body as GoogleAuthBody;
+    const googleClientId = process.env.GOOGLE_CLIENT_ID;
+    if (!googleClientId) {
+      throw httpError("Google OAuth is not configured", 500);
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: googleClientId,
+    });
+    const payload = ticket.getPayload();
+    const email = payload?.email?.trim().toLowerCase();
+    const googleId = payload?.sub;
+
+    if (!email || !googleId || payload.email_verified !== true) {
+      throw httpError("Invalid Google account", 401);
+    }
+
+    const name = payload.name?.trim() ?? "";
+    const existingByGoogle = await User.findOne({ googleId });
+    const existingByEmail = existingByGoogle
+      ? null
+      : await User.findOne({ email }).select("+googleId");
+
+    const user =
+      existingByGoogle ??
+      (existingByEmail
+        ? await User.findByIdAndUpdate(
+            existingByEmail._id,
+            {
+              $set: {
+                googleId,
+                authProvider: "google",
+                emailVerified: true,
+                ...(name && !existingByEmail.name ? { name } : {}),
+              },
+              $unset: {
+                emailVerificationTokenHash: "",
+                emailVerificationExpiresAt: "",
+              },
+            },
+            { new: true },
+          )
+        : await User.create({
+            email,
+            googleId,
+            name,
+            authProvider: "google",
+            emailVerified: true,
+          }));
+
+    if (!user) throw httpError("Unable to sign in with Google", 500);
+
+    const token = await issueTokens(res, { sub: user.id, email: user.email });
+    res.json({ token, user: authUser(user) });
   } catch (e) {
     next(e);
   }
@@ -220,6 +366,73 @@ export async function forgotPassword(
         response.resetToken = resetToken;
         response.resetUrl = buildResetUrl(resetToken);
       }
+    }
+
+    res.json(response);
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function verifyEmail(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const token =
+      ((req.body as Partial<VerifyEmailBody> | undefined)?.token ||
+        (typeof req.query.token === "string" ? req.query.token : ""))?.trim();
+
+    if (!token) {
+      throw httpError("Verification token is required", 400);
+    }
+
+    const user = await User.findOne({
+      emailVerificationTokenHash: hashResetToken(token),
+      emailVerificationExpiresAt: { $gt: new Date() },
+    }).select("_id");
+
+    if (!user) {
+      throw httpError("Invalid or expired verification token", 400);
+    }
+
+    await User.updateOne(
+      { _id: user._id },
+      {
+        $set: { emailVerified: true },
+        $unset: {
+          emailVerificationTokenHash: "",
+          emailVerificationExpiresAt: "",
+        },
+      },
+    );
+
+    res.json({ message: "Email has been verified." });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function resendVerification(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { email } = req.body as ResendVerificationBody;
+    const user = await User.findOne({
+      email,
+      emailVerified: false,
+    }).select("_id email name");
+    const response: {
+      message: string;
+      verificationToken?: string;
+      verificationUrl?: string;
+    } = { message: VERIFICATION_SENT_MESSAGE };
+
+    if (user) {
+      Object.assign(response, await issueEmailVerification(user));
     }
 
     res.json(response);

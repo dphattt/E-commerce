@@ -152,7 +152,7 @@ export function SiteHeader({
       >
         {/* Announcement */}
         <div className="border-b border-store-border/80 bg-store-surface">
-          <div className="mx-auto grid h-14 max-w-400 grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:px-6 lg:px-8">
+          <div className="grid h-14 w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:px-6 lg:px-10">
             <div aria-hidden="true" />
             <div className="flex h-full min-w-0 items-center justify-center overflow-hidden text-center">
               <div
@@ -195,7 +195,7 @@ export function SiteHeader({
 
         {/* Main bar */}
         <div className="border-b border-store-border/80">
-          <div className="mx-auto grid h-24 max-w-400 grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 sm:px-6 lg:h-auto lg:gap-6 lg:px-8 lg:py-3">
+          <div className="grid h-24 w-full grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 sm:px-6 lg:h-auto lg:gap-6 lg:px-10 lg:py-3">
             {/* Left: hamburger (mobile) + desktop nav */}
             <div className="flex min-w-0 items-center gap-5 lg:min-w-50 lg:gap-2">
               <button

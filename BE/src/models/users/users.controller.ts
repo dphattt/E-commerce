@@ -9,7 +9,7 @@ export async function me(req: Request, res: Response, next: NextFunction) {
     }
 
     const user = await User.findById(req.user.id).select(
-      "email name createdAt",
+      "email name emailVerified createdAt",
     );
     if (!user) {
       throw httpError("User not found", 404);
