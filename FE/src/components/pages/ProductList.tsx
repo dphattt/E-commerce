@@ -14,11 +14,11 @@ import {
 import { IconHeart } from "@/components/icons";
 import { useWishlist } from "@/features/wishlist";
 import { useHasHydrated } from "@/shared/hooks";
+import { formatUsd } from "@/shared/lib/format-money";
 import {
   productSlugFromSourceUrl,
   useProductCache,
   type Product,
-  fetchProductList,
 } from "@/features/products";
 
 type SortOption = "popular" | "low-to-high" | "high-to-low" | "newest";
@@ -416,12 +416,19 @@ export function ProductList({
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  // Best Sellers Showcase states and ref
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  // Best Sellers — seed from SSR products so the hero does not pop in after
+  // back-navigation (which would shift scroll position below the saved offset).
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(() =>
+    products.slice(0, 8),
+  );
   const [hoveredFeaturedId, setHoveredFeaturedId] = useState<string | null>(
     null,
   );
   const sliderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setFeaturedProducts(products.slice(0, 8));
+  }, [products]);
 
   const gender = useMemo(() => {
     if (products && products.length > 0) {
@@ -435,35 +442,6 @@ export function ProductList({
     }
     return "Mens";
   }, [products, categorySlug]);
-
-  const mainCategorySlug = useMemo(() => {
-    if (gender === "Womens") return "women";
-    if (gender === "Mens") return "men";
-    return "accessories";
-  }, [gender]);
-
-  useEffect(() => {
-    let active = true;
-    const loadFeatured = async () => {
-      try {
-        const res = await fetchProductList({
-          categorySlug: mainCategorySlug,
-          limit: 100,
-        });
-        if (!active) return;
-        if (res && res.products && res.products.length > 0) {
-          const shuffled = [...res.products].sort(() => 0.5 - Math.random());
-          setFeaturedProducts(shuffled.slice(0, 8));
-        }
-      } catch (err) {
-        console.error("Failed to fetch featured products:", err);
-      }
-    };
-    loadFeatured();
-    return () => {
-      active = false;
-    };
-  }, [mainCategorySlug]);
 
   const scrollPrev = () => {
     if (sliderRef.current) {
@@ -878,7 +856,7 @@ export function ProductList({
                           </h3>
                         </Link>
                         <span className="font-black text-sm text-store-ink-strong shrink-0">
-                          ${product.price.amount}
+                          {formatUsd(product.price.amount)}
                         </span>
                       </div>
                     </div>

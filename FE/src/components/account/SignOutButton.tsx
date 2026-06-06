@@ -56,7 +56,7 @@ export function SignOutButton() {
       type="button"
       onClick={handleSignOut}
       disabled={isSigningOut}
-      className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-transparent px-4 py-2 text-sm text-zinc-700 transition-all duration-150 hover:scale-[1.02] hover:border-zinc-900 hover:bg-zinc-900 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-store-border px-4 py-2 text-sm font-medium text-store-ink transition-all duration-150 hover:scale-[1.02] hover:border-store-ink-strong hover:bg-store-ink-strong hover:text-store-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-store-ink/20 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
     >
       <SignOutIcon />
       {isSigningOut ? "Signing Out..." : "Sign Out"}

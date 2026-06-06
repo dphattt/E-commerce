@@ -2,43 +2,90 @@
 
 import { useCallback } from "react";
 import {
-  add as addAction,
-  clear as clearAction,
-  remove as removeAction,
-  toggle as toggleAction,
+  clearWishlistApi,
+  getWishlistApi,
+  removeWishlistItemApi,
+  toggleWishlistItemApi,
+} from "@/features/wishlist/api/wishlist.api";
+import { useAuth } from "@/features/auth/model/useAuth";
+import { useWishlistLoginPrompt } from "@/features/wishlist/model/WishlistLoginPrompt";
+import {
+  addProductId,
+  clear,
+  removeProductId,
+  setWishlistFromApi,
 } from "@/features/wishlist/model/wishlist.slice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { useAuth } from "@/features/auth/model/useAuth";
 
 export function useWishlist() {
   const dispatch = useAppDispatch();
+  const productIds = useAppSelector((s) => s.wishlist.productIds);
+  const items = useAppSelector((s) => s.wishlist.items);
   const { isAuthenticated } = useAuth();
-  const rawSlugs = useAppSelector((s) => s.wishlist.slugs);
-
-  // Khi không authenticated, luôn trả về empty — không show wishlist của user cũ
-  const slugs = isAuthenticated ? rawSlugs : [];
+  const { openLoginPrompt } = useWishlistLoginPrompt();
 
   const toggle = useCallback(
-    (slug: string) => dispatch(toggleAction(slug)),
-    [dispatch],
+    async (productId: string) => {
+      if (!isAuthenticated) {
+        openLoginPrompt();
+        return;
+      }
+
+      const wasWishlisted = productIds.includes(productId);
+      if (wasWishlisted) {
+        dispatch(removeProductId(productId));
+      } else {
+        dispatch(addProductId(productId));
+      }
+
+      try {
+        const data = await toggleWishlistItemApi(productId);
+        dispatch(setWishlistFromApi(data.items));
+      } catch {
+        if (wasWishlisted) {
+          dispatch(addProductId(productId));
+        } else {
+          dispatch(removeProductId(productId));
+        }
+      }
+    },
+    [dispatch, isAuthenticated, openLoginPrompt, productIds],
   );
-  const add = useCallback(
-    (slug: string) => dispatch(addAction(slug)),
-    [dispatch],
-  );
+
   const remove = useCallback(
-    (slug: string) => dispatch(removeAction(slug)),
-    [dispatch],
+    async (productId: string) => {
+      if (!isAuthenticated) return;
+
+      dispatch(removeProductId(productId));
+      try {
+        const data = await removeWishlistItemApi(productId);
+        dispatch(setWishlistFromApi(data.items));
+      } catch {
+        const data = await getWishlistApi().catch(() => null);
+        if (data) dispatch(setWishlistFromApi(data.items));
+      }
+    },
+    [dispatch, isAuthenticated],
   );
-  const clear = useCallback(() => dispatch(clearAction()), [dispatch]);
+
+  const clearWishlist = useCallback(async () => {
+    if (!isAuthenticated) return;
+
+    dispatch(clear());
+    try {
+      await clearWishlistApi();
+    } catch {
+      // WishlistBootstrap will resync on next auth cycle if needed.
+    }
+  }, [dispatch, isAuthenticated]);
 
   return {
-    slugs,
-    count: slugs.length,
-    isWishlisted: (slug: string) => slugs.includes(slug),
+    productIds,
+    items,
+    count: productIds.length,
+    isWishlisted: (productId: string) => productIds.includes(productId),
     toggle,
-    add,
     remove,
-    clear,
+    clear: clearWishlist,
   };
 }

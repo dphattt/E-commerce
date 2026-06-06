@@ -23,9 +23,16 @@ export function errorHandler(
 ): void {
   const mongoErr = err as MongoDuplicateError;
   if (mongoErr.code === 11000) {
+    const fields = mongoErr.keyPattern
+      ? Object.keys(mongoErr.keyPattern)
+      : [];
+    const message = fields.includes("email")
+      ? "Email already registered"
+      : "Duplicate value";
+
     res.status(409).json({
-      message: "Duplicate value",
-      ...(mongoErr.keyPattern && { fields: Object.keys(mongoErr.keyPattern) }),
+      message,
+      ...(fields.length > 0 && { fields }),
     });
     return;
   }

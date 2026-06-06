@@ -1,4 +1,7 @@
-import type { ProductDetailResponse, ProductListResponse } from "@/features/products/model/product.types";
+import type {
+  ProductDetailResponse,
+  ProductListResponse,
+} from "@/features/products/model/product.types";
 import { getApiOrigin } from "@/lib/nav-categories";
 
 const productsApiUrl = (query?: string): string => {
@@ -68,5 +71,23 @@ export async function fetchProductBySlug(
   if (!res.ok) {
     throw new Error(`Failed to fetch product: ${res.status} ${res.statusText}`);
   }
+  return (await res.json()) as ProductDetailResponse;
+}
+
+export async function fetchProductById(
+  id: string,
+  options?: { signal?: AbortSignal },
+): Promise<ProductDetailResponse> {
+  const res = await fetch(
+    `${getApiOrigin()}/api/products/${encodeURIComponent(id)}`,
+    { signal: options?.signal, cache: "no-store" },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch product: ${res.status} ${res.statusText}`,
+    );
+  }
+
   return (await res.json()) as ProductDetailResponse;
 }

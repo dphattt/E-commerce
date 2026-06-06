@@ -11,6 +11,7 @@ import { useCart } from "@/features/cart";
 import { useAuth } from "@/features/auth/model/useAuth";
 import { useWishlist } from "@/features/wishlist";
 import { useRouter } from "next/navigation";
+import { useHasHydrated } from "@/shared/hooks";
 
 function IconHeart(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -69,7 +70,8 @@ export function ProductDetail({ slug }: ProductDetailProps) {
   const dispatch = useAppDispatch();
   const { addItem } = useCart();
   const { isAuthenticated } = useAuth();
-  const { isWishlisted, toggle: toggleWishlist } = useWishlist();
+  const wishlist = useWishlist();
+  const hasHydrated = useHasHydrated();
   const router = useRouter();
 
   // Fetch full product detail (with real variant SKUs) on mount.
@@ -172,6 +174,8 @@ export function ProductDetail({ slug }: ProductDetailProps) {
     product.imageUrls.length > 0 ? product.imageUrls : [""];
   const subtitle = categoryLabel(product.categories);
   const priceLabel = formatPrice(product.price.amount, product.price.currency);
+  const isProductWishlisted =
+    hasHydrated && wishlist.isWishlisted(product._id);
 
   const displaySizes =
     product.variants && product.variants.length > 0
@@ -254,13 +258,18 @@ export function ProductDetail({ slug }: ProductDetailProps) {
                   {product.title}
                 </h1>
                 <button
-                  onClick={() => toggleWishlist(slug)}
-                  aria-label={isWishlisted(slug) ? "Remove from wishlist" : "Add to wishlist"}
+                  onClick={() => wishlist.toggle(product._id)}
+                  aria-label={
+                    isProductWishlisted
+                      ? "Remove from wishlist"
+                      : "Add to wishlist"
+                  }
+                  aria-pressed={isProductWishlisted}
                   className="group rounded-full border border-store-border p-2.5 transition-colors hover:border-store-ink-strong"
                 >
                   <IconHeart
                     className={`size-6 transition-transform group-hover:scale-110 ${
-                      isWishlisted(slug)
+                      isProductWishlisted
                         ? "fill-red-500 stroke-red-500"
                         : "text-store-ink"
                     }`}

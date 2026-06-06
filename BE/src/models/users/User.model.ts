@@ -23,7 +23,13 @@ interface IUserModel extends Model<IUser> {
 
 const userSchema = new Schema<IUser, IUserModel>(
   {
-    email: { type: String, required: true, lowercase: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
     passwordHash: { type: String, select: false },
     name: { type: String, trim: true, default: "" },
     emailVerified: { type: Boolean, default: false },

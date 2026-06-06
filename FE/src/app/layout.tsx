@@ -38,13 +38,11 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning={true}
     >
-      <head>
-        <ThemeScript />
-      </head>
       <body
         className="min-h-full flex flex-col bg-background text-foreground"
         suppressHydrationWarning={true}
       >
+        <ThemeScript />
         <AppProviders>
           <SiteHeader navItems={navItems} />
           <div

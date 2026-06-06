@@ -2,46 +2,52 @@
 
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { clearSession } from "@/features/auth/model/auth.slice";
+import type { WishlistItemResponse } from "@/features/wishlist/api/wishlist.api";
+import type { Product } from "@/features/products/model/product.types";
 
 export interface WishlistState {
-  slugs: string[];
+  productIds: string[];
+  items: WishlistItemResponse[];
 }
 
 const initialState: WishlistState = {
-  slugs: [],
+  productIds: [],
+  items: [],
 };
 
+function productIdsFromItems(items: WishlistItemResponse[]) {
+  return items.map((item) => item.productId);
+}
+
 /**
- * Persisted wishlist of product slugs. Persisted per-user via
- * listenerMiddleware (see store/index.ts) using key
- * `ecommerce-wishlist-{userId}`.
+ * Server-synced wishlist for authenticated users. Product ids drive
+ * heart toggles; enriched items power the dedicated wishlist page.
  */
 const wishlistSlice = createSlice({
   name: "wishlist",
   initialState,
   reducers: {
-    setSlugs(state, action: PayloadAction<string[]>) {
-      state.slugs = action.payload;
+    setWishlistFromApi(state, action: PayloadAction<WishlistItemResponse[]>) {
+      state.items = action.payload;
+      state.productIds = productIdsFromItems(action.payload);
     },
-    toggle(state, action: PayloadAction<string>) {
-      const slug = action.payload;
-      if (state.slugs.includes(slug)) {
-        state.slugs = state.slugs.filter((s) => s !== slug);
-      } else {
-        state.slugs.push(slug);
+    setProductIds(state, action: PayloadAction<string[]>) {
+      state.productIds = action.payload;
+    },
+    addProductId(state, action: PayloadAction<string>) {
+      const id = action.payload;
+      if (!state.productIds.includes(id)) {
+        state.productIds.push(id);
       }
     },
-    add(state, action: PayloadAction<string>) {
-      const slug = action.payload;
-      if (!state.slugs.includes(slug)) {
-        state.slugs.push(slug);
-      }
-    },
-    remove(state, action: PayloadAction<string>) {
-      state.slugs = state.slugs.filter((s) => s !== action.payload);
+    removeProductId(state, action: PayloadAction<string>) {
+      const id = action.payload;
+      state.productIds = state.productIds.filter((pid) => pid !== id);
+      state.items = state.items.filter((item) => item.productId !== id);
     },
     clear(state) {
-      state.slugs = [];
+      state.productIds = [];
+      state.items = [];
     },
   },
   extraReducers: (builder) => {
@@ -50,9 +56,20 @@ const wishlistSlice = createSlice({
   },
 });
 
-export const { setSlugs, toggle, add, remove, clear } = wishlistSlice.actions;
+export const {
+  setWishlistFromApi,
+  setProductIds,
+  addProductId,
+  removeProductId,
+  clear,
+} = wishlistSlice.actions;
 export const wishlistReducer = wishlistSlice.reducer;
 
-export function selectWishlistHas(slugs: string[], slug: string): boolean {
-  return slugs.includes(slug);
+export function selectWishlistHas(
+  productIds: string[],
+  productId: string,
+): boolean {
+  return productIds.includes(productId);
 }
+
+export type { Product };
