@@ -17,6 +17,7 @@ type NewPasswordFormProps = {
 
 export function NewPasswordForm({ token }: NewPasswordFormProps) {
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(
     token ? null : "Password reset link is missing or invalid.",
@@ -33,12 +34,17 @@ export function NewPasswordForm({ token }: NewPasswordFormProps) {
       setError("Password must be at least 8 characters.");
       return;
     }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       await resetPasswordApi(token, password);
       setIsSubmitted(true);
       setPassword("");
+      setConfirmPassword("");
     } catch (err) {
       setError(getAuthFormErrorMessage(err));
     } finally {
@@ -83,6 +89,32 @@ export function NewPasswordForm({ token }: NewPasswordFormProps) {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            endAdornment={
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="text-store-fg-muted hover:text-store-ink"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="size-5" strokeWidth={1.5} />
+                ) : (
+                  <Eye className="size-5" strokeWidth={1.5} />
+                )}
+              </button>
+            }
+          />
+
+          <AuthFloatingInput
+            id="confirm-new-password"
+            label="Confirm password*"
+            type={showPassword ? "text" : "password"}
+            name="confirmPassword"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             endAdornment={
               <button
                 type="button"

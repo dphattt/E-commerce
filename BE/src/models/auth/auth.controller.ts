@@ -4,7 +4,10 @@ import type { Types } from "mongoose";
 import { createHash, randomBytes } from "node:crypto";
 import User from "@/models/users/User.model";
 import RefreshToken from "@/models/auth/Auth.model";
-import { sendVerificationEmail } from "@/models/auth/email.service";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "@/models/auth/email.service";
 import {
   signAccessToken,
   signRefreshToken,
@@ -341,15 +344,13 @@ export async function forgotPassword(
 ) {
   try {
     const { email } = req.body as ForgotPasswordBody;
-    const user = await User.findOne({ email }).select("_id");
-    const response: {
-      message: string;
-      resetToken?: string;
-      resetUrl?: string;
-    } = { message: PASSWORD_RESET_MESSAGE };
+    const user = await User.findOne({ email }).select("_id email name");
+    const response = { message: PASSWORD_RESET_MESSAGE };
 
     if (user) {
       const resetToken = randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString("hex");
+      const resetUrl = buildResetUrl(resetToken);
+
       await User.updateOne(
         { _id: user._id },
         {
@@ -362,9 +363,18 @@ export async function forgotPassword(
         },
       );
 
-      if (process.env.NODE_ENV !== "production") {
-        response.resetToken = resetToken;
-        response.resetUrl = buildResetUrl(resetToken);
+      if (resetUrl) {
+        await sendPasswordResetEmail({
+          to: user.email,
+          name: user.name,
+          resetUrl,
+        });
+      } else if (process.env.NODE_ENV === "production") {
+        throw new Error("APP_ORIGIN is required for password reset");
+      } else {
+        console.info(
+          `[auth] Password reset token for ${user.email}: ${resetToken}`,
+        );
       }
     }
 

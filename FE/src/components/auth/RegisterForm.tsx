@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Calendar, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,7 +16,10 @@ import {
   registerSchema,
   type RegisterFormValues,
 } from "@/components/auth/validate";
-import { registerApi } from "@/features/auth/api/auth.api";
+import {
+  registerApi,
+  resendVerificationApi,
+} from "@/features/auth/api/auth.api";
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +27,11 @@ export function RegisterForm() {
   const [verificationMessage, setVerificationMessage] = useState<string | null>(
     null,
   );
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [resendVerificationMessage, setResendVerificationMessage] = useState<
+    string | null
+  >(null);
 
   const {
     register,
@@ -42,19 +50,50 @@ export function RegisterForm() {
 
   async function onSubmit(values: RegisterFormValues) {
     setServerError(null);
+    setResendVerificationMessage(null);
     const name = [values.firstName?.trim(), values.lastName?.trim()]
       .filter(Boolean)
       .join(" ");
+    const email = values.email.trim().toLowerCase();
     try {
       const res = await registerApi({
-        email: values.email,
+        email,
         password: values.password,
         name,
       });
+      setRegisteredEmail(email);
       setVerificationMessage(res.verificationUrl ?? res.message);
     } catch (err) {
       setServerError(getAuthFormErrorMessage(err));
     }
+  }
+
+  async function resendVerification() {
+    if (!registeredEmail) return;
+
+    setServerError(null);
+    setResendVerificationMessage(null);
+    setIsResendingVerification(true);
+
+    try {
+      const res = await resendVerificationApi(registeredEmail);
+      if (res.verificationUrl) {
+        setVerificationMessage(res.verificationUrl);
+      }
+      setResendVerificationMessage("Verification email has been resent.");
+    } catch (err) {
+      setServerError(getAuthFormErrorMessage(err));
+    } finally {
+      setIsResendingVerification(false);
+    }
+  }
+
+  function openDatePicker() {
+    const input = document.getElementById("register-dob");
+    if (!(input instanceof HTMLInputElement)) return;
+
+    input.focus();
+    input.showPicker?.();
   }
 
   if (verificationMessage) {
@@ -64,9 +103,41 @@ export function RegisterForm() {
         <h1 className="text-base font-bold uppercase tracking-[0.12em] text-store-ink-strong">
           Check your email
         </h1>
-        <p className="mt-4 break-all text-sm leading-relaxed text-store-fg-muted">
-          {verificationMessage}
+        <p className="mt-4 text-sm leading-relaxed text-store-fg-muted">
+          We&apos;ve sent a verification link to{" "}
+          {registeredEmail ? (
+            <span className="font-medium text-store-ink">
+              {registeredEmail}
+            </span>
+          ) : (
+            "your email address"
+          )}
+          . Please check your inbox to complete your account setup.
         </p>
+        <p className="mt-3 text-sm leading-relaxed text-store-fg-muted">
+          Can&apos;t find the email? Check your spam folder or{" "}
+          <button
+            type="button"
+            onClick={resendVerification}
+            disabled={isResendingVerification || !registeredEmail}
+            className="font-semibold text-store-ink underline underline-offset-2 hover:text-store-fg-muted disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isResendingVerification
+              ? "sending..."
+              : "click here to send again"}
+          </button>
+          .
+        </p>
+        {resendVerificationMessage ? (
+          <p role="status" className="mt-3 text-sm text-store-fg-muted">
+            {resendVerificationMessage}
+          </p>
+        ) : null}
+        {serverError ? (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {serverError}
+          </p>
+        ) : null}
         <Link
           href="/account/login"
           className={`${authSubmitButtonClassName} mt-8 inline-flex justify-center`}
@@ -115,10 +186,21 @@ export function RegisterForm() {
         <AuthFloatingInput
           id="register-dob"
           label="Date Of Birth"
-          type="text"
+          type="date"
           autoComplete="bday"
+          className="[&::-webkit-calendar-picker-indicator]:hidden"
           error={errors.dateOfBirth?.message}
           {...register("dateOfBirth")}
+          endAdornment={
+            <button
+              type="button"
+              onClick={openDatePicker}
+              className="text-store-fg-muted hover:text-store-ink"
+              aria-label="Choose date of birth"
+            >
+              <Calendar className="size-5" strokeWidth={1.5} />
+            </button>
+          }
         />
 
         <AuthFloatingInput

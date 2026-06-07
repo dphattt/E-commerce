@@ -13,8 +13,6 @@ export type RegisterResponse = {
 };
 export type ForgotPasswordResponse = {
   message: string;
-  resetToken?: string;
-  resetUrl?: string;
 };
 
 export type ResetPasswordResponse = {
