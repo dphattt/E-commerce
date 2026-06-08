@@ -9,32 +9,29 @@ import { store } from "@/store";
 
 export function useCheckoutProducts(slugParam?: string) {
   const slugs = useMemo(() => parseCheckoutSlugs(slugParam), [slugParam]);
+  const hasSlugs = slugs.length > 0;
   const { cacheProduct } = useProductCache();
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(Boolean(slugParam));
+  const [loading, setLoading] = useState(hasSlugs);
   const [failedSlugs, setFailedSlugs] = useState<string[]>([]);
 
-  // Dependency array cố định 2 phần tử — tránh React báo lỗi đổi size giữa các lần render.
   useEffect(() => {
-    const parsedSlugs = parseCheckoutSlugs(slugParam);
-
-    if (parsedSlugs.length === 0) {
-      setProducts([]);
-      setFailedSlugs([]);
-      setLoading(false);
-      return;
-    }
+    if (!hasSlugs) return;
 
     let cancelled = false;
-    setLoading(true);
-    setFailedSlugs([]);
+
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoading(true);
+      setFailedSlugs([]);
+    });
 
     void (async () => {
       const loaded: Product[] = [];
       const missing: string[] = [];
       const cachedBySlug = store.getState().products.bySlug;
 
-      for (const slug of parsedSlugs) {
+      for (const slug of slugs) {
         const cached = cachedBySlug[slug];
         if (cached) {
           loaded.push(cached);
@@ -59,14 +56,14 @@ export function useCheckoutProducts(slugParam?: string) {
     return () => {
       cancelled = true;
     };
-  }, [slugParam, cacheProduct]);
+  }, [hasSlugs, slugs, cacheProduct]);
 
   return {
     slugs,
-    products,
-    loading,
-    failedSlugs,
+    products: hasSlugs ? products : [],
+    loading: hasSlugs ? loading : false,
+    failedSlugs: hasSlugs ? failedSlugs : [],
     isReady:
-      !loading && slugs.length > 0 && products.length === slugs.length,
+      hasSlugs && !loading && products.length === slugs.length,
   };
 }

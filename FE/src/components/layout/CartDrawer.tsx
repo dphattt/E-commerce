@@ -264,23 +264,22 @@ export function CartDrawer() {
   const visibleCount = hasHydrated ? count : 0;
   const { slugsParam: checkoutSlugsParam, isResolving: isResolvingCheckoutSlug } =
     useCheckoutSlugFromCart(visibleItems);
-  const ordersCount = orders.length;
+  const visibleOrders = isAuthenticated ? orders : [];
+  const visibleOrdersLoading =
+    isAuthenticated && open && sessionChecked && ordersLoading;
+  const visibleOrdersError = isAuthenticated ? ordersError : null;
+  const ordersCount = visibleOrders.length;
 
   useEffect(() => {
-    if (!sessionChecked) return;
-
-    if (!isAuthenticated) {
-      setOrders([]);
-      setOrdersLoading(false);
-      setOrdersError(null);
-      return;
-    }
-
-    if (!open) return;
+    if (!sessionChecked || !isAuthenticated || !open) return;
 
     let cancelled = false;
-    setOrdersLoading(true);
-    setOrdersError(null);
+
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setOrdersLoading(true);
+      setOrdersError(null);
+    });
 
     listOrdersApi()
       .then((res) => {
@@ -481,15 +480,15 @@ export function CartDrawer() {
               </SheetClose>
             </div>
           </div>
-        ) : ordersLoading ? (
+        ) : visibleOrdersLoading ? (
           <div className="flex flex-1 items-center justify-center px-8 py-12 text-center">
             <p className="text-sm text-zinc-400">Loading orders...</p>
           </div>
-        ) : ordersError ? (
+        ) : visibleOrdersError ? (
           <div className="flex flex-1 items-center justify-center px-8 py-12 text-center">
-            <p className="text-sm text-red-400">{ordersError}</p>
+            <p className="text-sm text-red-400">{visibleOrdersError}</p>
           </div>
-        ) : orders.length === 0 ? (
+        ) : visibleOrders.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 py-12 text-center">
             <EmptyOrdersIllustration />
             <div className="space-y-1">
@@ -514,7 +513,7 @@ export function CartDrawer() {
         ) : (
           <>
             <ul className="flex-1 overflow-y-auto">
-              {orders.map((order) => (
+              {visibleOrders.map((order) => (
                 <OrderGroup key={order._id} order={order} />
               ))}
             </ul>

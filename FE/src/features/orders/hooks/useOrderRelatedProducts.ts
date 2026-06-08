@@ -30,13 +30,13 @@ export function useOrderRelatedProducts(order: Order | null) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!order) {
-      setProducts([]);
-      return;
-    }
+    if (!order) return;
 
     let cancelled = false;
-    setLoading(true);
+
+    void Promise.resolve().then(() => {
+      if (!cancelled) setLoading(true);
+    });
 
     const load = async () => {
       const orderItemNames = new Set(
@@ -120,5 +120,8 @@ export function useOrderRelatedProducts(order: Order | null) {
     };
   }, [order]);
 
-  return { products, loading };
+  return {
+    products: order ? products : [],
+    loading: order ? loading : false,
+  };
 }

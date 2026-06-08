@@ -306,17 +306,15 @@ export function OrdersView() {
   const [selectedOrderCode, setSelectedOrderCode] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sessionChecked) return;
-
-    if (!isAuthenticated) {
-      setOrders([]);
-      setLoading(false);
-      return;
-    }
+    if (!sessionChecked || !isAuthenticated) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoading(true);
+      setError(null);
+    });
 
     listOrdersApi()
       .then((res) => {
@@ -334,16 +332,25 @@ export function OrdersView() {
     };
   }, [isAuthenticated, sessionChecked]);
 
+  const visibleOrders = useMemo(
+    () => (isAuthenticated ? orders : []),
+    [isAuthenticated, orders],
+  );
+  const visibleLoading = !sessionChecked || (isAuthenticated && loading);
+  const visibleError = isAuthenticated ? error : null;
+
   const activeOrderCode = useMemo(() => {
     if (selectedOrderCode) return selectedOrderCode;
     if (codeParam) return codeParam;
     if (placedOrderCode) return placedOrderCode;
-    return orders[0]?.orderCode ?? null;
-  }, [selectedOrderCode, codeParam, placedOrderCode, orders]);
+    return visibleOrders[0]?.orderCode ?? null;
+  }, [selectedOrderCode, codeParam, placedOrderCode, visibleOrders]);
 
   const activeOrder = useMemo(
-    () => orders.find((order) => order.orderCode === activeOrderCode) ?? null,
-    [orders, activeOrderCode],
+    () =>
+      visibleOrders.find((order) => order.orderCode === activeOrderCode) ??
+      null,
+    [visibleOrders, activeOrderCode],
   );
 
   return (
@@ -368,7 +375,7 @@ export function OrdersView() {
           </div>
         ) : null}
 
-        {!sessionChecked || loading ? (
+        {visibleLoading ? (
           <p className="py-16 text-center text-sm text-zinc-500">
             Loading orders...
           </p>
@@ -387,15 +394,15 @@ export function OrdersView() {
               SIGN IN
             </Link>
           </div>
-        ) : error ? (
-          <p className="py-16 text-center text-sm text-red-600">{error}</p>
-        ) : orders.length === 0 ? (
+        ) : visibleError ? (
+          <p className="py-16 text-center text-sm text-red-600">{visibleError}</p>
+        ) : visibleOrders.length === 0 ? (
           <OrdersEmptyState />
         ) : (
           <>
-            {orders.length > 1 ? (
+            {visibleOrders.length > 1 ? (
               <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
-                {orders.map((order) => {
+                {visibleOrders.map((order) => {
                   const isActive = order.orderCode === activeOrderCode;
                   return (
                     <button

@@ -170,17 +170,15 @@ export function AccountOrdersSection({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!sessionChecked) return;
-
-    if (!isAuthenticated) {
-      setOrders([]);
-      setLoading(false);
-      return;
-    }
+    if (!sessionChecked || !isAuthenticated) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
+
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoading(true);
+      setError(null);
+    });
 
     listOrdersApi()
       .then((res) => {
@@ -198,6 +196,10 @@ export function AccountOrdersSection({
     };
   }, [isAuthenticated, sessionChecked]);
 
+  const visibleOrders = isAuthenticated ? orders : [];
+  const visibleLoading = !sessionChecked || (isAuthenticated && loading);
+  const visibleError = isAuthenticated ? error : null;
+
   return (
     <section style={{ backgroundColor: "#F5F5F5", padding: "32px" }}>
       <h2 className="mb-6 text-xs font-bold tracking-[0.2em] uppercase text-zinc-900">
@@ -211,15 +213,15 @@ export function AccountOrdersSection({
         </div>
       ) : null}
 
-      {!sessionChecked || loading ? (
+      {visibleLoading ? (
         <p className="py-8 text-center text-sm text-zinc-500">Loading orders...</p>
-      ) : error ? (
-        <p className="py-8 text-center text-sm text-red-600">{error}</p>
-      ) : orders.length === 0 ? (
+      ) : visibleError ? (
+        <p className="py-8 text-center text-sm text-red-600">{visibleError}</p>
+      ) : visibleOrders.length === 0 ? (
         <AccountOrdersEmptyState />
       ) : (
         <div className="flex max-h-[640px] flex-col gap-4 overflow-y-auto pr-1">
-          {orders.map((order) => (
+          {visibleOrders.map((order) => (
             <AccountOrderCard key={order._id} order={order} />
           ))}
         </div>

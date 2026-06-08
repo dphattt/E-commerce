@@ -41,14 +41,13 @@ export function useCheckoutSlugFromCart(items: CartItem[]) {
   const [isResolving, setIsResolving] = useState(false);
 
   useEffect(() => {
-    if (items.length === 0) {
-      setSlugsParam(null);
-      setIsResolving(false);
-      return;
-    }
+    if (items.length === 0) return;
 
     let cancelled = false;
-    setIsResolving(true);
+
+    void Promise.resolve().then(() => {
+      if (!cancelled) setIsResolving(true);
+    });
 
     void (async () => {
       const slugs: string[] = [];
@@ -72,5 +71,8 @@ export function useCheckoutSlugFromCart(items: CartItem[]) {
     };
   }, [dispatch, items, productsBySlug]);
 
-  return { slugsParam, isResolving };
+  return {
+    slugsParam: items.length === 0 ? null : slugsParam,
+    isResolving: items.length === 0 ? false : isResolving,
+  };
 }

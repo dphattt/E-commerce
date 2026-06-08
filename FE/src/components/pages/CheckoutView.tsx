@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   CheckoutProductCard,
@@ -48,7 +48,6 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
   const { isAuthenticated } = useAuth();
   const { slugs, products, loading, failedSlugs, isReady } =
     useCheckoutProducts(slug);
-  const [lineStates, setLineStates] = useState<CheckoutLineState[]>([]);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [placeOrderError, setPlaceOrderError] = useState<string | null>(null);
   const [deliveryId, setDeliveryId] =
@@ -56,13 +55,18 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
   const [provinceCode, setProvinceCode] = useState("");
   const [wardCode, setWardCode] = useState("");
   const [streetAddress, setStreetAddress] = useState("");
-  const [voucherCode, setVoucherCode] = useState("");
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof PAYMENT_METHODS)[number]["id"]>("vnpay");
 
-  useEffect(() => {
+  const [lineStates, setLineStates] = useState<CheckoutLineState[]>([]);
+  const [lineStatesProductKey, setLineStatesProductKey] = useState("");
+  const productKey = products.map((product) => product._id).join("|");
+
+  if (productKey !== lineStatesProductKey) {
+    setLineStatesProductKey(productKey);
     setLineStates(products.map(() => ({ ...EMPTY_LINE_STATE })));
-  }, [products]);
+  }
 
   const provinceOptions = useMemo(
     () => provinces.map((p) => ({ value: p.code, label: p.name })),
@@ -95,19 +99,16 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
     error: vouchersError,
   } = useApplicableVouchers(productIds, subtotal);
 
-  useEffect(() => {
-    if (!applicableVouchers.length) {
-      setVoucherCode("");
-      return;
+  const voucherCode = useMemo(() => {
+    if (!applicableVouchers.length) return "";
+    if (
+      selectedVoucherCode &&
+      applicableVouchers.some((voucher) => voucher.code === selectedVoucherCode)
+    ) {
+      return selectedVoucherCode;
     }
-
-    const stillValid = applicableVouchers.some(
-      (voucher) => voucher.code === voucherCode,
-    );
-    if (!stillValid) {
-      setVoucherCode(applicableVouchers[0].code);
-    }
-  }, [applicableVouchers, voucherCode]);
+    return applicableVouchers[0].code;
+  }, [applicableVouchers, selectedVoucherCode]);
 
   const delivery =
     DELIVERY_OPTIONS.find((d) => d.id === deliveryId) ?? DELIVERY_OPTIONS[0];
@@ -317,7 +318,7 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
                         type="radio"
                         name="voucher"
                         checked={voucherCode === voucher.code}
-                        onChange={() => setVoucherCode(voucher.code)}
+                        onChange={() => setSelectedVoucherCode(voucher.code)}
                         className="accent-store-ink"
                       />
                       <span className="font-medium text-store-ink-strong">
