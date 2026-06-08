@@ -6,6 +6,8 @@ import productsRoutes from "@/models/products/products.routes";
 import cartRoutes from "@/models/cart/cart.routes";
 import wishlistRoutes from "@/models/wishlist/wishlist.routes";
 import categoriesRoutes from "@/models/categories/categories.routes";
+import ordersRoutes from "@/models/orders/orders.routes";
+import vouchersRoutes from "@/models/vouchers/vouchers.routes";
 
 const router = Router();
 
@@ -16,5 +18,7 @@ router.use("/products", productsRoutes);
 router.use("/cart", cartRoutes);
 router.use("/wishlist", wishlistRoutes);
 router.use("/categories", categoriesRoutes);
+router.use("/orders", ordersRoutes);
+router.use("/vouchers", vouchersRoutes);
 
 export default router;

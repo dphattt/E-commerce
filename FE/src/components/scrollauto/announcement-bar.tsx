@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/carousel";
 
 const announcements = [
-  "🔥 Sản phẩm A - Giảm 50%",
+  "🔥 Product A - 50% off",
   "⚡ Sản phẩm B - Mua 1 tặng 1",
   "🎁 Sản phẩm C - Flash sale hôm nay",
 ];

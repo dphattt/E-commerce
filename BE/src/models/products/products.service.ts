@@ -48,6 +48,10 @@ export async function listRecentProducts(limit = 10) {
   return productsRepo.findRecentProducts(limit);
 }
 
+export async function searchProducts(query: string, limit = 10) {
+  return productsRepo.searchProductsByTitle(query, limit);
+}
+
 export async function listProductsByCategory(
   categorySlug: string,
   limit: number,

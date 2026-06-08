@@ -2,8 +2,48 @@ import { httpError } from "@/utils/http-error";
 import * as cartRepo from "@/models/cart/cart.repository";
 import * as productsRepo from "@/models/products/products.repository";
 
+function slugFromSourceUrl(sourceUrl: string): string {
+  const marker = "/products/";
+  const idx = sourceUrl.indexOf(marker);
+  if (idx >= 0) return sourceUrl.slice(idx + marker.length);
+  return sourceUrl;
+}
+
+async function resolveProductSlugFromSku(sku: string): Promise<string | undefined> {
+  const variant = await productsRepo.findVariantBySku(sku);
+  if (variant?.productSourceUrl) {
+    return slugFromSourceUrl(variant.productSourceUrl);
+  }
+
+  const idMatch = sku.match(/^([a-f\d]{24})/i);
+  if (!idMatch) return undefined;
+
+  const product = await productsRepo.findProductById(idMatch[1]);
+  if (!product?.sourceUrl) return undefined;
+  return slugFromSourceUrl(product.sourceUrl);
+}
+
+async function enrichCartItemSlugs(
+  cart: NonNullable<Awaited<ReturnType<typeof cartRepo.findCartByEmail>>>,
+) {
+  let dirty = false;
+
+  for (const item of cart.items) {
+    if (item.productSlug) continue;
+    const slug = await resolveProductSlugFromSku(item.sku);
+    if (!slug) continue;
+    item.productSlug = slug;
+    dirty = true;
+  }
+
+  if (dirty) await cart.save();
+}
+
 export async function getCart(email: string) {
-  return cartRepo.findCartByEmail(email);
+  const cart = await cartRepo.findCartByEmail(email);
+  if (!cart) return null;
+  await enrichCartItemSlugs(cart);
+  return cart;
 }
 
 export async function addCartItem(
@@ -13,6 +53,7 @@ export async function addCartItem(
   name: string,
   image: string,
   variantLabel?: string,
+  productSlug?: string,
 ) {
   // Server-side price lookup: prefer ProductVariant price, fall back to Product price.
   const variant = await productsRepo.findActiveVariantBySku(sku);
@@ -30,6 +71,9 @@ export async function addCartItem(
     unitPrice = product.price;
   }
 
+  const resolvedProductSlug =
+    productSlug ?? (await resolveProductSlugFromSku(sku));
+
   const cart = await cartRepo.findOrInitCart(email);
   const existing = cart.items.find((i) => i.sku === sku);
   if (existing) {
@@ -38,8 +82,17 @@ export async function addCartItem(
     existing.name = name;
     existing.image = image;
     if (variantLabel !== undefined) existing.variantLabel = variantLabel;
+    if (resolvedProductSlug) existing.productSlug = resolvedProductSlug;
   } else {
-    cart.items.push({ sku, quantity, unitPrice, name, image, variantLabel });
+    cart.items.push({
+      sku,
+      quantity,
+      unitPrice,
+      name,
+      image,
+      variantLabel,
+      productSlug: resolvedProductSlug,
+    });
   }
   return cart.save();
 }

@@ -35,6 +35,29 @@ export async function fetchProductList(options?: {
   return (await res.json()) as ProductListResponse;
 }
 
+export async function searchProductsApi(
+  query: string,
+  options?: { limit?: number; signal?: AbortSignal },
+): Promise<ProductListResponse> {
+  const params = new URLSearchParams({
+    q: query.trim(),
+    limit: String(options?.limit ?? 8),
+  });
+
+  const res = await fetch(productsApiUrl(params.toString()), {
+    signal: options?.signal,
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Failed to search products: ${res.status} ${res.statusText}`,
+    );
+  }
+
+  return (await res.json()) as ProductListResponse;
+}
+
 /**
  * Server-safe products list fetcher. Uses native fetch so it works
  * inside React Server Components and respects Next.js fetch cache

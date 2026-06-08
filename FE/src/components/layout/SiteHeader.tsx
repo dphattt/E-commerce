@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { MegaMenuPanel } from "./MegaMenuPanel";
 import {
   IconClose,
@@ -15,9 +15,11 @@ import {
 import { cn } from "@/lib/utils";
 import { iconBlockClassName, iconGlyphClassName } from "@/lib/icon-block";
 import { CartDrawer } from "./CartDrawer";
+import { HeaderSearch } from "./HeaderSearch";
 import { DEFAULT_NAV } from "@/lib/default-nav";
 import type { NavItem, NavSubItem } from "@/types/nav";
 import { useAuth } from "@/features/auth";
+import { useWishlist } from "@/features/wishlist";
 
 // Re-export for backward compat if used elsewhere
 export type SiteHeaderNavSubItem = NavSubItem;
@@ -49,11 +51,11 @@ export function SiteHeader({
   onSearchSubmit,
 }: SiteHeaderProps) {
   const { isAuthenticated } = useAuth();
+  const { count: wishlistCount } = useWishlist();
   const menuId = useId();
   const headerRef = useRef<HTMLElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeNav, setActiveNav] = useState<SiteHeaderNavItem | null>(null);
   const lines = announcements?.length
@@ -65,7 +67,6 @@ export function SiteHeader({
       ];
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   /* ── update --header-h so the fixed panel can sit right below the header ── */
   useEffect(() => {
@@ -115,10 +116,6 @@ export function SiteHeader({
     return () => document.removeEventListener("keydown", onKey);
   }, [activeNav]);
 
-  useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus();
-  }, [searchOpen]);
-
   const openDropdown = (item: SiteHeaderNavItem) => {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     setActiveNav(item);
@@ -131,12 +128,6 @@ export function SiteHeader({
   const cancelClose = () => {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
   };
-
-  const submitSearch = useCallback(() => {
-    const q = query.trim();
-    if (q) onSearchSubmit?.(q);
-    setSearchOpen(false);
-  }, [onSearchSubmit, query]);
 
   const line = lines[index] ?? announcement;
   const nextLine = lines[(index + 1) % lines.length] ?? line;
@@ -297,34 +288,23 @@ export function SiteHeader({
             {/* Right: search + icons */}
             <div className="flex min-w-0 shrink-0 items-center justify-end gap-5 lg:gap-3">
               <div className="hidden min-w-0 max-w-md flex-1 lg:block lg:max-w-[320px] lg:flex-none xl:max-w-95">
-                <form
-                  className="relative"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    submitSearch();
-                  }}
-                >
-                  <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-store-fg-muted" />
-                  <input
-                    type="search"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={searchPlaceholder}
-                    className="h-10 w-full rounded-full border border-transparent bg-store-surface py-2 pl-10 pr-4 text-sm text-store-ink outline-none ring-store-ink/5 placeholder:text-store-fg-muted focus:border-store-border-strong focus:bg-store-paper focus:ring-2"
-                    aria-label="Search"
-                  />
-                </form>
+                <HeaderSearch placeholder={searchPlaceholder} />
               </div>
 
               <Link
                 href="/wishlist"
                 className={cn(
                   iconBlockClassName,
-                  "hidden rounded-full hover:bg-store-surface lg:inline-flex",
+                  "relative hidden rounded-full hover:bg-store-surface lg:inline-flex",
                 )}
-                aria-label="Wishlist"
+                aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} items` : ""}`}
               >
                 <IconHeart className="size-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-store-accent text-[10px] font-semibold leading-none text-store-on-accent">
+                    {wishlistCount > 9 ? "9+" : wishlistCount}
+                  </span>
+                )}
               </Link>
               <Link
                 href={isAuthenticated ? "/account" : "/account/login"}
@@ -355,30 +335,15 @@ export function SiteHeader({
               aria-label="Search"
               onClick={(e) => e.stopPropagation()}
             >
-              <form
-                className="flex gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  submitSearch();
-                }}
-              >
-                <div className="relative min-w-0 flex-1">
-                  <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-store-fg-muted" />
-                  <input
-                    ref={searchInputRef}
-                    type="search"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={searchPlaceholder}
-                    className="h-11 w-full rounded-full border border-store-border bg-store-surface-2 py-2 pl-10 pr-4 text-sm text-store-ink outline-none focus:border-store-border-strong focus:ring-2 focus:ring-store-ink/10"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="shrink-0 rounded-full bg-store-ink-strong px-4 text-sm font-medium text-store-paper hover:bg-store-ink"
-                >
-                  Go
-                </button>
+              <div className="flex gap-2">
+                <HeaderSearch
+                  placeholder={searchPlaceholder}
+                  className="min-w-0 flex-1"
+                  inputClassName="h-11 border border-store-border bg-store-surface-2 focus:border-store-border-strong focus:ring-store-ink/10"
+                  autoFocus
+                  onClose={() => setSearchOpen(false)}
+                  showSubmitButton
+                />
                 <button
                   type="button"
                   className="shrink-0 rounded-full border border-store-border px-3 text-sm hover:bg-store-surface"
@@ -386,7 +351,7 @@ export function SiteHeader({
                 >
                   Close
                 </button>
-              </form>
+              </div>
             </div>
           </div>
         )}

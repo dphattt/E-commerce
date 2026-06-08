@@ -6,6 +6,7 @@ export const addItemBodySchema = z.object({
   name: z.string().trim().min(1, "name is required"),
   image: z.string().trim().min(1, "image is required"),
   variantLabel: z.string().trim().optional(),
+  productSlug: z.string().trim().optional(),
 });
 
 export const updateItemBodySchema = z.object({

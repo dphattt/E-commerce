@@ -10,10 +10,19 @@ export async function getProducts(
   next: NextFunction,
 ) {
   try {
-    const { categorySlug, limit: l, skip: s } = req.query as Record<string, string | undefined>;
+    const { categorySlug, limit: l, skip: s, q } = req.query as Record<
+      string,
+      string | undefined
+    >;
 
     const limit = Math.min(Number(l) || DEFAULT_LIMIT, MAX_LIMIT);
     const skip = Math.max(Number(s) || 0, 0);
+
+    const searchQuery = q?.trim();
+    if (searchQuery) {
+      const products = await productsService.searchProducts(searchQuery, limit);
+      return res.json({ products, total: products.length, limit, skip: 0 });
+    }
 
     if (categorySlug) {
       const result = await productsService.listProductsByCategory(categorySlug, limit, skip);

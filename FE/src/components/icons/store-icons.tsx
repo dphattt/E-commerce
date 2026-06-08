@@ -39,6 +39,16 @@ export function IconHeart(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconOrder(props: SVGProps<SVGSVGElement>) {
+  return (
+    <StoreStrokeIcon {...props}>
+      <path d="M9 5h10l2 4H7l2-4Z" strokeLinejoin="round" />
+      <path d="M6 9v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9" strokeLinejoin="round" />
+      <path d="M10 13h4" strokeLinecap="round" />
+    </StoreStrokeIcon>
+  );
+}
+
 export function IconClose(props: SVGProps<SVGSVGElement>) {
   return (
     <StoreStrokeIcon {...props}>

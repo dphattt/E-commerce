@@ -3,6 +3,7 @@ export {
   IconClose,
   IconHeart,
   IconMenu,
+  IconOrder,
   IconPause,
   IconPlay,
   IconSearch,

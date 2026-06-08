@@ -3,6 +3,7 @@ import Product from "@/models/products/Product.model";
 import ProductVariant, {
   type IProductVariant,
 } from "@/models/products/ProductVariant.model";
+import { buildTitleWordSearchFilter } from "@/models/products/product-search";
 
 /**
  * Lean read for the cart pricing flow. Returns null when no active
@@ -30,6 +31,16 @@ export async function findVariantsBySourceUrl(sourceUrl: string) {
  */
 export async function findRecentProducts(limit: number) {
   return Product.find().sort({ createdAt: -1 }).limit(limit).lean();
+}
+
+export async function searchProductsByTitle(query: string, limit: number) {
+  const filter = buildTitleWordSearchFilter(query);
+  if (!filter) return [];
+
+  return Product.find(filter)
+    .sort({ scrapedAt: -1 })
+    .limit(limit)
+    .lean();
 }
 
 function escapeRegex(str: string) {

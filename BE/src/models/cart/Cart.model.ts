@@ -12,6 +12,7 @@ interface ICartItem {
   name: string;
   image: string;
   variantLabel?: string;
+  productSlug?: string;
 }
 
 interface ICart extends Document {
@@ -37,6 +38,7 @@ const cartItemSchema = new Schema<ICartItem>(
     name: { type: String, required: true, trim: true },
     image: { type: String, required: true, trim: true },
     variantLabel: { type: String, trim: true },
+    productSlug: { type: String, trim: true },
   },
   { _id: false },
 );

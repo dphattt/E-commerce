@@ -2,6 +2,7 @@ export {
   fetchProductById,
   fetchProductList,
   fetchRecentProducts,
+  searchProductsApi,
 } from "@/features/products/api/products.api";
 export { useCachedProduct } from "@/features/products/hooks/useCachedProduct";
 export {

@@ -16,6 +16,7 @@ export type AddItemPayload = {
   name: string;
   image: string;
   variantLabel?: string;
+  productSlug?: string;
 };
 
 export const cartApi = createApi({

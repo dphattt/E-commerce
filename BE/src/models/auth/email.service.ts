@@ -12,6 +12,12 @@ type PasswordResetEmailParams = {
   resetUrl: string;
 };
 
+type VoucherWishlistEmailParams = {
+  to: string;
+  productName: string;
+  voucherLabel: string;
+};
+
 function smtpPort(): number {
   const raw = process.env.SMTP_PORT;
   if (!raw) return 587;
@@ -114,5 +120,44 @@ export async function sendPasswordResetEmail({
       <p><a href="${resetUrl}">Reset your password</a></p>
       <p>This link expires in 1 hour. If you did not request a password reset, you can ignore this email.</p>
     `,
+  });
+}
+
+export async function sendVoucherWishlistEmail({
+  to,
+  productName,
+  voucherLabel,
+}: VoucherWishlistEmailParams): Promise<void> {
+  const subject = `${productName} is on sale — ${voucherLabel}`;
+  const text = [
+    "Hi there,",
+    "",
+    `Good news! ${productName} is currently eligible for ${voucherLabel}.`,
+    "Grab it from your wishlist before the offer ends.",
+    "",
+    "Shop now and place your order today.",
+  ].join("\n");
+
+  const html = `
+    <p>Hi there,</p>
+    <p>Good news! <strong>${productName}</strong> is currently eligible for <strong>${voucherLabel}</strong>.</p>
+    <p>Grab it from your wishlist before the offer ends.</p>
+    <p>Shop now and place your order today.</p>
+  `;
+
+  if (!hasSmtpConfig()) {
+    if (process.env.NODE_ENV !== "production") {
+      console.info(`[voucher] Wishlist promo email for ${to}: ${subject}`);
+      return;
+    }
+    throw new Error("SMTP configuration is missing");
+  }
+
+  await transporter().sendMail({
+    from: mailFrom(),
+    to,
+    subject,
+    text,
+    html,
   });
 }

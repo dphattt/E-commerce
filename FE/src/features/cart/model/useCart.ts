@@ -55,6 +55,7 @@ export function useCart(): CartSnapshot & {
         name: item.name,
         image: item.image,
         variantLabel: item.variantLabel,
+        productSlug: item.productSlug,
       }),
     removeItem: (sku: string) => void removeItemMutation(sku),
     updateQuantity: (sku: string, quantity: number) =>

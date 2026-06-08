@@ -142,6 +142,7 @@ export function ProductDetail({ slug }: ProductDetailProps) {
       name: product.title,
       image: variantImage,
       variantLabel: sizeObj?.label ?? selectedSize.toUpperCase(),
+      productSlug: slug,
       quantity: 1,
       unitPrice: product.price,
     });
