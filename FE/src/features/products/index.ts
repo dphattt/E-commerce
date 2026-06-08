@@ -1,5 +1,6 @@
 export {
   fetchProductById,
+  fetchProductBySlug,
   fetchProductList,
   fetchRecentProducts,
 } from "@/features/products/api/products.api";

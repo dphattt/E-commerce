@@ -1,65 +1,84 @@
 import Image from "next/image";
+import Link from "next/link";
+import { HomeBestsellersCarousel } from "@/components/pages/HomeBestsellersCarousel";
+import { HomeMoreGuides } from "@/components/pages/HomeMoreGuides";
+import { HomePopularNow } from "@/components/pages/HomePopularNow";
+import { HomeProductCarousel } from "@/components/pages/HomeProductCarousel";
+import { HomePromoHero } from "@/components/pages/HomePromoHero";
+import { HomeShopCategories } from "@/components/pages/HomeShopCategories";
+import { fetchProductList } from "@/features/products";
 
-export default function Home() {
+const heroImageSrc =
+  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=2400&q=85";
+const heroVideoSrc = "";
+
+export default async function Home() {
+  const [{ products: productList }, { products: womenProducts }] =
+    await Promise.all([
+      fetchProductList({ limit: 24 }),
+      fetchProductList({ categorySlug: "women", limit: 10 }),
+    ]);
+  const carouselProducts = productList
+    .filter((product) => product.imageUrls[0])
+    .slice(0, 12);
+  const womenBestsellers = womenProducts.filter((product) => product.imageUrls[0]);
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-store-surface-2 font-sans">
-      <main className="flex w-full max-w-3xl flex-1 flex-col items-center justify-between bg-store-paper px-16 py-32 sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-store-ink-strong">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-store-fg-muted">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-store-ink-strong hover:underline"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-store-ink-strong hover:underline"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="-mx-4 -my-9 flex flex-1 flex-col bg-store-paper sm:-mx-6 lg:-mx-8">
+      <section className="relative min-h-[calc(100vh-var(--header-h,0px))] overflow-hidden bg-store-ink text-white">
+        {heroVideoSrc ? (
+          <video
+            className="absolute inset-0 h-full w-full object-cover"
+            src={heroVideoSrc}
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-label="Gym training campaign video"
+          />
+        ) : (
+          <Image
+            src={heroImageSrc}
+            alt="Athlete training in a gym"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        )}
+
+        <div className="absolute inset-0 bg-black/35" aria-hidden="true" />
+        <div className="absolute inset-x-0 bottom-0 z-10 flex justify-start px-4 pb-8 pt-24 sm:px-8 sm:pb-10 lg:px-12 lg:pb-12">
+          <div className="flex max-w-2xl flex-col items-start text-left">
+            <h1 className="max-w-xl text-lg font-black uppercase leading-[1.12] tracking-normal text-white sm:text-xl lg:text-2xl">
+              New In: Premium Lifter&apos;s Collection
+            </h1>
+            <p className="mt-3 max-w-xl text-base font-medium leading-6 text-white/95 sm:text-lg">
+              Shape the new era in GSLC.
+            </p>
+            <div className="mt-5 flex flex-row flex-wrap gap-5">
+              <Link
+                href="/products"
+                className="inline-flex h-16 min-w-40 items-center justify-center bg-store-paper px-7 text-base font-medium text-store-ink-strong transition-colors hover:bg-store-surface"
+              >
+                Shop New In
+              </Link>
+              <Link
+                href="/products/men"
+                className="inline-flex h-16 min-w-54 items-center justify-center border border-white bg-transparent px-7 text-base font-medium text-white transition-colors hover:bg-white hover:text-store-ink-strong"
+              >
+                Shop The Collection
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-store-ink-strong px-5 text-store-paper transition-colors hover:bg-store-ink md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="size-4 dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-store-border px-5 text-store-ink transition-colors hover:border-store-border-strong hover:bg-store-surface md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+      <HomeProductCarousel products={carouselProducts} />
+      <HomePromoHero />
+      <HomeBestsellersCarousel products={womenBestsellers} />
+      <HomePopularNow />
+      <HomeShopCategories />
+      <HomeMoreGuides />
+    </main>
   );
 }
