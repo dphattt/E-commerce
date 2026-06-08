@@ -1,5 +1,6 @@
 export {
   fetchProductById,
+  fetchProductBySlug,
   fetchProductList,
   fetchRecentProducts,
   searchProductsApi,
