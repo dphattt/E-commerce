@@ -16,12 +16,13 @@ import { useAuth } from "@/features/auth";
 import { useCart } from "@/features/cart";
 import type { CartItem } from "@/features/cart";
 import { useCheckoutSlugFromCart } from "@/features/cart/hooks/useCheckoutSlugFromCart";
+import { resolveCartItemProductHref } from "@/features/cart/lib/checkout-slug";
+import { useAppSelector } from "@/store/hooks";
 import {
   listOrdersApi,
-  ORDER_STATUS_LABELS,
+  OrderStatusBadges,
   type Order,
   type OrderItem,
-  type OrderStatus,
 } from "@/features/orders";
 import { iconBlockClassName } from "@/lib/icon-block";
 import { useHasHydrated } from "@/shared/hooks";
@@ -31,21 +32,6 @@ import { cn } from "@/lib/utils";
 type DrawerPanel = "bag" | "orders";
 
 const ORDERS_HREF = "/account/orders";
-
-function orderDrawerStatusClassName(status: OrderStatus): string {
-  switch (status) {
-    case "pending":
-      return "bg-amber-500/20 text-amber-300";
-    case "shipping":
-      return "bg-sky-500/20 text-sky-300";
-    case "delivered":
-      return "bg-emerald-500/20 text-emerald-300";
-    case "cancelled":
-      return "bg-zinc-700 text-zinc-400";
-    default:
-      return "bg-zinc-700 text-zinc-300";
-  }
-}
 
 function EmptyBagIllustration() {
   return (
@@ -90,35 +76,61 @@ function EmptyOrdersIllustration() {
 
 function CartLine({
   item,
+  productHref,
   onRemove,
   onUpdateQuantity,
 }: {
   item: CartItem;
+  productHref: string | null;
   onRemove: (sku: string) => void;
   onUpdateQuantity: (sku: string, quantity: number) => void;
 }) {
   const lineTotal = item.unitPrice.amount * item.quantity;
+  const image = item.image ? (
+    // Using a plain <img> here on purpose: cart line is a
+    // throwaway thumbnail with no perf budget.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={item.image}
+      alt={item.name}
+      className="size-full object-cover"
+      loading="lazy"
+    />
+  ) : null;
+
   return (
     <li className="flex gap-4 border-b border-zinc-800 px-5 py-4">
-      <div className="size-20 shrink-0 overflow-hidden rounded bg-zinc-800">
-        {item.image ? (
-          // Using a plain <img> here on purpose: cart line is a
-          // throwaway thumbnail with no perf budget.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={item.image}
-            alt={item.name}
-            className="size-full object-cover"
-            loading="lazy"
-          />
-        ) : null}
-      </div>
+      {productHref ? (
+        <SheetClose asChild>
+          <Link
+            href={productHref}
+            className="size-20 shrink-0 overflow-hidden rounded bg-zinc-800"
+            aria-label={`View ${item.name}`}
+          >
+            {image}
+          </Link>
+        </SheetClose>
+      ) : (
+        <div className="size-20 shrink-0 overflow-hidden rounded bg-zinc-800">
+          {image}
+        </div>
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">
-              {item.name}
-            </p>
+            {productHref ? (
+              <SheetClose asChild>
+                <Link href={productHref} className="block min-w-0">
+                  <p className="truncate text-sm font-semibold text-white hover:underline">
+                    {item.name}
+                  </p>
+                </Link>
+              </SheetClose>
+            ) : (
+              <p className="truncate text-sm font-semibold text-white">
+                {item.name}
+              </p>
+            )}
             <p className="text-xs text-zinc-400">{item.sku}</p>
             {item.variantLabel ? (
               <p className="text-xs text-zinc-400">{item.variantLabel}</p>
@@ -230,11 +242,7 @@ function OrderGroup({ order }: { order: Order }) {
         <p className="font-mono text-xs font-bold tracking-wide text-white">
           {order.orderCode}
         </p>
-        <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${orderDrawerStatusClassName(order.status)}`}
-        >
-          {ORDER_STATUS_LABELS[order.status]}
-        </span>
+        <OrderStatusBadges order={order} />
       </div>
       <ul>
         {order.items.map((item) => (
@@ -262,6 +270,7 @@ export function CartDrawer() {
 
   const visibleItems = hasHydrated ? items : [];
   const visibleCount = hasHydrated ? count : 0;
+  const productsBySlug = useAppSelector((state) => state.products.bySlug);
   const { slugsParam: checkoutSlugsParam, isResolving: isResolvingCheckoutSlug } =
     useCheckoutSlugFromCart(visibleItems);
   const visibleOrders = isAuthenticated ? orders : [];
@@ -414,6 +423,10 @@ export function CartDrawer() {
                   <CartLine
                     key={item.sku}
                     item={item}
+                    productHref={resolveCartItemProductHref(
+                      item,
+                      productsBySlug,
+                    )}
                     onRemove={removeItem}
                     onUpdateQuantity={updateQuantity}
                   />

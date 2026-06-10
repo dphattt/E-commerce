@@ -248,23 +248,25 @@ export default function AccountPage() {
       {/* ───────── Body ───────── */}
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1600px] mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
-          <Suspense
-            fallback={
-              <section
-                style={{ backgroundColor: "#F5F5F5", padding: "32px" }}
-                className="min-h-[320px]"
-              >
-                <h2 className="mb-6 text-xs font-bold tracking-[0.2em] uppercase text-zinc-900">
-                  Orders
-                </h2>
-                <p className="py-8 text-center text-sm text-zinc-500">
-                  Loading orders...
-                </p>
-              </section>
-            }
-          >
-            <AccountOrdersSectionWithParams />
-          </Suspense>
+          <div className="min-h-0">
+            <Suspense
+              fallback={
+                <section
+                  style={{ backgroundColor: "#F5F5F5", padding: "32px" }}
+                  className="min-h-[320px]"
+                >
+                  <h2 className="mb-6 text-xs font-bold tracking-[0.2em] uppercase text-zinc-900">
+                    Orders
+                  </h2>
+                  <p className="py-8 text-center text-sm text-zinc-500">
+                    Loading orders...
+                  </p>
+                </section>
+              }
+            >
+              <AccountOrdersSectionWithParams />
+            </Suspense>
+          </div>
 
           {/* Quick-link cards */}
           <div className="flex flex-col gap-3">

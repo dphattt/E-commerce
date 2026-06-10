@@ -1,6 +1,12 @@
 import { httpClient } from "@/utils/http";
 
-export type OrderStatus = "pending" | "shipping" | "delivered" | "cancelled";
+export type OrderStatus =
+  | "pending"
+  | "awaiting_pickup"
+  | "shipping"
+  | "delivered"
+  | "cancelled"
+  | "payment_failed";
 
 export interface OrderMoney {
   amount: number;
@@ -25,6 +31,7 @@ export interface Order {
   orderCode: string;
   userEmail: string;
   status: OrderStatus;
+  isPay: boolean;
   items: OrderItem[];
   subtotal: OrderMoney;
   shippingFee: number;

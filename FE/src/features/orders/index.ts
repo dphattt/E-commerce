@@ -11,3 +11,4 @@ export {
   ORDER_STATUS_LABELS,
   orderStatusClassName,
 } from "@/features/orders/lib/order-status";
+export { OrderStatusBadges } from "@/features/orders/components/OrderStatusBadges";

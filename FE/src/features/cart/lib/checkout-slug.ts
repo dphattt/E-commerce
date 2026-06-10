@@ -45,3 +45,11 @@ export function resolveFirstCheckoutSlugFromCart(
   }
   return null;
 }
+
+export function resolveCartItemProductHref(
+  item: CartItem,
+  productsBySlug: Record<string, Product>,
+): string | null {
+  const slug = resolveCartItemCheckoutSlug(item, productsBySlug);
+  return slug ? `/products/${slug}` : null;
+}

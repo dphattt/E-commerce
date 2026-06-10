@@ -1,3 +1,5 @@
+import { productIdFromSku } from "@/features/cart/lib/checkout-slug";
+import type { CartItem } from "@/features/cart/model/cart.types";
 import { productSlugFromSourceUrl } from "@/features/products/lib/product-slug";
 import type { Product } from "@/features/products/model/product.types";
 import type { CheckoutLineState } from "@/components/pages/CheckoutProductCard";
@@ -19,9 +21,25 @@ function resolveImage(product: Product, color: string): string {
   return variant?.image ?? product.imageUrls[0] ?? "";
 }
 
+function matchCartItemForProduct(
+  product: Product,
+  cartItems: CartItem[],
+): CartItem | undefined {
+  const slug = productSlugFromSourceUrl(product.sourceUrl);
+
+  return cartItems.find((item) => {
+    if (item.productSlug && item.productSlug === slug) return true;
+    if (productIdFromSku(item.sku) === product._id) return true;
+    return product.variants?.some((variant) =>
+      variant.sizes.some((size) => size.sku === item.sku),
+    );
+  });
+}
+
 export function buildOrderItemsFromCheckout(
   products: Product[],
   lineStates: CheckoutLineState[],
+  cartItems: CartItem[] = [],
 ): OrderItem[] {
   return products.map((product, index) => {
     const line = lineStates[index];
@@ -42,7 +60,9 @@ export function buildOrderItemsFromCheckout(
         ? line.selectedSize
         : (sizes[0] ?? "M");
 
-    const sku = resolveSku(product, color, size);
+    const resolvedSku = resolveSku(product, color, size);
+    const matchedCartItem = matchCartItemForProduct(product, cartItems);
+    const sku = matchedCartItem?.sku ?? resolvedSku;
 
     return {
       productId: product._id,

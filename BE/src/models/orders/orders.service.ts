@@ -1,13 +1,40 @@
 import { randomBytes } from "node:crypto";
 import { httpError } from "@/utils/http-error";
 import type { CreateOrderBody } from "@/models/orders/orders.validation";
+import type { OrderStatus } from "@/models/orders/Order.model";
 import * as ordersRepo from "@/models/orders/orders.repository";
 import * as vouchersService from "@/models/vouchers/vouchers.service";
+import * as cartService from "@/models/cart/cart.service";
 
 function generateOrderCode(): string {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const suffix = randomBytes(3).toString("hex").toUpperCase();
   return `GS-${date}-${suffix}`;
+}
+
+export async function validateCheckoutForOrder(
+  email: string,
+  body: CreateOrderBody,
+) {
+  const productIds = body.items
+    .map((item) => item.productId)
+    .filter((id): id is string => Boolean(id));
+
+  const voucherResult = await vouchersService.validateVoucherForOrder({
+    voucherCode: body.voucherCode,
+    productIds,
+    subtotal: body.subtotal.amount,
+  });
+
+  const expectedTotal =
+    Math.max(0, body.subtotal.amount - voucherResult.voucherDiscount) +
+    body.shippingFee;
+
+  if (Math.abs(expectedTotal - body.total.amount) > 0.01) {
+    throw httpError("Order total does not match voucher calculation", 400);
+  }
+
+  return voucherResult;
 }
 
 export async function listOrders(email: string) {
@@ -20,31 +47,27 @@ export async function getOrder(email: string, orderCode: string) {
   return order;
 }
 
-export async function createOrder(email: string, body: CreateOrderBody) {
+export async function createOrder(
+  email: string,
+  body: CreateOrderBody,
+  options?: {
+    status?: OrderStatus;
+    isPay?: boolean;
+    momoOrderId?: string;
+    vnpTxnRef?: string;
+    clearCart?: boolean;
+  },
+) {
+  const voucherResult = await validateCheckoutForOrder(email, body);
   const orderCode = generateOrderCode();
-  const productIds = body.items
-    .map((item) => item.productId)
-    .filter((id): id is string => Boolean(id));
-
-  const voucherResult = await vouchersService.validateVoucherForOrder({
-    voucherCode: body.voucherCode,
-    productIds,
-    subtotal: body.subtotal.amount,
-  });
-
-  const expectedTotal = Math.max(
-    0,
-    body.subtotal.amount - voucherResult.voucherDiscount,
-  ) + body.shippingFee;
-
-  if (Math.abs(expectedTotal - body.total.amount) > 0.01) {
-    throw httpError("Order total does not match voucher calculation", 400);
-  }
 
   const order = await ordersRepo.createOrder({
     orderCode,
     userEmail: email,
-    status: "pending",
+    status: options?.status ?? "pending",
+    isPay: options?.isPay ?? false,
+    momoOrderId: options?.momoOrderId,
+    vnpTxnRef: options?.vnpTxnRef,
     items: body.items,
     subtotal: body.subtotal,
     shippingFee: body.shippingFee,
@@ -59,6 +82,13 @@ export async function createOrder(email: string, body: CreateOrderBody) {
       streetAddress: body.streetAddress,
     },
   });
+
+  if (options?.clearCart !== false) {
+    await cartService.removeCartItemsBySkus(
+      email,
+      body.items.map((item) => item.sku),
+    );
+  }
 
   return order;
 }

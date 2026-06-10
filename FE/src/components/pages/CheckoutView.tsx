@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   CheckoutProductCard,
@@ -10,9 +10,18 @@ import {
   type CheckoutLineState,
 } from "@/components/pages/CheckoutProductCard";
 import { buildOrderItemsFromCheckout } from "@/features/checkout/lib/build-order-items";
+import {
+  consumeCheckoutReturnReload,
+  markCheckoutPaymentRedirect,
+} from "@/features/checkout/lib/checkout-payment-redirect";
 import { useCheckoutProducts } from "@/features/checkout/hooks/useCheckoutProducts";
 import { useAuth } from "@/features/auth";
+import { useCart } from "@/features/cart";
+import { syncCartAfterOrder } from "@/features/cart/lib/sync-cart-after-order";
+import { useAppDispatch } from "@/store/hooks";
 import { createOrderApi } from "@/features/orders";
+import { createMomoPaymentApi } from "@/features/payments/api/momo.api";
+import { createVnpayPaymentApi } from "@/features/payments/api/vnpay.api";
 import { useApplicableVouchers } from "@/features/vouchers/hooks/useApplicableVouchers";
 import {
   getWardsByProvince,
@@ -45,7 +54,9 @@ const EMPTY_LINE_STATE: CheckoutLineState = {
 
 export function CheckoutView({ slug }: CheckoutViewProps) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { isAuthenticated } = useAuth();
+  const { items: cartItems } = useCart();
   const { slugs, products, loading, failedSlugs, isReady } =
     useCheckoutProducts(slug);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
@@ -61,12 +72,35 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
 
   const [lineStates, setLineStates] = useState<CheckoutLineState[]>([]);
   const [lineStatesProductKey, setLineStatesProductKey] = useState("");
-  const productKey = products.map((product) => product._id).join("|");
 
-  if (productKey !== lineStatesProductKey) {
+  useEffect(() => {
+    if (consumeCheckoutReturnReload()) {
+      window.location.reload();
+      return;
+    }
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      setIsPlacingOrder(false);
+      setPlaceOrderError(null);
+      router.refresh();
+      window.location.reload();
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [router]);
+
+  const productKey = useMemo(
+    () => products.map((product) => product._id).join("|"),
+    [products],
+  );
+
+  useEffect(() => {
+    if (!isReady || !productKey || productKey === lineStatesProductKey) return;
     setLineStatesProductKey(productKey);
     setLineStates(products.map(() => ({ ...EMPTY_LINE_STATE })));
-  }
+  }, [isReady, productKey, lineStatesProductKey, products]);
 
   const provinceOptions = useMemo(
     () => provinces.map((p) => ({ value: p.code, label: p.name })),
@@ -132,8 +166,13 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
     setIsPlacingOrder(true);
 
     try {
-      const { order } = await createOrderApi({
-        items: buildOrderItemsFromCheckout(products, lineStates),
+      const orderItems = buildOrderItemsFromCheckout(
+        products,
+        lineStates,
+        cartItems,
+      );
+      const checkoutPayload = {
+        items: orderItems,
         deliveryMethod: deliveryId,
         paymentMethod,
         provinceCode: provinceCode || undefined,
@@ -144,8 +183,44 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
         voucherCode: selectedVoucher?.code,
         voucherDiscount,
         total: { amount: total, currency: "USD" },
-      });
-      router.push(`/account?placed=${encodeURIComponent(order.orderCode)}`);
+      } as const;
+
+      if (paymentMethod === "momo") {
+        const { payment } = await createMomoPaymentApi({
+          ...checkoutPayload,
+          paymentMethod: "momo",
+        });
+        if (!payment.payUrl) {
+          setPlaceOrderError("MoMo did not return a payment URL. Please try again.");
+          return;
+        }
+        setIsPlacingOrder(false);
+        markCheckoutPaymentRedirect();
+        window.location.assign(payment.payUrl);
+        return;
+      }
+
+      if (paymentMethod === "vnpay") {
+        const { payment } = await createVnpayPaymentApi({
+          ...checkoutPayload,
+          paymentMethod: "vnpay",
+        });
+        if (!payment.payUrl) {
+          setPlaceOrderError("VNPay did not return a payment URL. Please try again.");
+          return;
+        }
+        setIsPlacingOrder(false);
+        markCheckoutPaymentRedirect();
+        window.location.assign(payment.payUrl);
+        return;
+      }
+
+      const { order } = await createOrderApi(checkoutPayload);
+      syncCartAfterOrder(dispatch);
+
+      router.push(
+        `/account?placed=${encodeURIComponent(order.orderCode)}&scroll=orders`,
+      );
     } catch {
       setPlaceOrderError("Could not place your order. Please try again.");
     } finally {
