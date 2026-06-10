@@ -1,11 +1,17 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
 
+export type UserRole = "user" | "admin" | "boss";
+export type UserStatus = "active" | "blocked";
+
 // Định nghĩa type cho document
 interface IUser extends Document {
   email: string;
   passwordHash?: string;
   name: string;
+  phone: string;
+  role: UserRole;
+  status: UserStatus;
   emailVerified: boolean;
   authProvider: "local" | "google";
   googleId?: string;
@@ -32,6 +38,17 @@ const userSchema = new Schema<IUser, IUserModel>(
     },
     passwordHash: { type: String, select: false },
     name: { type: String, trim: true, default: "" },
+    phone: { type: String, trim: true, default: "" },
+    role: {
+      type: String,
+      enum: ["user", "admin", "boss"],
+      default: "user",
+    },
+    status: {
+      type: String,
+      enum: ["active", "blocked"],
+      default: "active",
+    },
     emailVerified: { type: Boolean, default: false },
     authProvider: {
       type: String,

@@ -16,7 +16,11 @@ export function validate<T>(schema: ZodType<T>, part: RequestPart = "body") {
       res.status(400).json({ message: "Invalid request", issues });
       return;
     }
-    (req as unknown as Record<RequestPart, unknown>)[part] = result.data;
+    Object.defineProperty(req, part, {
+      value: result.data,
+      configurable: true,
+      writable: true,
+    });
     next();
   };
 }

@@ -3,6 +3,10 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { useRouter } from "next/navigation";
 import { googleLoginApi } from "@/features/auth/api/auth.api";
+import {
+  adminDashboardUrl,
+  isDashboardUser,
+} from "@/features/auth/model/auth-redirect";
 import { useAuth } from "@/features/auth/model/useAuth";
 import { getAuthFormErrorMessage } from "@/components/auth/auth-form-shared";
 
@@ -37,6 +41,10 @@ export function GoogleAuthButton({ onError }: GoogleAuthButtonProps) {
             try {
               const { token, user } = await googleLoginApi(credential);
               setSession(user, token);
+              if (isDashboardUser(user)) {
+                window.location.href = adminDashboardUrl();
+                return;
+              }
               router.push("/account");
               router.refresh();
             } catch (err) {
