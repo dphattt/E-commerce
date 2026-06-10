@@ -9,6 +9,7 @@ import categoriesRoutes from "@/models/categories/categories.routes";
 import ordersRoutes from "@/models/orders/orders.routes";
 import vouchersRoutes from "@/models/vouchers/vouchers.routes";
 import paymentsRoutes from "@/models/payments/payments.routes";
+import adminRoutes from "@/models/admin/admin.routes";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/categories", categoriesRoutes);
 router.use("/orders", ordersRoutes);
 router.use("/vouchers", vouchersRoutes);
 router.use("/payments", paymentsRoutes);
+router.use("/admin", adminRoutes);
 
 export default router;

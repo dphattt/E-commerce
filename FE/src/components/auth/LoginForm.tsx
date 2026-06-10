@@ -19,6 +19,10 @@ import {
   loginApi,
   resendVerificationApi,
 } from "@/features/auth/api/auth.api";
+import {
+  adminDashboardUrl,
+  isDashboardUser,
+} from "@/features/auth/model/auth-redirect";
 import { useAuth } from "@/features/auth/model/useAuth";
 
 export function LoginForm() {
@@ -45,6 +49,10 @@ export function LoginForm() {
     try {
       const { token, user } = await loginApi(values.email, values.password);
       setSession(user, token);
+      if (isDashboardUser(user)) {
+        window.location.href = adminDashboardUrl();
+        return;
+      }
       router.push("/account");
       router.refresh();
     } catch (err) {
