@@ -9,6 +9,7 @@ import {
 } from "@/features/wishlist/api/wishlist.api";
 import { useAuth } from "@/features/auth/model/useAuth";
 import { useWishlistLoginPrompt } from "@/features/wishlist/model/WishlistLoginPrompt";
+import { useToast } from "@/shared/context/ToastContext";
 import {
   addProductId,
   clear,
@@ -23,6 +24,7 @@ export function useWishlist() {
   const items = useAppSelector((s) => s.wishlist.items);
   const { isAuthenticated } = useAuth();
   const { openLoginPrompt } = useWishlistLoginPrompt();
+  const toast = useToast();
 
   const toggle = useCallback(
     async (productId: string) => {
@@ -41,15 +43,19 @@ export function useWishlist() {
       try {
         const data = await toggleWishlistItemApi(productId);
         dispatch(setWishlistFromApi(data.items));
+        toast.success(
+          wasWishlisted ? "Removed from Wishlist" : "Added to Wishlist"
+        );
       } catch {
         if (wasWishlisted) {
           dispatch(addProductId(productId));
         } else {
           dispatch(removeProductId(productId));
         }
+        toast.error("Failed to update Wishlist.");
       }
     },
-    [dispatch, isAuthenticated, openLoginPrompt, productIds],
+    [dispatch, isAuthenticated, openLoginPrompt, productIds, toast],
   );
 
   const remove = useCallback(
@@ -60,12 +66,14 @@ export function useWishlist() {
       try {
         const data = await removeWishlistItemApi(productId);
         dispatch(setWishlistFromApi(data.items));
+        toast.success("Removed from Wishlist");
       } catch {
         const data = await getWishlistApi().catch(() => null);
         if (data) dispatch(setWishlistFromApi(data.items));
+        toast.error("Failed to remove from Wishlist.");
       }
     },
-    [dispatch, isAuthenticated],
+    [dispatch, isAuthenticated, toast],
   );
 
   const clearWishlist = useCallback(async () => {
@@ -74,10 +82,11 @@ export function useWishlist() {
     dispatch(clear());
     try {
       await clearWishlistApi();
+      toast.success("Wishlist cleared.");
     } catch {
-      // WishlistBootstrap will resync on next auth cycle if needed.
+      toast.error("Failed to clear wishlist.");
     }
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated, toast]);
 
   return {
     productIds,

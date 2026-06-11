@@ -29,7 +29,9 @@ export async function fetchProductList(options?: {
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);
+    throw new Error(
+      `Failed to fetch products: ${res.status} ${res.statusText}`,
+    );
   }
 
   return (await res.json()) as ProductListResponse;
@@ -76,7 +78,9 @@ export async function fetchRecentProducts(options?: {
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);
+    throw new Error(
+      `Failed to fetch products: ${res.status} ${res.statusText}`,
+    );
   }
 
   return (await res.json()) as ProductListResponse;
@@ -107,10 +111,20 @@ export async function fetchProductById(
   );
 
   if (!res.ok) {
-    throw new Error(
-      `Failed to fetch product: ${res.status} ${res.statusText}`,
-    );
+    throw new Error(`Failed to fetch product: ${res.status} ${res.statusText}`);
   }
 
   return (await res.json()) as ProductDetailResponse;
+}
+
+export async function rateProductApi(
+  id: string,
+  rating: number,
+): Promise<{ ratingAverage: number; ratingCount: number }> {
+  const { httpClient } = await import("@/utils/http");
+  const { data } = await httpClient.post<{
+    ratingAverage: number;
+    ratingCount: number;
+  }>(`/products/${encodeURIComponent(id)}/rate`, { rating });
+  return data;
 }

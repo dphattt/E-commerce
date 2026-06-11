@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCachedProduct } from "@/features/products";
+import { useCachedProduct, rateProductApi } from "@/features/products";
 import { useAppDispatch } from "@/store/hooks";
 import { cacheProduct } from "@/features/products/model/products.slice";
 import { fetchProductBySlug } from "@/features/products/api/products.api";
@@ -12,6 +12,7 @@ import { useAuth } from "@/features/auth/model/useAuth";
 import { useWishlist } from "@/features/wishlist";
 import { useRouter } from "next/navigation";
 import { useHasHydrated } from "@/shared/hooks";
+import { useToast } from "@/shared/context/ToastContext";
 
 function IconHeart(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -37,6 +38,20 @@ function IconChevronDown(props: React.SVGProps<SVGSVGElement>) {
       {...props}
     >
       <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconStar({ filled, className }: { filled: boolean; className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth={1.5}
+      className={className}
+    >
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   );
 }
@@ -73,6 +88,28 @@ export function ProductDetail({ slug }: ProductDetailProps) {
   const wishlist = useWishlist();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
+  const toast = useToast();
+
+  const [userRating, setUserRating] = useState<number | null>(null);
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+
+  const handleRateProduct = async (rating: number) => {
+    if (!product) return;
+    try {
+      const stats = await rateProductApi(product._id, rating);
+      setUserRating(rating);
+      dispatch(
+        cacheProduct({
+          ...product,
+          ratingAverage: stats.ratingAverage,
+          ratingCount: stats.ratingCount,
+        }),
+      );
+      toast.success("Cảm ơn bạn đã đánh giá sản phẩm!");
+    } catch {
+      toast.error("Không thể gửi đánh giá sản phẩm.");
+    }
+  };
 
   // Fetch full product detail (with real variant SKUs) on mount.
   // The list endpoint doesn't include variants, so we fetch them here.
@@ -202,45 +239,110 @@ export function ProductDetail({ slug }: ProductDetailProps) {
       </nav>
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 xl:gap-16">
-        {/* Left: Gallery */}
-        <div className="relative flex-1 gallery flex gap-3 max-h-150">
-          <div className="hidden md:flex flex-col items-center justify-center w-20 shrink-0 absolute top-2/5 left-2 h-50 rounded-xl z-10">
-            <div className="flex-1 flex items-center justify-center p-4 my-3 relative rounded-full bg-store-ink">
-              <div
-                ref={scrollTrackRef}
-                className="w-2 h-35 bg-store-fg-muted rounded-full border relative"
-              >
+        {/* Left: Gallery & Rating */}
+        <div className="flex-1 flex flex-col gap-4">
+          <div className="relative gallery flex gap-3 max-h-150">
+            <div className="hidden md:flex flex-col items-center justify-center w-20 shrink-0 absolute top-2/5 left-2 h-50 rounded-xl z-10">
+              <div className="flex-1 flex items-center justify-center p-4 my-3 relative rounded-full bg-store-ink">
                 <div
-                  ref={scrollThumbRef}
-                  style={{
-                    top: `${scrollProgress}%`,
-                    transform: `translate(-50%, -${scrollProgress}%)`,
-                  }}
-                  className="thumbScroll absolute left-1/2 h-10 w-2 bg-store-paper rounded-full transition-transform duration-150 shadow-sm"
-                />
+                  ref={scrollTrackRef}
+                  className="w-2 h-35 bg-store-fg-muted rounded-full border relative"
+                >
+                  <div
+                    ref={scrollThumbRef}
+                    style={{
+                      top: `${scrollProgress}%`,
+                      transform: `translate(-50%, -${scrollProgress}%)`,
+                    }}
+                    className="thumbScroll absolute left-1/2 h-10 w-2 bg-store-paper rounded-full transition-transform duration-150 shadow-sm"
+                  />
+                </div>
               </div>
+            </div>
+
+            <div
+              ref={thumbnailScrollRef}
+              onScroll={handleScroll}
+              className="a grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2 flex-1 overflow-auto scrollbar-hidden"
+            >
+              {gallery.map((src, i) => (
+                <div key={i} className="relative aspect-2/3 bg-store-surface">
+                  {src && (
+                    <Image
+                      height={800}
+                      width={600}
+                      src={src}
+                      alt={`${product.title} ${i + 1}`}
+                      className="min-h-full min-w-full object-cover transition-transform duration-500 hover:scale-101"
+                      priority={i === 0}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div
-            ref={thumbnailScrollRef}
-            onScroll={handleScroll}
-            className="a grid grid-cols-1 md:grid-cols-2 gap-1.5 sm:gap-2 flex-1 overflow-auto scrollbar-hidden"
-          >
-            {gallery.map((src, i) => (
-              <div key={i} className="relative aspect-2/3 bg-store-surface">
-                {src && (
-                  <Image
-                    height={800}
-                    width={600}
-                    src={src}
-                    alt={`${product.title} ${i + 1}`}
-                    className="min-h-full min-w-full object-cover transition-transform duration-500 hover:scale-101"
-                    priority={i === 0}
-                  />
-                )}
+          {/* Minimalist Rating Summary & Interactive Rating */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-store-border/40 pt-4 px-1">
+            <div className="flex items-center gap-2 text-store-ink">
+              <div className="flex items-center gap-0.5 text-amber-500">
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const ratingVal = product.ratingAverage ?? 0;
+                  const isFilled = i < Math.round(ratingVal);
+                  return (
+                    <IconStar
+                      key={i}
+                      filled={isFilled}
+                      className={`size-4.5 ${
+                        isFilled ? "text-amber-500 fill-amber-500" : "text-store-fg-subtle"
+                      }`}
+                    />
+                  );
+                })}
               </div>
-            ))}
+              <span className="text-sm font-black text-store-ink-strong">
+                {product.ratingAverage ? product.ratingAverage.toFixed(1) : "0.0"}
+              </span>
+              <span className="text-xs text-store-fg-muted font-bold tracking-tight">
+                ({product.ratingCount ?? 0} {product.ratingCount === 1 ? "đánh giá" : "đánh giá"})
+              </span>
+            </div>
+
+            {/* User rating submission */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-store-fg-muted">Đánh giá sản phẩm:</span>
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const starVal = i + 1;
+                    const isHoveredOrSelected = starVal <= (hoveredRating ?? userRating ?? 0);
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleRateProduct(starVal)}
+                        onMouseEnter={() => setHoveredRating(starVal)}
+                        onMouseLeave={() => setHoveredRating(null)}
+                        className="p-0.5 cursor-pointer text-store-fg-subtle hover:text-amber-400 transition-colors"
+                        aria-label={`Đánh giá ${starVal} sao`}
+                      >
+                        <IconStar
+                          filled={isHoveredOrSelected}
+                          className={`size-4.5 transition-transform duration-100 hover:scale-110 ${isHoveredOrSelected ? "text-amber-400 fill-amber-400" : "text-store-fg-subtle"}`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/account/login"
+                className="text-[10px] font-black uppercase tracking-wider text-store-fg-muted hover:text-store-ink underline underline-offset-4"
+              >
+                Đăng nhập để đánh giá
+              </Link>
+            )}
           </div>
         </div>
 

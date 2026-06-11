@@ -24,10 +24,12 @@ import {
   isDashboardUser,
 } from "@/features/auth/model/auth-redirect";
 import { useAuth } from "@/features/auth/model/useAuth";
+import { useToast } from "@/shared/context/ToastContext";
 
 export function LoginForm() {
   const router = useRouter();
   const { setSession } = useAuth();
+  const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
@@ -49,6 +51,7 @@ export function LoginForm() {
     try {
       const { token, user } = await loginApi(values.email, values.password);
       setSession(user, token);
+      toast.success(`Welcome back, ${user.name || "User"}!`);
       if (isDashboardUser(user)) {
         window.location.href = adminDashboardUrl();
         return;
@@ -59,7 +62,9 @@ export function LoginForm() {
       if (getAuthFormErrorCode(err) === "EMAIL_NOT_VERIFIED") {
         setUnverifiedEmail(values.email.trim().toLowerCase());
       }
-      setServerError(getAuthFormErrorMessage(err));
+      const msg = getAuthFormErrorMessage(err);
+      setServerError(msg);
+      toast.error(msg);
     }
   }
 
@@ -70,8 +75,11 @@ export function LoginForm() {
     try {
       const res = await resendVerificationApi(unverifiedEmail);
       setResendMessage(res.verificationUrl ?? res.message);
+      toast.success("Verification email resent successfully.");
     } catch (err) {
-      setServerError(getAuthFormErrorMessage(err));
+      const msg = getAuthFormErrorMessage(err);
+      setServerError(msg);
+      toast.error(msg);
     }
   }
 

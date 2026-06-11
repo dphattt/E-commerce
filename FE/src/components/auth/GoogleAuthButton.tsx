@@ -9,6 +9,7 @@ import {
 } from "@/features/auth/model/auth-redirect";
 import { useAuth } from "@/features/auth/model/useAuth";
 import { getAuthFormErrorMessage } from "@/components/auth/auth-form-shared";
+import { useToast } from "@/shared/context/ToastContext";
 
 type GoogleAuthButtonProps = {
   onError: (message: string) => void;
@@ -17,6 +18,7 @@ type GoogleAuthButtonProps = {
 export function GoogleAuthButton({ onError }: GoogleAuthButtonProps) {
   const router = useRouter();
   const { setSession } = useAuth();
+  const toast = useToast();
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   if (!googleClientId) return null;
@@ -41,6 +43,7 @@ export function GoogleAuthButton({ onError }: GoogleAuthButtonProps) {
             try {
               const { token, user } = await googleLoginApi(credential);
               setSession(user, token);
+              toast.success(`Welcome back, ${user.name || "User"}!`);
               if (isDashboardUser(user)) {
                 window.location.href = adminDashboardUrl();
                 return;
@@ -48,11 +51,15 @@ export function GoogleAuthButton({ onError }: GoogleAuthButtonProps) {
               router.push("/account");
               router.refresh();
             } catch (err) {
-              onError(getAuthFormErrorMessage(err));
+              const msg = getAuthFormErrorMessage(err);
+              onError(msg);
+              toast.error(msg);
             }
           }}
           onError={() => {
-            onError("Google sign in was cancelled or failed.");
+            const msg = "Google sign in was cancelled or failed.";
+            onError(msg);
+            toast.error(msg);
           }}
         />
       </div>

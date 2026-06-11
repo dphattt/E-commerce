@@ -20,8 +20,10 @@ import {
   registerApi,
   resendVerificationApi,
 } from "@/features/auth/api/auth.api";
+import { useToast } from "@/shared/context/ToastContext";
 
 export function RegisterForm() {
+  const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(
@@ -63,8 +65,11 @@ export function RegisterForm() {
       });
       setRegisteredEmail(email);
       setVerificationMessage(res.verificationUrl ?? res.message);
+      toast.success("Account registered! Check your email to verify.");
     } catch (err) {
-      setServerError(getAuthFormErrorMessage(err));
+      const msg = getAuthFormErrorMessage(err);
+      setServerError(msg);
+      toast.error(msg);
     }
   }
 
@@ -81,8 +86,11 @@ export function RegisterForm() {
         setVerificationMessage(res.verificationUrl);
       }
       setResendVerificationMessage("Verification email has been resent.");
+      toast.success("Verification email resent successfully.");
     } catch (err) {
-      setServerError(getAuthFormErrorMessage(err));
+      const msg = getAuthFormErrorMessage(err);
+      setServerError(msg);
+      toast.error(msg);
     } finally {
       setIsResendingVerification(false);
     }

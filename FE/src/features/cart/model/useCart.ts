@@ -10,6 +10,7 @@ import {
 } from "@/features/cart/api/cart.api";
 import type { CartItem, CartSnapshot } from "@/features/cart/model/cart.types";
 import { useAuth } from "@/features/auth/model/useAuth";
+import { useToast } from "@/shared/context/ToastContext";
 
 export function useCart(): CartSnapshot & {
   isLoading: boolean;
@@ -45,22 +46,50 @@ export function useCart(): CartSnapshot & {
     return { items, count, subtotal: { amount, currency } };
   }, [items]);
 
+  const toast = useToast();
+
   return {
     ...snapshot,
     isLoading,
-    addItem: (item: CartItem) =>
-      void addItemMutation({
-        sku: item.sku,
-        quantity: item.quantity,
-        name: item.name,
-        image: item.image,
-        variantLabel: item.variantLabel,
-        productSlug: item.productSlug,
-      }),
-    removeItem: (sku: string) => void removeItemMutation(sku),
-    updateQuantity: (sku: string, quantity: number) =>
-      void updateItemMutation({ sku, quantity }),
-    clear: () => void clearCartMutation(),
+    addItem: async (item: CartItem) => {
+      try {
+        await addItemMutation({
+          sku: item.sku,
+          quantity: item.quantity,
+          name: item.name,
+          image: item.image,
+          variantLabel: item.variantLabel,
+          productSlug: item.productSlug,
+        }).unwrap();
+        toast.success(`Added ${item.name} to bag!`);
+      } catch {
+        toast.error("Failed to add product to bag.");
+      }
+    },
+    removeItem: async (sku: string) => {
+      try {
+        await removeItemMutation(sku).unwrap();
+        toast.success("Removed item from bag.");
+      } catch {
+        toast.error("Failed to remove item from bag.");
+      }
+    },
+    updateQuantity: async (sku: string, quantity: number) => {
+      try {
+        await updateItemMutation({ sku, quantity }).unwrap();
+        toast.success("Updated bag quantity.");
+      } catch {
+        toast.error("Failed to update bag quantity.");
+      }
+    },
+    clear: async () => {
+      try {
+        await clearCartMutation().unwrap();
+        toast.success("Bag cleared.");
+      } catch {
+        toast.error("Failed to clear bag.");
+      }
+    },
   };
 }
 

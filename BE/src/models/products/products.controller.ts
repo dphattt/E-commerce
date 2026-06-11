@@ -63,3 +63,24 @@ export async function getProductById(
     next(e);
   }
 }
+
+export async function rateProduct(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { id } = req.params as { id: string };
+    const { rating } = req.body as { rating: number };
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const stats = await productsService.rateProduct(id, userId, Number(rating));
+    res.json({ message: "Rating submitted successfully", ...stats });
+  } catch (e) {
+    next(e);
+  }
+}
+
