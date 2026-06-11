@@ -38,6 +38,10 @@ export type SiteHeaderProps = {
   onSearchSubmit?: (query: string) => void;
 };
 
+function isExploreNavItem(item: SiteHeaderNavItem | null | undefined): boolean {
+  return item?.href === "/explore";
+}
+
 export function SiteHeader({
   brandName = "GYMSHARK",
   logoHref = "/",
@@ -54,6 +58,8 @@ export function SiteHeader({
   const { count: wishlistCount } = useWishlist();
   const menuId = useId();
   const headerRef = useRef<HTMLElement>(null);
+  const megaMenuRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -127,6 +133,21 @@ export function SiteHeader({
 
   const cancelClose = () => {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+  };
+
+  const handleNavMouseLeave = (
+    item: SiteHeaderNavItem,
+    e: React.MouseEvent<HTMLDivElement>,
+  ) => {
+    if (isExploreNavItem(item)) {
+      const related = e.relatedTarget;
+      if (related instanceof Node) {
+        if (megaMenuRef.current?.contains(related)) return;
+        if (backdropRef.current?.contains(related)) return;
+      }
+      return;
+    }
+    scheduleClose();
   };
 
   const line = lines[index] ?? announcement;
@@ -227,7 +248,7 @@ export function SiteHeader({
                     <div
                       key={item.href}
                       onMouseEnter={() => openDropdown(item)}
-                      onMouseLeave={scheduleClose}
+                      onMouseLeave={(e) => handleNavMouseLeave(item, e)}
                     >
                       <button
                         type="button"
@@ -417,17 +438,23 @@ export function SiteHeader({
       {activeNav?.subItems && (
         <MegaMenuPanel
           item={activeNav}
+          panelRef={megaMenuRef}
+          overlayRef={backdropRef}
           onKeepOpen={cancelClose}
           onRequestClose={scheduleClose}
           onNavigate={() => setActiveNav(null)}
         />
       )}
 
-      {/* Backdrop */}
+      {/* Backdrop — hover keeps mega menu open (pairs with MegaMenuPanel above) */}
       {activeNav && (
         <div
-          className="fixed inset-0 z-35 hidden bg-black/25 lg:block"
+          ref={backdropRef}
+          className="fixed inset-0 z-[35] hidden bg-black/25 lg:block"
+          style={{ top: "var(--header-h, 64px)" }}
           aria-hidden
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
         />
       )}
     </>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatUsd } from "@/shared/lib/format-money";
 
@@ -22,7 +22,6 @@ function parseAmount(value: string | null): number | null {
 }
 
 export function PaymentResultClient() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const status = searchParams.get("status");
   const amountVnd = parseAmount(searchParams.get("amountVnd"));
@@ -45,14 +44,14 @@ export function PaymentResultClient() {
     }, 1000);
 
     const redirectTimer = window.setTimeout(() => {
-      router.replace(accountHref);
+      window.location.assign(accountHref);
     }, REDIRECT_SECONDS * 1000);
 
     return () => {
       window.clearInterval(countdownTimer);
       window.clearTimeout(redirectTimer);
     };
-  }, [accountHref, isFailed, isSuccess, router]);
+  }, [accountHref, isFailed, isSuccess]);
 
   if (!isSuccess && !isFailed) {
     return (

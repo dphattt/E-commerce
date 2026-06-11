@@ -15,6 +15,9 @@ export interface MegaMenuPanelProps {
   onRequestClose: () => void;
   /** Called when user clicks a nav link */
   onNavigate: () => void;
+  panelRef?: React.RefObject<HTMLDivElement | null>;
+  /** When leaving the panel toward this element (overlay), do not request close */
+  overlayRef?: React.RefObject<HTMLElement | null>;
 }
 
 export function MegaMenuPanel({
@@ -23,6 +26,8 @@ export function MegaMenuPanel({
   onKeepOpen,
   onRequestClose,
   onNavigate,
+  panelRef,
+  overlayRef,
 }: MegaMenuPanelProps) {
   const [activeSub, setActiveSub] = useState<NavSubItem | null>(null);
   const subTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -44,6 +49,7 @@ export function MegaMenuPanel({
 
   return (
     <div
+      ref={panelRef}
       className="fixed left-0 z-50 hidden lg:flex"
       style={{
         top: "var(--header-h, 64px)",
@@ -51,7 +57,16 @@ export function MegaMenuPanel({
         ...style,
       }}
       onMouseEnter={onKeepOpen}
-      onMouseLeave={onRequestClose}
+      onMouseLeave={(e) => {
+        const related = e.relatedTarget;
+        if (
+          related instanceof Node &&
+          overlayRef?.current?.contains(related)
+        ) {
+          return;
+        }
+        onRequestClose();
+      }}
     >
       {/* Left column — level-2 categories */}
       <div className="h-full w-[260px] overflow-y-auto border-r border-store-border bg-store-paper py-3 text-store-ink shadow-2xl">
