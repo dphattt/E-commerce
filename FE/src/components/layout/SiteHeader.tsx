@@ -157,12 +157,12 @@ export function SiteHeader({
       <header
         ref={headerRef}
         className={cn(
-          "sticky top-0 z-40 w-full bg-white text-neutral-950",
+          "sticky top-0 z-40 w-full bg-store-paper text-store-ink-strong",
           className,
         )}
       >
         {/* Announcement */}
-        <div className="border-b border-neutral-200 bg-neutral-50 text-neutral-950">
+        <div className="border-b border-store-border/80 bg-store-surface text-store-ink-strong">
           <div className="grid h-14 w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:px-6 lg:px-10">
             <div aria-hidden="true" />
             <div className="flex h-full min-w-0 items-center justify-center overflow-hidden text-center">
@@ -188,7 +188,7 @@ export function SiteHeader({
             {lines.length > 1 && (
               <button
                 type="button"
-                className="justify-self-end p-1 text-neutral-500 hover:text-neutral-950"
+                className="justify-self-end p-1 text-store-fg-muted hover:text-store-ink-strong"
                 onClick={() => setPaused((p) => !p)}
                 aria-label={
                   paused ? "Play announcements" : "Pause announcements"
@@ -205,7 +205,7 @@ export function SiteHeader({
         </div>
 
         {/* Main bar */}
-        <div className="border-b border-neutral-200 bg-white text-neutral-950">
+        <div className="border-b border-store-border/80 bg-store-paper text-store-ink-strong">
           <div className="grid h-24 w-full grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 sm:px-6 lg:h-auto lg:gap-6 lg:px-10 lg:py-3">
             {/* Left: hamburger (mobile) + desktop nav */}
             <div className="flex min-w-0 items-center gap-5 lg:min-w-50 lg:gap-2">
@@ -213,7 +213,7 @@ export function SiteHeader({
                 type="button"
                 className={cn(
                   iconBlockClassName,
-                  "rounded-md hover:bg-neutral-100 lg:hidden",
+                  "rounded-md hover:bg-store-surface lg:hidden",
                 )}
                 aria-expanded={menuOpen}
                 aria-controls={menuId}
@@ -227,13 +227,13 @@ export function SiteHeader({
                 type="button"
                 className={cn(
                   iconBlockClassName,
-                  "rounded-full hover:bg-neutral-100 lg:hidden",
+                  "rounded-full hover:bg-store-surface lg:hidden",
                 )}
                 aria-label="Open search"
                 onClick={() => setSearchOpen(true)}
               >
                 <IconSearch
-                  className={cn(iconGlyphClassName, "text-neutral-950")}
+                  className={cn(iconGlyphClassName, "text-store-ink")}
                 />
               </button>
 
@@ -264,10 +264,10 @@ export function SiteHeader({
                           }
                         }}
                         className={cn(
-                          "relative shrink-0 text-sm font-medium tracking-wide text-neutral-950",
+                          "relative shrink-0 text-sm font-medium tracking-wide text-store-ink-strong",
                           "cursor-pointer bg-transparent",
                           "after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full",
-                          "after:bg-neutral-950 after:transition-opacity",
+                          "after:bg-store-ink-strong after:transition-opacity",
                           activeNav?.href === item.href
                             ? "after:opacity-100"
                             : "after:opacity-0 hover:after:opacity-100",
@@ -281,9 +281,9 @@ export function SiteHeader({
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "relative shrink-0 text-sm font-medium tracking-wide text-neutral-950",
+                        "relative shrink-0 text-sm font-medium tracking-wide text-store-ink-strong",
                         "after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full",
-                        "after:bg-neutral-950 after:opacity-0 after:transition-opacity",
+                        "after:bg-store-ink-strong after:opacity-0 after:transition-opacity",
                         "hover:after:opacity-100",
                       )}
                     >
@@ -315,13 +315,13 @@ export function SiteHeader({
                 href="/wishlist"
                 className={cn(
                   iconBlockClassName,
-                  "relative hidden rounded-full hover:bg-neutral-100 lg:inline-flex",
+                  "relative hidden rounded-full hover:bg-store-surface lg:inline-flex",
                 )}
                 aria-label={`Wishlist${wishlistCount > 0 ? `, ${wishlistCount} items` : ""}`}
               >
                 <IconHeart className="size-5" />
                 {wishlistCount > 0 && (
-                  <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-neutral-950 text-[10px] font-semibold leading-none text-white">
+                  <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-store-accent text-[10px] font-semibold leading-none text-store-on-accent">
                     {wishlistCount > 9 ? "9+" : wishlistCount}
                   </span>
                 )}
@@ -330,7 +330,7 @@ export function SiteHeader({
                 href={isAuthenticated ? "/account" : "/account/login"}
                 className={cn(
                   iconBlockClassName,
-                  "rounded-full hover:bg-neutral-100",
+                  "rounded-full hover:bg-store-surface",
                 )}
                 aria-label="Account"
               >
@@ -344,12 +344,12 @@ export function SiteHeader({
         {/* Mobile search overlay */}
         {searchOpen && (
           <div
-            className="fixed inset-0 z-50 bg-black/40 lg:hidden"
+            className="fixed inset-0 z-50 bg-store-ink/40 lg:hidden"
             role="presentation"
             onClick={() => setSearchOpen(false)}
           >
             <div
-              className="border-b border-neutral-200 bg-white p-4 text-neutral-950 shadow-md"
+              className="border-b border-store-border bg-store-paper p-4 text-store-ink-strong shadow-md"
               role="dialog"
               aria-modal="true"
               aria-label="Search"
@@ -359,14 +359,14 @@ export function SiteHeader({
                 <HeaderSearch
                   placeholder={searchPlaceholder}
                   className="min-w-0 flex-1"
-                  inputClassName="h-11 border border-neutral-200 bg-neutral-50 focus:border-neutral-500 focus:ring-neutral-950/10"
+                  inputClassName="h-11 border border-store-border bg-store-surface-2 focus:border-store-border-strong focus:ring-store-ink/10"
                   autoFocus
                   onClose={() => setSearchOpen(false)}
                   showSubmitButton
                 />
                 <button
                   type="button"
-                  className="shrink-0 rounded-full border border-neutral-200 px-3 text-sm hover:bg-neutral-100"
+                  className="shrink-0 rounded-full border border-store-border px-3 text-sm hover:bg-store-surface"
                   onClick={() => setSearchOpen(false)}
                 >
                   Close
@@ -381,18 +381,18 @@ export function SiteHeader({
           <div className="fixed inset-0 z-50 lg:hidden">
             <button
               type="button"
-              className="absolute inset-0 bg-black/40"
+              className="absolute inset-0 bg-store-ink/40"
               aria-label="Close menu"
               onClick={() => setMenuOpen(false)}
             />
             <div
               id={menuId}
-              className="absolute left-0 top-0 flex h-full w-[min(100%,320px)] flex-col bg-white text-neutral-950 shadow-xl"
+              className="absolute left-0 top-0 flex h-full w-[min(100%,320px)] flex-col bg-store-paper text-store-ink-strong shadow-xl"
               role="dialog"
               aria-modal="true"
               aria-label="Site menu"
             >
-              <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
+              <div className="flex items-center justify-between border-b border-store-border px-4 py-3">
                 <span className="text-sm font-semibold uppercase tracking-wide">
                   Menu
                 </span>
@@ -400,7 +400,7 @@ export function SiteHeader({
                   type="button"
                   className={cn(
                     iconBlockClassName,
-                    "rounded-md hover:bg-neutral-100",
+                    "rounded-md hover:bg-store-surface",
                   )}
                   onClick={() => setMenuOpen(false)}
                   aria-label="Close menu"
@@ -419,8 +419,8 @@ export function SiteHeader({
                       className={cn(
                         "rounded-lg px-4 py-3 text-base font-medium",
                         active
-                          ? "bg-neutral-100"
-                          : "hover:bg-neutral-50",
+                          ? "bg-store-surface"
+                          : "hover:bg-store-surface-2",
                       )}
                     >
                       {item.label}
