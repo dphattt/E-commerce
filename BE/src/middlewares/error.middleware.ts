@@ -40,10 +40,12 @@ export function errorHandler(
   const status = err.status ?? err.statusCode ?? 500;
   const message = err.message || "Internal server error";
 
-  if (process.env.NODE_ENV !== "production" && err.stack) {
-    console.error(err.stack);
-  } else if (status >= 500) {
-    console.error(err);
+  if (status >= 500) {
+    if (process.env.NODE_ENV !== "production" && err.stack) {
+      console.error(err.stack);
+    } else {
+      console.error(err);
+    }
   }
 
   res.status(status).json({
