@@ -25,7 +25,7 @@ type HeaderSearchProps = {
 };
 
 export function HeaderSearch({
-  placeholder = "What are you looking for tod…",
+  placeholder = "What are you looking for today?",
   className,
   inputClassName,
   autoFocus = false,
@@ -81,7 +81,7 @@ export function HeaderSearch({
           }
         }}
       >
-        <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-store-fg-muted" />
+        <IconSearch className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-neutral-500" />
         <input
           ref={inputRef}
           type="search"
@@ -90,7 +90,7 @@ export function HeaderSearch({
           onFocus={() => setFocused(true)}
           placeholder={placeholder}
           className={cn(
-            "h-10 w-full rounded-full border border-transparent bg-store-surface py-2 pl-10 pr-4 text-sm text-store-ink outline-none ring-store-ink/5 placeholder:text-store-fg-muted focus:border-store-border-strong focus:bg-store-paper focus:ring-2",
+            "h-10 w-full rounded-full border border-transparent bg-neutral-100 py-2 pl-10 pr-4 text-sm text-neutral-950 outline-none ring-neutral-950/5 placeholder:text-neutral-500 focus:border-neutral-400 focus:bg-white focus:ring-2",
             showSubmitButton && "h-11 pr-4",
             inputClassName,
           )}
@@ -115,16 +115,16 @@ export function HeaderSearch({
         <div
           id={listboxId}
           role="listbox"
-          className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-2xl border border-store-border bg-store-paper shadow-lg"
+          className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-2xl border border-neutral-200 bg-white text-neutral-950 shadow-lg"
         >
           {showLoading ? (
-            <p className="px-4 py-3 text-sm text-store-fg-muted">
+            <p className="px-4 py-3 text-sm text-neutral-500">
               Searching...
             </p>
           ) : error ? (
             <p className="px-4 py-3 text-sm text-red-600">{error}</p>
           ) : results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-store-fg-muted">
+            <p className="px-4 py-3 text-sm text-neutral-500">
               No products found for &ldquo;{trimmedQuery}&rdquo;
             </p>
           ) : (
@@ -143,9 +143,9 @@ export function HeaderSearch({
                         cacheProduct(product);
                         handleSelect();
                       }}
-                      className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-store-surface"
+                      className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-neutral-100"
                     >
-                      <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-store-surface">
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
                         {image ? (
                           <Image
                             src={image}
@@ -157,10 +157,10 @@ export function HeaderSearch({
                         ) : null}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-sm font-medium text-store-ink-strong">
+                        <p className="line-clamp-2 text-sm font-medium text-neutral-950">
                           {product.title}
                         </p>
-                        <p className="mt-0.5 text-xs font-semibold tabular-nums text-store-ink">
+                        <p className="mt-0.5 text-xs font-semibold tabular-nums text-neutral-800">
                           {formatUsd(product.price.amount)}
                         </p>
                       </div>
