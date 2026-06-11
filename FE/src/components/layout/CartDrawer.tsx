@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { IconBag, IconClose, IconOrder } from "@/components/icons";
+import { IconBag, IconClose, IconHeart, IconOrder } from "@/components/icons";
+import { useAuth } from "@/features/auth";
 import {
   Sheet,
   SheetClose,
@@ -12,7 +13,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useAuth } from "@/features/auth";
 import { useCart } from "@/features/cart";
 import type { CartItem } from "@/features/cart";
 import { useCheckoutSlugFromCart } from "@/features/cart/hooks/useCheckoutSlugFromCart";
@@ -50,25 +50,6 @@ function EmptyBagIllustration() {
           d="M22 34c0 4.418 3.582 8 8 8s8-3.582 8-8"
           strokeLinecap="round"
         />
-      </svg>
-    </div>
-  );
-}
-
-function EmptyOrdersIllustration() {
-  return (
-    <div className="mx-auto flex size-30 items-center justify-center rounded-lg bg-zinc-700">
-      <svg
-        viewBox="0 0 60 60"
-        fill="none"
-        stroke="#9ca3af"
-        strokeWidth={1.5}
-        className="size-16"
-        aria-hidden
-      >
-        <path d="M18 22h24l3 6H15l3-6Z" strokeLinejoin="round" />
-        <path d="M14 28v18a3 3 0 0 0 3 3h26a3 3 0 0 0 3-3V28" strokeLinejoin="round" />
-        <path d="M24 36h12" strokeLinecap="round" />
       </svg>
     </div>
   );
@@ -259,36 +240,32 @@ function OrderGroup({ order }: { order: Order }) {
 
 export function CartDrawer() {
   const hasHydrated = useHasHydrated();
-  const { isAuthenticated, sessionChecked } = useAuth();
   const { items, count, subtotal, removeItem, updateQuantity, clear } =
     useCart();
+  const { isAuthenticated, sessionChecked } = useAuth();
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<DrawerPanel>("bag");
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState<string | null>(null);
 
+  // While the persisted store is still hydrating on the client, we
+  // render the same "empty" UI the server emitted to avoid a flicker
+  // and avoid a hydration mismatch warning.
   const visibleItems = hasHydrated ? items : [];
   const visibleCount = hasHydrated ? count : 0;
   const productsBySlug = useAppSelector((state) => state.products.bySlug);
-  const { slugsParam: checkoutSlugsParam, isResolving: isResolvingCheckoutSlug } =
-    useCheckoutSlugFromCart(visibleItems);
-  const visibleOrders = isAuthenticated ? orders : [];
-  const visibleOrdersLoading =
-    isAuthenticated && open && sessionChecked && ordersLoading;
-  const visibleOrdersError = isAuthenticated ? ordersError : null;
-  const ordersCount = visibleOrders.length;
+  const {
+    slugsParam: checkoutSlugsParam,
+    isResolving: isResolvingCheckoutSlug,
+  } = useCheckoutSlugFromCart(visibleItems);
 
   useEffect(() => {
     if (!sessionChecked || !isAuthenticated || !open) return;
 
     let cancelled = false;
-
-    void Promise.resolve().then(() => {
-      if (cancelled) return;
-      setOrdersLoading(true);
-      setOrdersError(null);
-    });
+    setOrdersLoading(true);
+    setOrdersError(null);
 
     listOrdersApi()
       .then((res) => {
@@ -339,21 +316,12 @@ export function CartDrawer() {
         <SheetHeader className="flex flex-row items-center justify-between border-b border-zinc-700 px-5 py-4">
           <div>
             <SheetTitle className="text-sm font-bold uppercase tracking-widest text-white">
-              {panel === "bag" ? (
-                <>
-                  Your Bag {visibleCount > 0 ? `(${visibleCount})` : null}
-                </>
-              ) : (
-                <>
-                  Your Orders{" "}
-                  {ordersCount > 0 ? `(${ordersCount})` : null}
-                </>
-              )}
+              {panel === "bag"
+                ? `Your Bag${visibleCount > 0 ? ` (${visibleCount})` : ""}`
+                : "Your Orders"}
             </SheetTitle>
             <SheetDescription className="sr-only">
-              {panel === "bag"
-                ? "View and manage items in your shopping bag."
-                : "View your order history."}
+              View and manage items in your shopping bag.
             </SheetDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -361,30 +329,28 @@ export function CartDrawer() {
               type="button"
               onClick={() => setPanel("bag")}
               className={cn(
-                "inline-flex size-9 items-center justify-center rounded-lg text-white",
+                "relative inline-flex size-9 items-center justify-center rounded-lg text-white",
                 panel === "bag" ? "bg-black" : "hover:bg-zinc-800",
               )}
-              aria-label="Bag"
-              aria-pressed={panel === "bag"}
+              aria-label="View bag"
             >
               <IconBag className="size-5" />
+              {visibleCount > 0 && (
+                <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-store-accent text-[10px] font-semibold leading-none text-store-on-accent">
+                  {visibleCount > 9 ? "9+" : visibleCount}
+                </span>
+              )}
             </button>
             <button
               type="button"
               onClick={() => setPanel("orders")}
               className={cn(
-                "relative inline-flex size-9 items-center justify-center rounded-full text-white",
+                "inline-flex size-9 items-center justify-center rounded-lg text-white",
                 panel === "orders" ? "bg-black" : "hover:bg-zinc-800",
               )}
-              aria-label={`Orders${ordersCount > 0 ? `, ${ordersCount} orders` : ""}`}
-              aria-pressed={panel === "orders"}
+              aria-label="View orders"
             >
               <IconOrder className="size-5" />
-              {ordersCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-store-accent text-[10px] font-semibold leading-none text-store-on-accent">
-                  {ordersCount > 9 ? "9+" : ordersCount}
-                </span>
-              )}
             </button>
             <SheetClose className="inline-flex size-9 items-center justify-center rounded-full text-white hover:bg-zinc-800">
               <IconClose className="size-5" />
@@ -446,7 +412,9 @@ export function CartDrawer() {
                         ? `/checkout?slug=${encodeURIComponent(checkoutSlugsParam)}`
                         : "#"
                     }
-                    aria-disabled={!checkoutSlugsParam || isResolvingCheckoutSlug}
+                    aria-disabled={
+                      !checkoutSlugsParam || isResolvingCheckoutSlug
+                    }
                     onClick={(event) => {
                       if (!checkoutSlugsParam || isResolvingCheckoutSlug) {
                         event.preventDefault();
@@ -471,69 +439,63 @@ export function CartDrawer() {
               </div>
             </>
           )
-        ) : sessionChecked && !isAuthenticated ? (
+        ) : !isAuthenticated && sessionChecked ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 py-12 text-center">
-            <EmptyOrdersIllustration />
             <div className="space-y-1">
               <p className="text-sm font-bold uppercase tracking-widest text-white">
-                You are not logged in
+                Sign in to view orders
               </p>
               <p className="text-sm text-zinc-400">
-                Sign in to view your orders
+                Log in to see your order history
               </p>
             </div>
-            <div className="mt-4 flex w-full flex-col gap-3">
-              <SheetClose asChild>
-                <Link
-                  href="/account/login"
-                  className="flex h-12 w-full items-center justify-center rounded-full bg-black text-sm font-bold uppercase tracking-widest text-white transition-colors hover:bg-zinc-900"
-                >
-                  Login
-                </Link>
-              </SheetClose>
-            </div>
+            <SheetClose asChild>
+              <Link
+                href="/account/login"
+                className="flex h-12 w-48 items-center justify-center rounded-full bg-black text-sm font-bold uppercase tracking-widest text-white transition-colors hover:bg-zinc-900"
+              >
+                Log In
+              </Link>
+            </SheetClose>
           </div>
-        ) : visibleOrdersLoading ? (
-          <div className="flex flex-1 items-center justify-center px-8 py-12 text-center">
+        ) : ordersLoading ? (
+          <div className="flex flex-1 items-center justify-center">
             <p className="text-sm text-zinc-400">Loading orders...</p>
           </div>
-        ) : visibleOrdersError ? (
-          <div className="flex flex-1 items-center justify-center px-8 py-12 text-center">
-            <p className="text-sm text-red-400">{visibleOrdersError}</p>
+        ) : ordersError ? (
+          <div className="flex flex-1 items-center justify-center px-8 text-center">
+            <p className="text-sm text-zinc-400">{ordersError}</p>
           </div>
-        ) : visibleOrders.length === 0 ? (
+        ) : orders.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 py-12 text-center">
-            <EmptyOrdersIllustration />
             <div className="space-y-1">
               <p className="text-sm font-bold uppercase tracking-widest text-white">
                 No orders yet
               </p>
               <p className="text-sm text-zinc-400">
-                Your orders will appear here after checkout
+                Your order history will appear here
               </p>
             </div>
-            <div className="mt-4 flex w-full flex-col gap-3">
-              <SheetClose asChild>
-                <Link
-                  href="/products"
-                  className="flex h-12 w-full items-center justify-center rounded-full bg-black text-sm font-bold uppercase tracking-widest text-white transition-colors hover:bg-zinc-900"
-                >
-                  Shop Now
-                </Link>
-              </SheetClose>
-            </div>
+            <SheetClose asChild>
+              <Link
+                href="/products"
+                className="flex h-12 w-48 items-center justify-center rounded-full bg-black text-sm font-bold uppercase tracking-widest text-white transition-colors hover:bg-zinc-900"
+              >
+                Shop Now
+              </Link>
+            </SheetClose>
           </div>
         ) : (
           <>
             <ul className="flex-1 overflow-y-auto">
-              {visibleOrders.map((order) => (
+              {orders.map((order) => (
                 <OrderGroup key={order._id} order={order} />
               ))}
             </ul>
-            <div className="border-t border-zinc-700 px-5 py-4">
+            <div className="space-y-3 border-t border-zinc-700 px-5 py-4">
               <SheetClose asChild>
                 <Link
-                  href={ORDERS_HREF}
+                  href="/account/orders"
                   className="flex h-12 w-full items-center justify-center rounded-full bg-black text-sm font-bold uppercase tracking-widest text-white transition-colors hover:bg-zinc-900"
                 >
                   View All Orders

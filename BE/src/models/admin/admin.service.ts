@@ -2,13 +2,20 @@ import { isValidObjectId } from "mongoose";
 import User, { type UserRole } from "@/models/users/User.model";
 import Product from "@/models/products/Product.model";
 import ProductVariant from "@/models/products/ProductVariant.model";
+import Voucher from "@/models/vouchers/Voucher.model";
+import Order from "@/models/orders/Order.model";
 import { httpError } from "@/utils/http-error";
 import type {
+  AdminCreateVoucherBody,
   AdminCreateProductBody,
   AdminCreateVariantBody,
+  AdminListOrdersQuery,
+  AdminListVouchersQuery,
   AdminListProductsQuery,
   AdminListUsersQuery,
+  AdminUpdateVoucherBody,
   AdminUpdateProductBody,
+  AdminUpdateOrderStatusBody,
   AdminUpdateUserBody,
   AdminUpdateVariantBody,
 } from "@/models/admin/admin.validation";
@@ -211,4 +218,122 @@ export async function deleteProductVariant(id: string) {
 
   const variant = await ProductVariant.findByIdAndDelete(id).lean();
   if (!variant) throw httpError("Variant not found", 404);
+}
+
+export async function listVouchers(queryParams: AdminListVouchersQuery) {
+  const { search, isActive, limit, skip } = queryParams;
+  const query: Record<string, unknown> = {};
+
+  if (search) {
+    const regex = new RegExp(escapeRegex(search), "i");
+    query.$or = [{ code: regex }, { label: regex }];
+  }
+  if (typeof isActive === "boolean") query.isActive = isActive;
+
+  const [vouchers, total] = await Promise.all([
+    Voucher.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    Voucher.countDocuments(query),
+  ]);
+
+  return { vouchers, total, limit, skip };
+}
+
+export async function getVoucher(id: string) {
+  assertObjectId(id);
+
+  const voucher = await Voucher.findById(id).lean();
+  if (!voucher) throw httpError("Voucher not found", 404);
+
+  return voucher;
+}
+
+export async function createVoucher(body: AdminCreateVoucherBody) {
+  const existing = await Voucher.findOne({ code: body.code }).select("_id").lean();
+  if (existing) {
+    throw httpError("Voucher code already exists", 409);
+  }
+
+  return Voucher.create(body);
+}
+
+export async function updateVoucher(id: string, body: AdminUpdateVoucherBody) {
+  assertObjectId(id);
+
+  if (body.code) {
+    const existing = await Voucher.findOne({
+      _id: { $ne: id },
+      code: body.code,
+    })
+      .select("_id")
+      .lean();
+    if (existing) {
+      throw httpError("Voucher code already exists", 409);
+    }
+  }
+
+  const voucher = await Voucher.findByIdAndUpdate(
+    id,
+    { $set: body },
+    { returnDocument: "after", runValidators: true },
+  ).lean();
+  if (!voucher) throw httpError("Voucher not found", 404);
+
+  return voucher;
+}
+
+export async function deleteVoucher(id: string) {
+  assertObjectId(id);
+
+  const voucher = await Voucher.findByIdAndDelete(id).lean();
+  if (!voucher) throw httpError("Voucher not found", 404);
+}
+
+export async function listOrders(queryParams: AdminListOrdersQuery) {
+  const { search, status, limit, skip } = queryParams;
+  const query: Record<string, unknown> = {};
+
+  if (search) {
+    const regex = new RegExp(escapeRegex(search), "i");
+    query.$or = [{ orderCode: regex }, { userEmail: regex }];
+  }
+  if (status) query.status = status;
+
+  const [orders, total] = await Promise.all([
+    Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    Order.countDocuments(query),
+  ]);
+
+  return { orders, total, limit, skip };
+}
+
+export async function getOrder(orderCode: string) {
+  const order = await Order.findOne(orderIdentifierQuery(orderCode)).lean();
+  if (!order) throw httpError("Order not found", 404);
+
+  return order;
+}
+
+function orderIdentifierQuery(identifier: string) {
+  const trimmed = identifier.trim();
+  const query: Record<string, unknown>[] = [{ orderCode: trimmed.toUpperCase() }];
+
+  if (isValidObjectId(trimmed)) {
+    query.push({ _id: trimmed });
+  }
+
+  return { $or: query };
+}
+
+export async function updateOrderStatus(
+  orderCode: string,
+  body: AdminUpdateOrderStatusBody,
+) {
+  const order = await Order.findOneAndUpdate(
+    orderIdentifierQuery(orderCode),
+    { $set: { status: body.status } },
+    { returnDocument: "after", runValidators: true },
+  ).lean();
+  if (!order) throw httpError("Order not found", 404);
+
+  return order;
 }

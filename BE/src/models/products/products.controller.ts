@@ -25,7 +25,11 @@ export async function getProducts(
     }
 
     if (categorySlug) {
-      const result = await productsService.listProductsByCategory(categorySlug, limit, skip);
+      const result = await productsService.listProductsByCategory(
+        categorySlug,
+        limit,
+        skip,
+      );
       return res.json({ ...result, limit, skip });
     }
 

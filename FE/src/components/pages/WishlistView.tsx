@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/model/useAuth";
-import { buildCartItemFromProduct } from "@/features/cart/lib/cart-item-from-product";
-import { useCart } from "@/features/cart";
 import { useResolvedWishlistItems } from "@/features/wishlist/hooks/useResolvedWishlistItems";
 import { useWishlist } from "@/features/wishlist";
 
@@ -70,8 +69,7 @@ interface WishlistCardProps {
   title: string;
   imageUrl: string;
   onRemove: () => void;
-  onAddToCart: () => void;
-  addToCartDisabled?: boolean;
+  onGoPay: () => void;
 }
 
 function WishlistCard({
@@ -79,8 +77,7 @@ function WishlistCard({
   title,
   imageUrl,
   onRemove,
-  onAddToCart,
-  addToCartDisabled = false,
+  onGoPay,
 }: WishlistCardProps) {
   return (
     <li className="flex flex-col overflow-hidden rounded-lg bg-zinc-900">
@@ -120,11 +117,10 @@ function WishlistCard({
         </button>
         <button
           type="button"
-          onClick={onAddToCart}
-          disabled={addToCartDisabled}
-          className="flex flex-1 cursor-pointer items-center justify-center rounded-md bg-green-600 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={onGoPay}
+          className="flex flex-1 cursor-pointer items-center justify-center rounded-md bg-green-600 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-green-700"
         >
-          Add to cart
+          Go Pay
         </button>
       </div>
     </li>
@@ -132,9 +128,9 @@ function WishlistCard({
 }
 
 export function WishlistView() {
+  const router = useRouter();
   const { isAuthenticated, sessionChecked } = useAuth();
-  const { addItem } = useCart();
-  const { remove, clear, items: wishlistStoreItems } = useWishlist();
+  const { remove, clear } = useWishlist();
   const resolvedItems = useResolvedWishlistItems();
   const items = sessionChecked && isAuthenticated ? resolvedItems : [];
   const productCount = items.length;
@@ -216,9 +212,6 @@ export function WishlistView() {
             {items.map(({ key, slug, product }) => {
               const title = product?.title ?? slug;
               const imageUrl = product?.imageUrls[0] ?? "";
-              const sku = wishlistStoreItems.find(
-                (item) => item.productId === key,
-              )?.sku;
 
               return (
                 <WishlistCard
@@ -227,11 +220,9 @@ export function WishlistView() {
                   title={title}
                   imageUrl={imageUrl}
                   onRemove={() => remove(key)}
-                  addToCartDisabled={!product}
-                  onAddToCart={() => {
-                    if (!product) return;
-                    addItem(buildCartItemFromProduct(product, slug, sku));
-                  }}
+                  onGoPay={() =>
+                    router.push(`/checkout?slug=${encodeURIComponent(slug)}`)
+                  }
                 />
               );
             })}

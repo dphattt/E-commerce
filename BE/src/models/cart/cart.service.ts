@@ -9,7 +9,9 @@ function slugFromSourceUrl(sourceUrl: string): string {
   return sourceUrl;
 }
 
-async function resolveProductSlugFromSku(sku: string): Promise<string | undefined> {
+async function resolveProductSlugFromSku(
+  sku: string,
+): Promise<string | undefined> {
   const variant = await productsRepo.findVariantBySku(sku);
   if (variant?.productSourceUrl) {
     return slugFromSourceUrl(variant.productSourceUrl);

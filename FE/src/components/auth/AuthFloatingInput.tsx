@@ -15,8 +15,7 @@ export type AuthFloatingInputProps = Omit<
 const labelBase =
   "pointer-events-none absolute left-4 origin-left transition-all duration-200 ease-out";
 
-const labelResting =
-  "top-1/2 -translate-y-1/2 text-sm text-store-fg-subtle";
+const labelResting = "top-1/2 -translate-y-1/2 text-sm text-store-fg-subtle";
 
 /** Stacked floating label: label rests in the field, then slides up on focus or when filled. */
 export function AuthFloatingInput({

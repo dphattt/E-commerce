@@ -172,14 +172,13 @@ export function ProductDetail({ slug }: ProductDetailProps) {
     const variantImage =
       product.variants && product.variants.length > 0
         ? product.variants[0].image
-        : product.imageUrls[0] ?? "";
+        : (product.imageUrls[0] ?? "");
 
     addItem({
       sku,
       name: product.title,
       image: variantImage,
       variantLabel: sizeObj?.label ?? selectedSize.toUpperCase(),
-      productSlug: slug,
       quantity: 1,
       unitPrice: product.price,
     });
@@ -208,12 +207,10 @@ export function ProductDetail({ slug }: ProductDetailProps) {
     );
   }
 
-  const gallery =
-    product.imageUrls.length > 0 ? product.imageUrls : [""];
+  const gallery = product.imageUrls.length > 0 ? product.imageUrls : [""];
   const subtitle = categoryLabel(product.categories);
   const priceLabel = formatPrice(product.price.amount, product.price.currency);
-  const isProductWishlisted =
-    hasHydrated && wishlist.isWishlisted(product._id);
+  const isProductWishlisted = hasHydrated && wishlist.isWishlisted(product._id);
 
   const displaySizes =
     product.variants && product.variants.length > 0
@@ -235,7 +232,9 @@ export function ProductDetail({ slug }: ProductDetailProps) {
           Products
         </Link>
         <span>/</span>
-        <span className="text-store-ink-strong line-clamp-1">{product.title}</span>
+        <span className="text-store-ink-strong line-clamp-1">
+          {product.title}
+        </span>
       </nav>
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 xl:gap-16">

@@ -19,9 +19,7 @@ export const registerSchema = z
       .trim()
       .min(1, "Email is required")
       .email("Invalid email address"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
     marketingOptIn: z.boolean(),
   })

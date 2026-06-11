@@ -4,11 +4,17 @@ import * as adminService from "@/models/admin/admin.service";
 import type {
   AdminCreateProductBody,
   AdminCreateVariantBody,
+  AdminCreateVoucherBody,
+  AdminListOrdersQuery,
   AdminListProductsQuery,
   AdminListUsersQuery,
+  AdminListVouchersQuery,
+  AdminOrderCodeParams,
+  AdminUpdateOrderStatusBody,
   AdminUpdateProductBody,
   AdminUpdateUserBody,
   AdminUpdateVariantBody,
+  AdminUpdateVoucherBody,
 } from "@/models/admin/admin.validation";
 
 function validatedQuery<TQuery>(req: Request) {
@@ -207,6 +213,127 @@ export async function deleteProductVariant(
     const id = requestId(req);
     await adminService.deleteProductVariant(id);
     res.status(204).end();
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function listVouchers(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const result = await adminService.listVouchers(
+      validatedQuery<AdminListVouchersQuery>(req),
+    );
+    res.json(result);
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function getVoucher(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const id = requestId(req);
+    const voucher = await adminService.getVoucher(id);
+    res.json({ voucher });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function createVoucher(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const voucher = await adminService.createVoucher(
+      validatedBody<AdminCreateVoucherBody>(req),
+    );
+    res.status(201).json({ voucher });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function updateVoucher(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const id = requestId(req);
+    const voucher = await adminService.updateVoucher(
+      id,
+      validatedBody<AdminUpdateVoucherBody>(req),
+    );
+    res.json({ voucher });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function deleteVoucher(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const id = requestId(req);
+    await adminService.deleteVoucher(id);
+    res.status(204).end();
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function listOrders(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const result = await adminService.listOrders(
+      validatedQuery<AdminListOrdersQuery>(req),
+    );
+    res.json(result);
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function getOrder(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { orderCode } = req.params as unknown as AdminOrderCodeParams;
+    const order = await adminService.getOrder(orderCode);
+    res.json({ order });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function updateOrderStatus(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { orderCode } = req.params as unknown as AdminOrderCodeParams;
+    const order = await adminService.updateOrderStatus(
+      orderCode,
+      validatedBody<AdminUpdateOrderStatusBody>(req),
+    );
+    res.json({ order });
   } catch (e) {
     next(e);
   }

@@ -42,7 +42,7 @@ function refreshCookieOptions(): CookieOptions {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/api",
+    path: "/api/auth",
     maxAge: SEVEN_DAYS_MS,
   };
 }
@@ -100,9 +100,9 @@ async function issueEmailVerification(user: {
   email: string;
   name?: string;
 }): Promise<{ verificationToken?: string; verificationUrl?: string }> {
-  const verificationToken = randomBytes(EMAIL_VERIFICATION_TOKEN_BYTES).toString(
-    "hex",
-  );
+  const verificationToken = randomBytes(
+    EMAIL_VERIFICATION_TOKEN_BYTES,
+  ).toString("hex");
   const verificationUrl = buildVerificationUrl(verificationToken);
 
   await User.updateOne(
@@ -135,13 +135,8 @@ async function issueEmailVerification(user: {
   return { verificationToken, verificationUrl };
 }
 
-function authUser(user: {
-  id: string;
-  email: string;
-  name?: string;
-  role?: "user" | "admin" | "boss";
-}) {
-  return { id: user.id, email: user.email, name: user.name, role: user.role };
+function authUser(user: { id: string; email: string; name?: string }) {
+  return { id: user.id, email: user.email, name: user.name };
 }
 
 export async function register(
@@ -202,11 +197,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       );
     }
 
-    const token = await issueTokens(res, {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    });
+    const token = await issueTokens(res, { sub: user.id, email: user.email });
     res.json({
       token,
       user: authUser(user),
@@ -271,11 +262,7 @@ export async function google(req: Request, res: Response, next: NextFunction) {
 
     if (!user) throw httpError("Unable to sign in with Google", 500);
 
-    const token = await issueTokens(res, {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    });
+    const token = await issueTokens(res, { sub: user.id, email: user.email });
     res.json({ token, user: authUser(user) });
   } catch (e) {
     next(e);
@@ -315,15 +302,9 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
     }
 
     // Rotation: issue hoàn toàn token mới
-    const user = await User.findById(payload.sub).select("email role").lean();
-    if (!user) {
-      throw httpError("User not found", 401);
-    }
-
     const accessToken = await issueTokens(res, {
       sub: payload.sub,
-      email: user.email,
-      role: user.role,
+      email: payload.email,
     });
     res.json({ token: accessToken });
   } catch (e) {
@@ -367,7 +348,9 @@ export async function forgotPassword(
     const response = { message: PASSWORD_RESET_MESSAGE };
 
     if (user) {
-      const resetToken = randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString("hex");
+      const resetToken = randomBytes(PASSWORD_RESET_TOKEN_BYTES).toString(
+        "hex",
+      );
       const resetUrl = buildResetUrl(resetToken);
 
       await User.updateOne(
@@ -409,9 +392,10 @@ export async function verifyEmail(
   next: NextFunction,
 ) {
   try {
-    const token =
-      ((req.body as Partial<VerifyEmailBody> | undefined)?.token ||
-        (typeof req.query.token === "string" ? req.query.token : ""))?.trim();
+    const token = (
+      (req.body as Partial<VerifyEmailBody> | undefined)?.token ||
+      (typeof req.query.token === "string" ? req.query.token : "")
+    )?.trim();
 
     if (!token) {
       throw httpError("Verification token is required", 400);
