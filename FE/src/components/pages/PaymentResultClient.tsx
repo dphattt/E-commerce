@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatUsd } from "@/shared/lib/format-money";
+import { useToast } from "@/shared/context/ToastContext";
 
 const REDIRECT_SECONDS = 5;
 
@@ -31,10 +32,19 @@ export function PaymentResultClient() {
   const isSuccess = status === "success";
   const isFailed = status === "failed";
   const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
+  const toast = useToast();
 
   const accountHref = orderCode
     ? `/account?placed=${encodeURIComponent(orderCode)}&scroll=orders`
     : "/account?scroll=orders";
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success("Payment processed successfully!");
+    } else if (isFailed) {
+      toast.error("Payment transaction failed.");
+    }
+  }, [isSuccess, isFailed, toast]);
 
   useEffect(() => {
     if (!isSuccess && !isFailed) return;

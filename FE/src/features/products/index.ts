@@ -4,6 +4,7 @@ export {
   fetchProductList,
   fetchRecentProducts,
   searchProductsApi,
+  rateProductApi,
 } from "@/features/products/api/products.api";
 export { useCachedProduct } from "@/features/products/hooks/useCachedProduct";
 export {

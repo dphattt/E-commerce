@@ -7,6 +7,7 @@ import { logoutApi } from "@/features/auth/api/auth.api";
 import { cartApi } from "@/features/cart";
 import { useAppDispatch } from "@/store/hooks";
 import { clear as clearWishlist } from "@/features/wishlist/model/wishlist.slice";
+import { useToast } from "@/shared/context/ToastContext";
 
 function SignOutIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -33,6 +34,7 @@ export function SignOutButton() {
   const { clearSession } = useAuth();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const toast = useToast();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
@@ -46,6 +48,7 @@ export function SignOutButton() {
       dispatch(cartApi.util.resetApiState());
       dispatch(clearWishlist());
       clearSession();
+      toast.success("Signed out successfully.");
       router.push("/");
       router.refresh();
     }

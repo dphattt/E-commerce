@@ -71,6 +71,7 @@ export async function listProductsByCategory(
 }
 
 import ProductVariant from "@/models/products/ProductVariant.model";
+import ProductRating from "@/models/products/ProductRating.model";
 import mongoose from "mongoose";
 
 function escapeRegex(str: string) {
@@ -184,12 +185,48 @@ export async function getProductById(id: string) {
   const catTag = product.categories[2] || "Training";
   const descTag = `${genderTag} ${catTag}`;
 
+  const ratingStats = await getProductRatingStats(id);
+
   return {
     ...product,
     description: `Built to perform, designed to last. The ${product.title} features a durable fabric blend and a fit that moves with you. Perfect for high intensity training.`,
     descTag,
     variants: Array.from(colorVariantsMap.values()),
+    ratingAverage: ratingStats.ratingAverage,
+    ratingCount: ratingStats.ratingCount,
   };
+}
+
+export async function getProductRatingStats(productId: string) {
+  const stats = await ProductRating.aggregate([
+    { $match: { productId: new mongoose.Types.ObjectId(productId) } },
+    {
+      $group: {
+        _id: null,
+        ratingAverage: { $avg: "$rating" },
+        ratingCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  return {
+    ratingAverage: stats[0]?.ratingAverage ? Math.round(stats[0].ratingAverage * 10) / 10 : 0,
+    ratingCount: stats[0]?.ratingCount ?? 0,
+  };
+}
+
+export async function rateProduct(productId: string, userId: string, rating: number) {
+  if (rating < 1 || rating > 5) {
+    throw httpError("Rating must be between 1 and 5", 400);
+  }
+
+  await ProductRating.findOneAndUpdate(
+    { productId: new mongoose.Types.ObjectId(productId), userId: new mongoose.Types.ObjectId(userId) },
+    { rating },
+    { upsert: true, new: true }
+  );
+
+  return getProductRatingStats(productId);
 }
 
 /**

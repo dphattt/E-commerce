@@ -29,6 +29,8 @@ export interface Product {
   description?: string;
   descTag?: string;
   variants?: ProductVariant[];
+  ratingAverage?: number;
+  ratingCount?: number;
 }
 
 export interface ProductListResponse {
