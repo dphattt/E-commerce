@@ -8,8 +8,7 @@ import { MessageCircle, Phone } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import {
   listOrdersApi,
-  ORDER_STATUS_LABELS,
-  orderStatusClassName,
+  OrderStatusBadges,
   type Order,
   type OrderItem,
 } from "@/features/orders";
@@ -107,14 +106,7 @@ function OrderInfoSection({ order }: { order: Order }) {
             {order.orderCode}
           </p>
         </div>
-        <span
-          className={cn(
-            "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide sm:text-xs",
-            orderStatusClassName(order.status),
-          )}
-        >
-          {ORDER_STATUS_LABELS[order.status]}
-        </span>
+        <OrderStatusBadges order={order} size="md" />
       </div>
 
       <ul className="divide-y divide-zinc-100">

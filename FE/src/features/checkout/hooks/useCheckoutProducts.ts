@@ -2,29 +2,33 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { fetchProductBySlug } from "@/features/products/api/products.api";
-import { useProductCache } from "@/features/products";
 import type { Product } from "@/features/products/model/product.types";
+import { cacheProduct as cacheProductAction } from "@/features/products/model/products.slice";
 import { parseCheckoutSlugs } from "@/features/checkout/lib/parse-checkout-slugs";
 import { store } from "@/store";
 
+interface CheckoutProductsState {
+  products: Product[];
+  failedSlugs: string[];
+  resolvedKey: string;
+}
+
+const EMPTY_STATE: CheckoutProductsState = {
+  products: [],
+  failedSlugs: [],
+  resolvedKey: "",
+};
+
 export function useCheckoutProducts(slugParam?: string) {
   const slugs = useMemo(() => parseCheckoutSlugs(slugParam), [slugParam]);
+  const slugKey = slugs.join("&");
   const hasSlugs = slugs.length > 0;
-  const { cacheProduct } = useProductCache();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(hasSlugs);
-  const [failedSlugs, setFailedSlugs] = useState<string[]>([]);
+  const [data, setData] = useState<CheckoutProductsState>(EMPTY_STATE);
 
   useEffect(() => {
-    if (!hasSlugs) return;
+    if (!slugKey) return;
 
     let cancelled = false;
-
-    void Promise.resolve().then(() => {
-      if (cancelled) return;
-      setLoading(true);
-      setFailedSlugs([]);
-    });
 
     void (async () => {
       const loaded: Product[] = [];
@@ -40,7 +44,7 @@ export function useCheckoutProducts(slugParam?: string) {
 
         try {
           const { product } = await fetchProductBySlug(slug);
-          cacheProduct(product);
+          store.dispatch(cacheProductAction(product));
           loaded.push(product);
         } catch {
           missing.push(slug);
@@ -48,22 +52,29 @@ export function useCheckoutProducts(slugParam?: string) {
       }
 
       if (cancelled) return;
-      setProducts(loaded);
-      setFailedSlugs(missing);
-      setLoading(false);
+      setData({
+        products: loaded,
+        failedSlugs: missing,
+        resolvedKey: slugKey,
+      });
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [hasSlugs, slugs, cacheProduct]);
+  }, [slugKey, slugs]);
+
+  const isResolved = data.resolvedKey === slugKey;
+  const loading = hasSlugs && !isResolved;
+  const products = hasSlugs && isResolved ? data.products : [];
+  const failedSlugs = hasSlugs && isResolved ? data.failedSlugs : [];
 
   return {
     slugs,
-    products: hasSlugs ? products : [],
-    loading: hasSlugs ? loading : false,
-    failedSlugs: hasSlugs ? failedSlugs : [],
+    products,
+    loading,
+    failedSlugs,
     isReady:
-      hasSlugs && !loading && products.length === slugs.length,
+      hasSlugs && isResolved && products.length === slugs.length,
   };
 }

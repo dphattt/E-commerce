@@ -78,3 +78,13 @@ export async function clearCart(email: string) {
   cart.items = [] as typeof cart.items;
   return cart.save();
 }
+
+export async function removeCartItemsBySkus(email: string, skus: string[]) {
+  if (skus.length === 0) return null;
+  const cart = await cartRepo.findCartByEmail(email);
+  if (!cart) return null;
+
+  const skuSet = new Set(skus.map((sku) => sku.trim()).filter(Boolean));
+  cart.items = cart.items.filter((item) => !skuSet.has(item.sku)) as typeof cart.items;
+  return cart.save();
+}

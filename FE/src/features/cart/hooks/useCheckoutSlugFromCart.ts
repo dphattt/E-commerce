@@ -10,7 +10,8 @@ import {
   productIdFromSku,
   resolveCartItemCheckoutSlug,
 } from "@/features/cart/lib/checkout-slug";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { store } from "@/store";
+import { useAppDispatch } from "@/store/hooks";
 
 async function resolveSlugForCartItem(
   item: CartItem,
@@ -36,9 +37,11 @@ async function resolveSlugForCartItem(
 
 export function useCheckoutSlugFromCart(items: CartItem[]) {
   const dispatch = useAppDispatch();
-  const productsBySlug = useAppSelector((state) => state.products.bySlug);
   const [slugsParam, setSlugsParam] = useState<string | null>(null);
   const [isResolving, setIsResolving] = useState(false);
+  const itemsKey = items
+    .map((item) => `${item.sku}:${item.quantity}`)
+    .join("|");
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -51,6 +54,7 @@ export function useCheckoutSlugFromCart(items: CartItem[]) {
 
     void (async () => {
       const slugs: string[] = [];
+      const productsBySlug = store.getState().products.bySlug;
 
       for (const item of items) {
         const slug = await resolveSlugForCartItem(
@@ -69,7 +73,7 @@ export function useCheckoutSlugFromCart(items: CartItem[]) {
     return () => {
       cancelled = true;
     };
-  }, [dispatch, items, productsBySlug]);
+  }, [dispatch, items, itemsKey]);
 
   return {
     slugsParam: items.length === 0 ? null : slugsParam,

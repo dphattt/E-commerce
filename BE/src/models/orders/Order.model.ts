@@ -2,9 +2,11 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export const ORDER_STATUSES = [
   "pending",
+  "awaiting_pickup",
   "shipping",
   "delivered",
   "cancelled",
+  "payment_failed",
 ] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -37,6 +39,9 @@ interface IOrder extends Document {
   orderCode: string;
   userEmail: string;
   status: OrderStatus;
+  isPay: boolean;
+  momoOrderId?: string;
+  vnpTxnRef?: string;
   items: IOrderItem[];
   subtotal: IUnitPrice;
   shippingFee: number;
@@ -103,6 +108,9 @@ const orderSchema = new Schema<IOrder>(
       enum: ORDER_STATUSES,
       default: "pending",
     },
+    isPay: { type: Boolean, default: false },
+    momoOrderId: { type: String, trim: true },
+    vnpTxnRef: { type: String, trim: true, uppercase: true },
     items: { type: [orderItemSchema], required: true, minlength: 1 },
     subtotal: { type: unitPriceSchema, required: true },
     shippingFee: { type: Number, required: true, min: 0, default: 0 },

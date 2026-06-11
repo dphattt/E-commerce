@@ -222,3 +222,25 @@ html.dark {
 .scrollbar-hidden::-webkit-scrollbar {
     display: none;
 }
+
+@keyframes orders-section-reveal {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        transform: translateY(12px);
+        opacity: 0.88;
+    }
+    45% {
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.22);
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-orders-section-reveal {
+    animation: orders-section-reveal 1.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

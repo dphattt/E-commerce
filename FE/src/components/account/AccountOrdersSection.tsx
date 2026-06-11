@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth";
+import { syncCartAfterOrder } from "@/features/cart/lib/sync-cart-after-order";
+import { useAppDispatch } from "@/store/hooks";
 import {
   listOrdersApi,
-  ORDER_STATUS_LABELS,
-  orderStatusClassName,
+  OrderStatusBadges,
   type Order,
 } from "@/features/orders";
 import { formatUsd } from "@/shared/lib/format-money";
@@ -99,18 +100,14 @@ function AccountOrderCard({ order }: { order: Order }) {
         <p className="font-mono text-xs font-bold tracking-wide text-zinc-900 sm:text-sm">
           {order.orderCode}
         </p>
-        <span
-          className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide sm:text-xs ${orderStatusClassName(order.status)}`}
-        >
-          {ORDER_STATUS_LABELS[order.status]}
-        </span>
+        <OrderStatusBadges order={order} />
       </div>
 
       <ul className="divide-y divide-zinc-100">
         {order.items.map((item) => (
           <li
             key={`${order.orderCode}-${item.sku}`}
-            className="flex gap-3 px-4 py-3"
+            className="flex items-start gap-3 px-4 py-3"
           >
             <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-zinc-100 sm:size-20">
               {item.image ? (
@@ -159,10 +156,14 @@ function AccountOrderCard({ order }: { order: Order }) {
 
 interface AccountOrdersSectionProps {
   placedOrderCode?: string | null;
+  highlightOrders?: boolean;
+  paymentPendingMessage?: string | null;
 }
 
 export function AccountOrdersSection({
   placedOrderCode = null,
+  highlightOrders = false,
+  paymentPendingMessage = null,
 }: AccountOrdersSectionProps) {
   const { isAuthenticated, sessionChecked } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -194,17 +195,29 @@ export function AccountOrdersSection({
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, sessionChecked]);
+  }, [isAuthenticated, sessionChecked, placedOrderCode]);
 
   const visibleOrders = isAuthenticated ? orders : [];
   const visibleLoading = !sessionChecked || (isAuthenticated && loading);
   const visibleError = isAuthenticated ? error : null;
 
   return (
-    <section style={{ backgroundColor: "#F5F5F5", padding: "32px" }}>
-      <h2 className="mb-6 text-xs font-bold tracking-[0.2em] uppercase text-zinc-900">
+    <section
+      id="account-orders-section"
+      className={`flex min-h-0 flex-col overflow-hidden ${
+        highlightOrders ? "animate-orders-section-reveal" : ""
+      }`}
+      style={{ backgroundColor: "#F5F5F5", padding: "32px" }}
+    >
+      <h2 className="mb-4 shrink-0 text-xs font-bold tracking-[0.2em] uppercase text-zinc-900">
         Orders
       </h2>
+
+      {paymentPendingMessage ? (
+        <div className="mb-4 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+          {paymentPendingMessage}
+        </div>
+      ) : null}
 
       {placedOrderCode ? (
         <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -220,10 +233,12 @@ export function AccountOrdersSection({
       ) : visibleOrders.length === 0 ? (
         <AccountOrdersEmptyState />
       ) : (
-        <div className="flex max-h-[640px] flex-col gap-4 overflow-y-auto pr-1">
-          {visibleOrders.map((order) => (
-            <AccountOrderCard key={order._id} order={order} />
-          ))}
+        <div className="scrollbar-hidden min-h-0 max-h-[min(560px,65vh)] overflow-y-auto pr-1">
+          <div className="flex flex-col gap-4">
+            {visibleOrders.map((order) => (
+              <AccountOrderCard key={order._id} order={order} />
+            ))}
+          </div>
         </div>
       )}
     </section>
@@ -232,7 +247,37 @@ export function AccountOrdersSection({
 
 export function AccountOrdersSectionWithParams() {
   const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
+  const initialPlacedOrderCode = searchParams.get("placed");
+  const scrollTarget = searchParams.get("scroll");
+  const [placedOrderCode] = useState<string | null>(initialPlacedOrderCode);
+  const [highlightOrders, setHighlightOrders] = useState(false);
+
+  useEffect(() => {
+    if (!initialPlacedOrderCode) return;
+    syncCartAfterOrder(dispatch);
+  }, [dispatch, initialPlacedOrderCode]);
+
+  useEffect(() => {
+    if (scrollTarget !== "orders") return;
+
+    const section = document.getElementById("account-orders-section");
+    if (!section) return;
+
+    const scrollTimer = window.setTimeout(() => {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      setHighlightOrders(true);
+      window.setTimeout(() => setHighlightOrders(false), 1800);
+    }, 200);
+
+    return () => window.clearTimeout(scrollTimer);
+  }, [scrollTarget]);
+
   return (
-    <AccountOrdersSection placedOrderCode={searchParams.get("placed")} />
+    <AccountOrdersSection
+      placedOrderCode={placedOrderCode}
+      highlightOrders={highlightOrders}
+      paymentPendingMessage={null}
+    />
   );
 }
