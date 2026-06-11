@@ -92,7 +92,7 @@ export function SearchableSelect({
           <ul className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-store-border bg-store-paper py-1 shadow-lg">
             {filtered.length === 0 ? (
               <li className="px-3 py-2 text-sm text-store-fg-muted">
-                Không tìm thấy
+                No results found
               </li>
             ) : (
               filtered.map((opt) => (

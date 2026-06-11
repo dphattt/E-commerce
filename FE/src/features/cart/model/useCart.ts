@@ -62,4 +62,3 @@ export function useCart(): CartSnapshot & {
     clear: () => void clearCartMutation(),
   };
 }
-

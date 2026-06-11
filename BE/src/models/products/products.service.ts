@@ -87,37 +87,49 @@ export async function getProductById(id: string) {
   const skus = variants.map((v) => v.sku);
   const db = mongoose.connection.db;
   const inventoryItems = db
-    ? await db.collection("inventory").find({ sku: { $in: skus } }).toArray()
+    ? await db
+        .collection("inventory")
+        .find({ sku: { $in: skus } })
+        .toArray()
     : [];
   const inventoryMap = new Map(inventoryItems.map((item) => [item.sku, item]));
 
   // 3. Fetch color metadata (hex values) from 'colors' collection
   const colorSlugs = [...new Set(variants.map((v) => v.color).filter(Boolean))];
   const colors = db
-    ? await db.collection("colors").find({ slug: { $in: colorSlugs } }).toArray()
+    ? await db
+        .collection("colors")
+        .find({ slug: { $in: colorSlugs } })
+        .toArray()
     : [];
   const colorMap = new Map(colors.map((c) => [c.slug, c]));
 
   // 4. Fetch size metadata (order) from 'sizes' collection
   const sizeSlugs = [...new Set(variants.map((v) => v.size).filter(Boolean))];
   const sizes = db
-    ? await db.collection("sizes").find({ slug: { $in: sizeSlugs } }).toArray()
+    ? await db
+        .collection("sizes")
+        .find({ slug: { $in: sizeSlugs } })
+        .toArray()
     : [];
   const sizeMap = new Map(sizes.map((s) => [s.slug, s]));
 
   // 5. Structure variants by color
-  const colorVariantsMap = new Map<string, {
-    id: string;
-    color: string;
-    image: string;
-    hex: string;
-    sizes: Array<{
+  const colorVariantsMap = new Map<
+    string,
+    {
       id: string;
-      label: string;
-      inStock: boolean;
-      sku: string;
-    }>;
-  }>();
+      color: string;
+      image: string;
+      hex: string;
+      sizes: Array<{
+        id: string;
+        label: string;
+        inStock: boolean;
+        sku: string;
+      }>;
+    }
+  >();
 
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -130,7 +142,8 @@ export async function getProductById(id: string) {
 
     const inventoryDoc = inventoryMap.get(v.sku);
     const inStock = inventoryDoc
-      ? (inventoryDoc.status !== "out_of_stock" && (inventoryDoc.quantity - inventoryDoc.reserved) > 0)
+      ? inventoryDoc.status !== "out_of_stock" &&
+        inventoryDoc.quantity - inventoryDoc.reserved > 0
       : false;
 
     if (!colorVariantsMap.has(colorSlug)) {
@@ -141,9 +154,13 @@ export async function getProductById(id: string) {
         const matchingProduct = await db.collection("products").findOne({
           title: { $regex: new RegExp(escapeRegex(familyName), "i") },
           $or: [
-            { title: { $regex: new RegExp(`\\b${escapeRegex(colorSlug)}\\b`, "i") } },
-            { sourceUrl: { $regex: new RegExp(escapeRegex(colorSlug), "i") } }
-          ]
+            {
+              title: {
+                $regex: new RegExp(`\\b${escapeRegex(colorSlug)}\\b`, "i"),
+              },
+            },
+            { sourceUrl: { $regex: new RegExp(escapeRegex(colorSlug), "i") } },
+          ],
         });
         if (matchingProduct && matchingProduct.imageUrls?.[0]) {
           colorImage = matchingProduct.imageUrls[0];

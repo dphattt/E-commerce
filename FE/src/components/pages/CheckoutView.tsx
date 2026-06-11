@@ -1,15 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
-  fetchProductById,
-  useCachedProduct,
-  useProductCache,
-} from "@/features/products";
+  CheckoutProductCard,
+  lineSubtotal,
+  type CheckoutLineState,
+} from "@/components/pages/CheckoutProductCard";
+import { buildOrderItemsFromCheckout } from "@/features/checkout/lib/build-order-items";
+import { useCheckoutProducts } from "@/features/checkout/hooks/useCheckoutProducts";
+import { useAuth } from "@/features/auth";
+import { createOrderApi } from "@/features/orders";
+import { useApplicableVouchers } from "@/features/vouchers/hooks/useApplicableVouchers";
 import {
   getWardsByProvince,
   provinces,
@@ -17,125 +21,52 @@ import {
 } from "@/lib/vietnam-address";
 import { formatUsd } from "@/shared/lib/format-money";
 
-const DEFAULT_COLORS = ["Black", "Grey", "Navy"];
-const DEFAULT_SIZES = ["XS", "S", "M", "L", "XL"];
-
 const DELIVERY_OPTIONS = [
-  { id: "standard", label: "Giao hàng thường", fee: 5 },
-  { id: "express", label: "Giao hàng nhanh", fee: 15 },
+  { id: "standard", label: "Standard delivery", fee: 5 },
+  { id: "express", label: "Express delivery", fee: 15 },
 ] as const;
-
-const VOUCHERS = [
-  { id: "", label: "Không dùng voucher", type: "none" as const, value: 0 },
-  {
-    id: "GYM10",
-    label: "GYM10 — Giảm 10%",
-    type: "percent" as const,
-    value: 10,
-  },
-  {
-    id: "SAVE50",
-    label: "SAVE50 — Giảm $50",
-    type: "fixed" as const,
-    value: 50,
-  },
-  {
-    id: "FREESHIP",
-    label: "FREESHIP — Miễn phí vận chuyển",
-    type: "shipping" as const,
-    value: 0,
-  },
-];
 
 const PAYMENT_METHODS = [
   { id: "vnpay", label: "VNPay" },
-  { id: "bank", label: "Chuyển khoản ngân hàng" },
+  { id: "bank", label: "Bank transfer" },
   { id: "momo", label: "MoMo" },
-  { id: "cod", label: "Thanh toán khi nhận hàng" },
+  { id: "cod", label: "Cash on delivery" },
 ] as const;
 
 interface CheckoutViewProps {
   slug?: string;
 }
 
-export function CheckoutView({ slug }: CheckoutViewProps) {
-  const product = useCachedProduct(slug ?? "");
-  const { cacheProduct } = useProductCache();
+const EMPTY_LINE_STATE: CheckoutLineState = {
+  quantity: 1,
+  selectedColor: "",
+  selectedSize: "",
+};
 
-  const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
+export function CheckoutView({ slug }: CheckoutViewProps) {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const { slugs, products, loading, failedSlugs, isReady } =
+    useCheckoutProducts(slug);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [placeOrderError, setPlaceOrderError] = useState<string | null>(null);
   const [deliveryId, setDeliveryId] =
     useState<(typeof DELIVERY_OPTIONS)[number]["id"]>("standard");
   const [provinceCode, setProvinceCode] = useState("");
   const [wardCode, setWardCode] = useState("");
   const [streetAddress, setStreetAddress] = useState("");
-  const [voucherId, setVoucherId] = useState("");
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<(typeof PAYMENT_METHODS)[number]["id"]>("vnpay");
 
-  const colors = useMemo(() => {
-    if (product?.variants?.length) {
-      return product.variants.map((v) => v.color);
-    }
-    return DEFAULT_COLORS;
-  }, [product]);
+  const [lineStates, setLineStates] = useState<CheckoutLineState[]>([]);
+  const [lineStatesProductKey, setLineStatesProductKey] = useState("");
+  const productKey = products.map((product) => product._id).join("|");
 
-  const effectiveSelectedColor =
-    selectedColor && colors.includes(selectedColor)
-      ? selectedColor
-      : (colors[0] ?? "");
-
-  const selectedVariant = useMemo(
-    () => product?.variants?.find((v) => v.color === effectiveSelectedColor),
-    [product, effectiveSelectedColor],
-  );
-
-  const sizes = useMemo(() => {
-    if (selectedVariant?.sizes.length) {
-      return selectedVariant.sizes.filter((s) => s.inStock).map((s) => s.label);
-    }
-    return DEFAULT_SIZES;
-  }, [selectedVariant]);
-
-  const effectiveSelectedSize =
-    selectedSize && sizes.includes(selectedSize)
-      ? selectedSize
-      : (sizes[0] ?? "");
-
-  useEffect(() => {
-    if (!product?._id || product.variants?.length) return;
-
-    const controller = new AbortController();
-    fetchProductById(product._id, { signal: controller.signal })
-      .then((res) => cacheProduct(res.product))
-      .catch(() => {});
-
-    return () => controller.abort();
-  }, [product?._id, product?.variants?.length, cacheProduct]);
-
-  const handleColorChange = useCallback(
-    (color: string) => {
-      setSelectedColor(color);
-      const variant = product?.variants?.find((v) => v.color === color);
-      if (!variant?.sizes.length) return;
-
-      const stillValid = variant.sizes.some(
-        (s) => s.label === effectiveSelectedSize && s.inStock,
-      );
-      if (stillValid) return;
-
-      const nextSize =
-        variant.sizes.find((s) => s.inStock) ?? variant.sizes[0];
-      setSelectedSize(nextSize.label);
-    },
-    [product, effectiveSelectedSize],
-  );
-
-  const imageUrl = useMemo(() => {
-    if (selectedVariant?.image) return selectedVariant.image;
-    return product?.imageUrls[0] ?? "";
-  }, [product, selectedVariant]);
+  if (productKey !== lineStatesProductKey) {
+    setLineStatesProductKey(productKey);
+    setLineStates(products.map(() => ({ ...EMPTY_LINE_STATE })));
+  }
 
   const provinceOptions = useMemo(
     () => provinces.map((p) => ({ value: p.code, label: p.name })),
@@ -150,57 +81,119 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
     }));
   }, [provinceCode]);
 
-  const unitPrice = product?.price.amount ?? 0;
-  const subtotal = unitPrice * quantity;
+  const subtotal = useMemo(() => {
+    return products.reduce((sum, product, index) => {
+      const line = lineStates[index] ?? EMPTY_LINE_STATE;
+      return sum + lineSubtotal(product, line.quantity);
+    }, 0);
+  }, [products, lineStates]);
+
+  const productIds = useMemo(
+    () => products.map((product) => product._id),
+    [products],
+  );
+
+  const {
+    vouchers: applicableVouchers,
+    loading: vouchersLoading,
+    error: vouchersError,
+  } = useApplicableVouchers(productIds, subtotal);
+
+  const voucherCode = useMemo(() => {
+    if (!applicableVouchers.length) return "";
+    if (
+      selectedVoucherCode &&
+      applicableVouchers.some((voucher) => voucher.code === selectedVoucherCode)
+    ) {
+      return selectedVoucherCode;
+    }
+    return applicableVouchers[0].code;
+  }, [applicableVouchers, selectedVoucherCode]);
+
   const delivery =
     DELIVERY_OPTIONS.find((d) => d.id === deliveryId) ?? DELIVERY_OPTIONS[0];
   const shippingFee = delivery.fee;
+  const selectedVoucher = applicableVouchers.find(
+    (voucher) => voucher.code === voucherCode,
+  );
 
-  const voucher = VOUCHERS.find((v) => v.id === voucherId) ?? VOUCHERS[0];
+  const voucherDiscount = selectedVoucher
+    ? Math.round((subtotal * selectedVoucher.discountValue) / 100)
+    : 0;
+  const total = Math.max(0, subtotal - voucherDiscount) + shippingFee;
 
-  let voucherDiscount = 0;
-  let effectiveShipping: number = shippingFee;
+  async function handlePlaceOrder() {
+    if (!isAuthenticated) {
+      router.push("/account/login");
+      return;
+    }
 
-  if (voucher.type === "percent") {
-    voucherDiscount = Math.round((subtotal * voucher.value) / 100);
-  } else if (voucher.type === "fixed") {
-    voucherDiscount = voucher.value;
-  } else if (voucher.type === "shipping") {
-    effectiveShipping = 0;
+    setPlaceOrderError(null);
+    setIsPlacingOrder(true);
+
+    try {
+      const { order } = await createOrderApi({
+        items: buildOrderItemsFromCheckout(products, lineStates),
+        deliveryMethod: deliveryId,
+        paymentMethod,
+        provinceCode: provinceCode || undefined,
+        wardCode: wardCode || undefined,
+        streetAddress: streetAddress.trim() || undefined,
+        subtotal: { amount: subtotal, currency: "USD" },
+        shippingFee,
+        voucherCode: selectedVoucher?.code,
+        voucherDiscount,
+        total: { amount: total, currency: "USD" },
+      });
+      router.push(`/account?placed=${encodeURIComponent(order.orderCode)}`);
+    } catch {
+      setPlaceOrderError("Could not place your order. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
+    }
   }
 
-  const total = Math.max(0, subtotal - voucherDiscount) + effectiveShipping;
-
-  if (!slug) {
+  if (!slug || slugs.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-20 text-center">
         <p className="text-base font-bold uppercase tracking-wider text-store-ink-strong">
-          Không có sản phẩm để thanh toán
+          No products to checkout
         </p>
         <Link
           href="/wishlist"
           className="rounded-lg bg-store-ink-strong px-6 py-2.5 text-xs font-black uppercase tracking-wider text-store-paper"
         >
-          Về wishlist
+          Back to wishlist
         </Link>
       </div>
     );
   }
 
-  if (!product) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center gap-4 py-20 text-center">
         <p className="text-base font-bold uppercase tracking-wider text-store-ink-strong">
-          Chưa tải được thông tin sản phẩm
+          Loading products...
+        </p>
+      </div>
+    );
+  }
+
+  if (!isReady || products.length !== slugs.length) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-20 text-center">
+        <p className="text-base font-bold uppercase tracking-wider text-store-ink-strong">
+          Could not load product details
         </p>
         <p className="max-w-sm text-sm text-store-fg-muted">
-          Hãy mở sản phẩm từ danh sách hoặc wishlist trước khi thanh toán.
+          No product found for slug:{" "}
+          {failedSlugs.length > 0 ? failedSlugs.join(", ") : slugs.join(", ")}
         </p>
         <Link
-          href={`/products/${slug}`}
+          href="/products"
           className="rounded-lg bg-store-ink-strong px-6 py-2.5 text-xs font-black uppercase tracking-wider text-store-paper"
         >
-          Xem sản phẩm
+          Browse products
         </Link>
       </div>
     );
@@ -210,112 +203,29 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
     <div className="-mx-4 -mt-9 w-[calc(100%+2rem)] bg-store-paper sm:-mx-6 sm:w-[calc(100%+3rem)] lg:-mx-8 lg:w-[calc(100%+4rem)]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <h1 className="mb-8 text-2xl font-black uppercase tracking-tight text-store-ink-strong">
-          Thanh toán
+          Checkout
         </h1>
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_380px]">
-          {/* Left */}
           <div className="flex flex-col gap-8">
-            <section className="flex gap-5 rounded-2xl border border-store-border/60 bg-store-surface-2/40 p-5">
-              <div className="relative aspect-2/3 w-28 shrink-0 overflow-hidden rounded-xl bg-store-surface sm:w-32">
-                {imageUrl ? (
-                  <Image
-                    key={imageUrl}
-                    src={imageUrl}
-                    alt={`${product.title} — ${effectiveSelectedColor || "default"}`}
-                    fill
-                    sizes="128px"
-                    className="object-cover transition-opacity duration-300"
-                  />
-                ) : null}
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col gap-4">
-                <div>
-                  <h2 className="text-sm font-black uppercase leading-snug text-store-ink-strong">
-                    {product.title}
-                  </h2>
-                  <p className="mt-1 text-lg font-black text-store-ink-strong">
-                    {formatUsd(unitPrice)}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-store-ink-strong">
-                    Màu
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {colors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => handleColorChange(color)}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-bold uppercase transition-colors ${
-                          effectiveSelectedColor === color
-                            ? "border-store-ink-strong bg-store-ink-strong text-store-paper"
-                            : "border-store-border bg-store-paper hover:border-store-ink-strong"
-                        }`}
-                      >
-                        {color}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-store-ink-strong">
-                    Size
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {sizes.map((size) => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => setSelectedSize(size)}
-                        className={`min-w-10 rounded-lg border px-3 py-1.5 text-xs font-bold uppercase transition-colors ${
-                          effectiveSelectedSize === size
-                            ? "border-store-ink-strong bg-store-ink-strong text-store-paper"
-                            : "border-store-border bg-store-paper hover:border-store-ink-strong"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-store-ink-strong">
-                    Số lượng
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      aria-label="Giảm số lượng"
-                      disabled={quantity <= 1}
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="flex size-9 items-center justify-center rounded-lg border border-store-border disabled:opacity-40"
-                    >
-                      <Minus className="size-4" />
-                    </button>
-                    <span className="min-w-8 text-center text-sm font-bold">
-                      {quantity}
-                    </span>
-                    <button
-                      type="button"
-                      aria-label="Tăng số lượng"
-                      onClick={() => setQuantity((q) => Math.min(99, q + 1))}
-                      className="flex size-9 items-center justify-center rounded-lg border border-store-border"
-                    >
-                      <Plus className="size-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </section>
+            {products.map((product, index) => (
+              <CheckoutProductCard
+                key={`${product._id}-${index}`}
+                product={product}
+                lineState={lineStates[index] ?? EMPTY_LINE_STATE}
+                onLineChange={(next) =>
+                  setLineStates((current) =>
+                    current.map((line, lineIndex) =>
+                      lineIndex === index ? next : line,
+                    ),
+                  )
+                }
+              />
+            ))}
 
             <section className="space-y-3">
               <p className="text-[11px] font-black uppercase tracking-widest text-store-ink-strong">
-                Hình thức giao hàng
+                Delivery method
               </p>
               <div className="flex flex-col gap-2 sm:flex-row">
                 {DELIVERY_OPTIONS.map((opt) => (
@@ -342,8 +252,8 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
 
             <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <SearchableSelect
-                label="Tỉnh / Thành phố"
-                placeholder="Nhập để tìm tỉnh thành..."
+                label="Province / City"
+                placeholder="Search province..."
                 options={provinceOptions}
                 value={provinceCode}
                 onChange={(code) => {
@@ -352,9 +262,9 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
                 }}
               />
               <SearchableSelect
-                label="Phường / Xã"
+                label="Ward"
                 placeholder={
-                  provinceCode ? "Nhập để tìm phường xã..." : "Chọn tỉnh trước"
+                  provinceCode ? "Search ward..." : "Select a province first"
                 }
                 options={wardOptions}
                 value={wardCode}
@@ -366,54 +276,63 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
                   htmlFor="street-address"
                   className="text-[11px] font-black uppercase tracking-widest text-store-ink-strong"
                 >
-                  Số nhà / Đường
+                  Street address
                 </label>
                 <input
                   id="street-address"
                   type="text"
                   value={streetAddress}
                   onChange={(e) => setStreetAddress(e.target.value)}
-                  placeholder="Ví dụ: 123 Nguyễn Huệ"
+                  placeholder="e.g. 123 Main Street"
                   className="h-11 w-full rounded-lg border border-store-border bg-store-paper px-3 text-sm outline-none focus:border-store-ink-strong"
                 />
               </div>
             </section>
           </div>
 
-          {/* Right */}
           <aside className="flex flex-col gap-6 lg:sticky lg:top-24 lg:self-start">
             <section className="rounded-2xl border border-store-border/60 bg-store-surface-2/40 p-5">
               <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-store-ink-strong">
-                Voucher giảm giá
+                Discount vouchers
               </p>
-              <div className="flex flex-col gap-2">
-                {VOUCHERS.map((v) => (
-                  <label
-                    key={v.id || "none"}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
-                      voucherId === v.id
-                        ? "border-store-ink-strong bg-store-surface"
-                        : "border-store-border hover:border-store-ink-strong/40"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="voucher"
-                      checked={voucherId === v.id}
-                      onChange={() => setVoucherId(v.id)}
-                      className="accent-store-ink"
-                    />
-                    <span className="font-medium text-store-ink-strong">
-                      {v.label}
-                    </span>
-                  </label>
-                ))}
-              </div>
+              {vouchersLoading ? (
+                <p className="text-sm text-store-fg-muted">Loading vouchers...</p>
+              ) : vouchersError ? (
+                <p className="text-sm text-destructive">{vouchersError}</p>
+              ) : applicableVouchers.length === 0 ? (
+                <p className="text-sm text-store-fg-muted">
+                  No vouchers apply to these products.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {applicableVouchers.map((voucher) => (
+                    <label
+                      key={voucher.code}
+                      className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                        voucherCode === voucher.code
+                          ? "border-store-ink-strong bg-store-surface"
+                          : "border-store-border hover:border-store-ink-strong/40"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="voucher"
+                        checked={voucherCode === voucher.code}
+                        onChange={() => setSelectedVoucherCode(voucher.code)}
+                        className="accent-store-ink"
+                      />
+                      <span className="font-medium text-store-ink-strong">
+                        {voucher.label} ({voucher.discountValue}% off)
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </section>
 
             <section className="rounded-2xl border border-store-border/60 bg-store-surface-2/40 p-5">
               <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-store-ink-strong">
-                Hình thức thanh toán
+                Payment method
               </p>
               <div className="flex flex-col gap-2">
                 {PAYMENT_METHODS.map((method) => (
@@ -443,30 +362,37 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
             <section className="rounded-2xl border border-store-border bg-store-paper p-5 shadow-sm">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-store-fg-muted">
-                  <span>Tạm tính</span>
+                  <span>Subtotal ({products.length} items)</span>
                   <span>{formatUsd(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-store-fg-muted">
-                  <span>Vận chuyển</span>
-                  <span>{formatUsd(effectiveShipping)}</span>
+                  <span>Shipping</span>
+                  <span>{formatUsd(shippingFee)}</span>
                 </div>
                 {voucherDiscount > 0 ? (
                   <div className="flex justify-between text-green-700">
-                    <span>Giảm giá</span>
+                    <span>Discount</span>
                     <span>-{formatUsd(voucherDiscount)}</span>
                   </div>
                 ) : null}
                 <div className="flex justify-between border-t border-store-border pt-3 text-base font-black text-store-ink-strong">
-                  <span>Tổng cộng</span>
+                  <span>Total</span>
                   <span>{formatUsd(total)}</span>
                 </div>
               </div>
 
+              {placeOrderError ? (
+                <p className="mt-3 text-center text-sm text-destructive">
+                  {placeOrderError}
+                </p>
+              ) : null}
               <button
                 type="button"
-                className="mt-5 w-full rounded-lg bg-store-ink-strong py-4 text-xs font-black uppercase tracking-[0.2em] text-store-paper transition-colors hover:opacity-70 cursor-pointer"
+                onClick={handlePlaceOrder}
+                disabled={isPlacingOrder}
+                className="mt-5 w-full cursor-pointer rounded-lg bg-store-ink-strong py-4 text-xs font-black uppercase tracking-[0.2em] text-store-paper transition-colors hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Đặt hàng
+                {isPlacingOrder ? "Placing order..." : "Place order"}
               </button>
             </section>
           </aside>

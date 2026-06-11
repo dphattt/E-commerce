@@ -29,7 +29,9 @@ export async function fetchProductList(options?: {
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);
+    throw new Error(
+      `Failed to fetch products: ${res.status} ${res.statusText}`,
+    );
   }
 
   return (await res.json()) as ProductListResponse;
@@ -53,7 +55,9 @@ export async function fetchRecentProducts(options?: {
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);
+    throw new Error(
+      `Failed to fetch products: ${res.status} ${res.statusText}`,
+    );
   }
 
   return (await res.json()) as ProductListResponse;
@@ -84,9 +88,7 @@ export async function fetchProductById(
   );
 
   if (!res.ok) {
-    throw new Error(
-      `Failed to fetch product: ${res.status} ${res.statusText}`,
-    );
+    throw new Error(`Failed to fetch product: ${res.status} ${res.statusText}`);
   }
 
   return (await res.json()) as ProductDetailResponse;

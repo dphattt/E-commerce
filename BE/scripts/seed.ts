@@ -18,6 +18,8 @@ const SEED_MAP: Record<string, string> = {
   carts: "carts",
   wishlists: "wishlists",
   loyalty_tiers: "loyalty_tiers",
+  orders: "orders",
+  vouchers: "vouchers",
 };
 
 interface CliOptions {
@@ -74,6 +76,14 @@ async function main() {
       if (docs.length === 0) {
         console.warn(`! Skip ${collection}: file is empty`);
         continue;
+      }
+
+      if (collection === "vouchers") {
+        for (const doc of docs) {
+          if (typeof doc.expiresAt === "string") {
+            doc.expiresAt = new Date(doc.expiresAt);
+          }
+        }
       }
 
       const col = db.collection(collection);

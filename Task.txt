@@ -1,3 +1,2 @@
-2. Nhờ AI đọc data và tạo bảng orders.
-3. Tạo bảng đơn hàng chứa tất cả đơn hàng của người dùng.
 5. Làm sao để khi 1 người nào trong team tạo ra dữ liệu thì tự thêm vô seed và pull về tự cập nhật vô data.
+- Tạo bảng voucher(bảng này sẽ chứa các loại voucher ví dụ như: voucher 30%, 50%, 70%). Trong các loại voucher đó sẽ có field chứa danh sách sản phẩm được áp dụng cho voucher đó.

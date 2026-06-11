@@ -221,9 +221,7 @@ export function WishlistView() {
                   imageUrl={imageUrl}
                   onRemove={() => remove(key)}
                   onGoPay={() =>
-                    router.push(
-                      `/checkout?slug=${encodeURIComponent(slug)}`,
-                    )
+                    router.push(`/checkout?slug=${encodeURIComponent(slug)}`)
                   }
                 />
               );

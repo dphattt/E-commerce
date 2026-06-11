@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CheckoutView } from "@/components/pages/CheckoutView";
 
 export const metadata: Metadata = {
-  title: "Thanh toán | Gymshark",
+  title: "Checkout | Gymshark",
 };
 
 interface PageProps {

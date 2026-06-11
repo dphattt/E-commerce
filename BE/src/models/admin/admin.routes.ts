@@ -9,12 +9,18 @@ import * as adminController from "@/models/admin/admin.controller";
 import {
   adminCreateProductBodySchema,
   adminCreateVariantBodySchema,
+  adminCreateVoucherBodySchema,
   adminIdParamsSchema,
+  adminListOrdersQuerySchema,
   adminListProductsQuerySchema,
   adminListUsersQuerySchema,
+  adminListVouchersQuerySchema,
+  adminOrderCodeParamsSchema,
+  adminUpdateOrderStatusBodySchema,
   adminUpdateProductBodySchema,
   adminUpdateUserBodySchema,
   adminUpdateVariantBodySchema,
+  adminUpdateVoucherBodySchema,
 } from "@/models/admin/admin.validation";
 
 const router = Router();
@@ -42,6 +48,23 @@ router.delete(
   requireBoss,
   validate(adminIdParamsSchema, "params"),
   adminController.deleteUser,
+);
+
+router.get(
+  "/orders",
+  validate(adminListOrdersQuerySchema, "query"),
+  adminController.listOrders,
+);
+router.patch(
+  "/orders/:orderCode/status",
+  validate(adminOrderCodeParamsSchema, "params"),
+  validate(adminUpdateOrderStatusBodySchema),
+  adminController.updateOrderStatus,
+);
+router.get(
+  "/orders/:orderCode",
+  validate(adminOrderCodeParamsSchema, "params"),
+  adminController.getOrder,
 );
 
 router.get(
@@ -94,6 +117,36 @@ router.delete(
   requireBoss,
   validate(adminIdParamsSchema, "params"),
   adminController.deleteProductVariant,
+);
+
+router.get(
+  "/vouchers",
+  validate(adminListVouchersQuerySchema, "query"),
+  adminController.listVouchers,
+);
+router.post(
+  "/vouchers",
+  requireBoss,
+  validate(adminCreateVoucherBodySchema),
+  adminController.createVoucher,
+);
+router.get(
+  "/vouchers/:id",
+  validate(adminIdParamsSchema, "params"),
+  adminController.getVoucher,
+);
+router.patch(
+  "/vouchers/:id",
+  requireBoss,
+  validate(adminIdParamsSchema, "params"),
+  validate(adminUpdateVoucherBodySchema),
+  adminController.updateVoucher,
+);
+router.delete(
+  "/vouchers/:id",
+  requireBoss,
+  validate(adminIdParamsSchema, "params"),
+  adminController.deleteVoucher,
 );
 
 export default router;

@@ -28,8 +28,16 @@ export async function getCart(req: Request, res: Response, next: NextFunction) {
 export async function addItem(req: Request, res: Response, next: NextFunction) {
   try {
     const email = req.user!.email;
-    const { sku, quantity, name, image, variantLabel } = req.body as AddItemBody;
-    const cart = await cartService.addCartItem(email, sku, quantity, name, image, variantLabel);
+    const { sku, quantity, name, image, variantLabel } =
+      req.body as AddItemBody;
+    const cart = await cartService.addCartItem(
+      email,
+      sku,
+      quantity,
+      name,
+      image,
+      variantLabel,
+    );
     res.status(200).json(cart);
   } catch (e) {
     next(e);
