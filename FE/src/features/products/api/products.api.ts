@@ -93,3 +93,24 @@ export async function fetchProductById(
 
   return (await res.json()) as ProductDetailResponse;
 }
+
+export async function searchProductsApi(
+  query: string,
+  options?: { limit?: number; signal?: AbortSignal },
+): Promise<ProductListResponse> {
+  const params = new URLSearchParams({ q: query });
+  if (options?.limit) params.set("limit", String(options.limit));
+
+  const res = await fetch(
+    `${getApiOrigin()}/api/products/search?${params.toString()}`,
+    { signal: options?.signal, cache: "no-store" },
+  );
+
+  if (!res.ok) {
+    throw new Error(
+      `Failed to search products: ${res.status} ${res.statusText}`,
+    );
+  }
+
+  return (await res.json()) as ProductListResponse;
+}

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { searchProductsApi, type Product } from "@/features/products";
+import {
+  searchProductsApi,
+  type Product,
+  type ProductListResponse,
+} from "@/features/products";
 
 interface SearchData {
   products: Product[];
@@ -27,7 +31,7 @@ export function useProductSearch(trimmedQuery: string) {
       limit: 8,
       signal: controller.signal,
     })
-      .then((response) => {
+      .then((response: ProductListResponse) => {
         if (controller.signal.aborted) return;
         setData({
           products: response.products,
@@ -50,8 +54,7 @@ export function useProductSearch(trimmedQuery: string) {
 
   const isResolved = data.resolvedQuery === trimmedQuery;
   const loading = trimmedQuery.length > 0 && !isResolved;
-  const results =
-    trimmedQuery.length > 0 && isResolved ? data.products : [];
+  const results = trimmedQuery.length > 0 && isResolved ? data.products : [];
   const error = trimmedQuery.length > 0 && isResolved ? data.error : null;
 
   return { results, loading, error };
