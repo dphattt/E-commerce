@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { IconBag, IconClose, IconHeart, IconOrder } from "@/components/icons";
+import { IconBag, IconClose, IconOrder } from "@/components/icons";
 import { useAuth } from "@/features/auth";
 import {
   Sheet,
@@ -264,8 +264,12 @@ export function CartDrawer() {
     if (!sessionChecked || !isAuthenticated || !open) return;
 
     let cancelled = false;
-    setOrdersLoading(true);
-    setOrdersError(null);
+
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setOrdersLoading(true);
+      setOrdersError(null);
+    });
 
     listOrdersApi()
       .then((res) => {

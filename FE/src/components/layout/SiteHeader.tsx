@@ -52,7 +52,6 @@ export function SiteHeader({
   announcements,
   searchPlaceholder = "What are you looking for tod…",
   className = "",
-  onSearchSubmit,
 }: SiteHeaderProps) {
   const { isAuthenticated } = useAuth();
   const { count: wishlistCount } = useWishlist();

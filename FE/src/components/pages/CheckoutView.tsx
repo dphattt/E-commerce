@@ -97,8 +97,11 @@ export function CheckoutView({ slug }: CheckoutViewProps) {
 
   useEffect(() => {
     if (!isReady || !productKey || productKey === lineStatesProductKey) return;
-    setLineStatesProductKey(productKey);
-    setLineStates(products.map(() => ({ ...EMPTY_LINE_STATE })));
+
+    queueMicrotask(() => {
+      setLineStatesProductKey(productKey);
+      setLineStates(products.map(() => ({ ...EMPTY_LINE_STATE })));
+    });
   }, [isReady, productKey, lineStatesProductKey, products]);
 
   const provinceOptions = useMemo(
