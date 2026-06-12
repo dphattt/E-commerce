@@ -7,6 +7,8 @@ import { notFoundHandler, errorHandler } from "@/middlewares/error.middleware";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 const corsOrigin = process.env.CORS_ORIGIN;
 app.use(
   cors({
