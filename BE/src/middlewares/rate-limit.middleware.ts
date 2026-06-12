@@ -9,7 +9,7 @@ const ONE_HOUR = 60 * 60 * 1000;
  */
 export const loginLimiter = rateLimit({
   windowMs: FIFTEEN_MINUTES,
-  limit: 10,
+  limit: 50,
   standardHeaders: "draft-7",
   legacyHeaders: false,
   message: { message: "Too many login attempts. Please try again later." },
@@ -21,8 +21,10 @@ export const loginLimiter = rateLimit({
  */
 export const registerLimiter = rateLimit({
   windowMs: ONE_HOUR,
-  limit: 5,
+  limit: 20,
   standardHeaders: "draft-7",
   legacyHeaders: false,
-  message: { message: "Too many registration attempts. Please try again later." },
+  message: {
+    message: "Too many registration attempts. Please try again later.",
+  },
 });
