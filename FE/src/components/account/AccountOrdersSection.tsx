@@ -104,9 +104,9 @@ function AccountOrderCard({ order }: { order: Order }) {
       </div>
 
       <ul className="divide-y divide-zinc-100">
-        {order.items.map((item) => (
+        {order.items.map((item, index) => (
           <li
-            key={`${order.orderCode}-${item.sku}`}
+            key={`${order.orderCode}-${item.sku}-${index}`}
             className="flex items-start gap-3 px-4 py-3"
           >
             <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-zinc-100 sm:size-20">
