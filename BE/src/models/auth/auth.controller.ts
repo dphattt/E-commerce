@@ -38,10 +38,11 @@ const VERIFICATION_SENT_MESSAGE =
 const googleClient = new OAuth2Client();
 
 function refreshCookieOptions(): CookieOptions {
+  const isProd = process.env.NODE_ENV === "production";
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
     path: "/api/auth",
     maxAge: SEVEN_DAYS_MS,
   };
@@ -99,7 +100,7 @@ async function issueEmailVerification(user: {
   _id: Types.ObjectId;
   email: string;
   name?: string;
-}): Promise<{ verificationToken?: string; verificationUrl?: string }> {
+}): Promise<{ verificationToken?: string; verificationUrl?: string; emailError?: string }> {
   const verificationToken = randomBytes(
     EMAIL_VERIFICATION_TOKEN_BYTES,
   ).toString("hex");
@@ -117,22 +118,24 @@ async function issueEmailVerification(user: {
     },
   );
 
-  if (verificationUrl) {
-    await sendVerificationEmail({
-      to: user.email,
-      name: user.name,
-      verificationUrl,
-    });
-  } else if (process.env.NODE_ENV === "production") {
-    throw new Error("APP_ORIGIN is required for email verification");
-  } else if (process.env.NODE_ENV !== "production") {
-    console.info(
-      `[auth] Email verification token for ${user.email}: ${verificationToken}`,
-    );
+  let emailError: string | undefined;
+  try {
+    if (verificationUrl) {
+      await sendVerificationEmail({
+        to: user.email,
+        name: user.name,
+        verificationUrl,
+      });
+    } else {
+      throw new Error("APP_ORIGIN/FRONTEND_URL is required to build verification URL");
+    }
+  } catch (err) {
+    emailError = (err as Error).message;
+    console.error(`[auth] Verification email failed for ${user.email}:`, err);
   }
 
-  if (process.env.NODE_ENV === "production") return {};
-  return { verificationToken, verificationUrl };
+  if (process.env.NODE_ENV === "production" && !emailError) return {};
+  return { verificationToken, verificationUrl, emailError };
 }
 
 function authUser(user: { id: string; email: string; name?: string }) {
