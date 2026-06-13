@@ -236,7 +236,7 @@ export function HomeProductCarousel({ products }: HomeProductCarouselProps) {
   if (products.length === 0) return null;
 
   return (
-    <section className="bg-store-paper px-4 py-8 text-store-ink-strong sm:px-8 lg:px-12">
+    <section className="bg-store-paper px-4 py-8 text-store-ink-strong sm:px-8 lg:px-12 2xl:px-16">
       <Carousel opts={{ align: "start", loop: false }} className="w-full">
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex items-baseline gap-4">
@@ -261,7 +261,7 @@ export function HomeProductCarousel({ products }: HomeProductCarouselProps) {
               return (
                 <CarouselItem
                   key={product._id}
-                  className="basis-[82%] pl-1.5 sm:basis-1/2 sm:pl-2 lg:basis-1/4"
+                  className="basis-[82%] pl-1.5 sm:basis-1/2 sm:pl-2 lg:basis-1/4 xl:basis-1/5 2xl:basis-1/6"
                 >
                   <ProductCarouselCard
                     product={displayProduct}

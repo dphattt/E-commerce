@@ -98,7 +98,7 @@ const inlineLinkClass =
 
 export function HomeMoreGuides() {
   return (
-    <section className="bg-store-paper px-4 pb-16 pt-0 text-store-ink-strong sm:px-8 lg:px-12">
+    <section className="bg-store-paper px-4 pb-16 pt-0 text-store-ink-strong sm:px-8 lg:px-12 2xl:px-16">
       <div className="mb-8 flex flex-col items-start gap-6">
         <h2 className="text-2xl font-black uppercase leading-none tracking-normal sm:text-3xl">
           Wait There&apos;s More...
@@ -185,7 +185,7 @@ export function HomeMoreGuides() {
       </div>
 
       <div className="mt-24 border-t border-store-border pt-14">
-        <div className="max-w-none space-y-7 text-base leading-7 text-store-ink-strong">
+        <div className="mx-auto max-w-6xl space-y-7 text-base leading-7 text-store-ink-strong">
           <div className="space-y-5">
             <h2 className="text-3xl font-black uppercase leading-tight tracking-normal sm:text-4xl">
               Workout Clothes &amp; Gym Clothes

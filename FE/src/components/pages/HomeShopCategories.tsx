@@ -27,7 +27,7 @@ const shopCategories = [
 
 export function HomeShopCategories() {
   return (
-    <section className="bg-store-paper px-4 pb-16 pt-0 text-store-ink-strong sm:px-8 lg:px-12">
+    <section className="bg-store-paper px-4 pb-16 pt-0 text-store-ink-strong sm:px-8 lg:px-12 2xl:px-16">
       <div className="grid grid-cols-1 gap-1 md:grid-cols-3">
         {shopCategories.map((category, index) => (
           <article key={category.title} className="flex flex-col gap-4">

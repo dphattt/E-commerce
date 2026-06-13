@@ -4,11 +4,11 @@ import { HomeHeroMedia } from "@/components/pages/HomeHeroMedia";
 
 export function HomePromoHero() {
   return (
-    <section className="relative min-h-[520px] overflow-hidden bg-store-ink text-white">
+    <section className="relative h-[560px] overflow-hidden bg-store-ink text-white lg:aspect-[8/3] lg:h-auto">
       <HomeHeroMedia {...premiumLiftersHeroMedia} />
 
       <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
-      <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-10 sm:px-8 lg:px-12 lg:pb-12">
+      <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-10 sm:px-8 lg:px-12 lg:pb-12 2xl:px-16">
         <div className="max-w-xl text-left">
           <h2 className="text-3xl font-black uppercase leading-none tracking-normal text-white sm:text-4xl">
             New In: Premium Lifter&apos;s Collection

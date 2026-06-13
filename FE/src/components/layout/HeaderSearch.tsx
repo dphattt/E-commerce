@@ -25,7 +25,7 @@ type HeaderSearchProps = {
 };
 
 export function HeaderSearch({
-  placeholder = "What are you looking for tod…",
+  placeholder = "What are you looking for today?",
   className,
   inputClassName,
   autoFocus = false,
@@ -115,7 +115,7 @@ export function HeaderSearch({
         <div
           id={listboxId}
           role="listbox"
-          className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-2xl border border-store-border bg-store-paper shadow-lg"
+          className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-2xl border border-store-border bg-store-paper text-store-ink-strong shadow-lg"
         >
           {showLoading ? (
             <p className="px-4 py-3 text-sm text-store-fg-muted">

@@ -50,9 +50,8 @@ export function SiteHeader({
   activeHref,
   announcement = "Get 10% off when you sign up for emails",
   announcements,
-  searchPlaceholder = "What are you looking for tod…",
+  searchPlaceholder = "What are you looking for today?",
   className = "",
-  onSearchSubmit,
 }: SiteHeaderProps) {
   const { isAuthenticated } = useAuth();
   const { count: wishlistCount } = useWishlist();
@@ -74,7 +73,7 @@ export function SiteHeader({
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
-  /* ── update --header-h so the fixed panel can sit right below the header ── */
+  /* Update --header-h so the fixed panel can sit right below the header. */
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
@@ -163,7 +162,7 @@ export function SiteHeader({
         )}
       >
         {/* Announcement */}
-        <div className="border-b border-store-border/80 bg-store-surface">
+        <div className="border-b border-store-border/80 bg-store-surface text-store-ink-strong">
           <div className="grid h-14 w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:px-6 lg:px-10">
             <div aria-hidden="true" />
             <div className="flex h-full min-w-0 items-center justify-center overflow-hidden text-center">
@@ -206,7 +205,7 @@ export function SiteHeader({
         </div>
 
         {/* Main bar */}
-        <div className="border-b border-store-border/80">
+        <div className="border-b border-store-border/80 bg-store-paper text-store-ink-strong">
           <div className="grid h-24 w-full grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 sm:px-6 lg:h-auto lg:gap-6 lg:px-10 lg:py-3">
             {/* Left: hamburger (mobile) + desktop nav */}
             <div className="flex min-w-0 items-center gap-5 lg:min-w-50 lg:gap-2">
@@ -350,7 +349,7 @@ export function SiteHeader({
             onClick={() => setSearchOpen(false)}
           >
             <div
-              className="border-b border-store-border bg-store-paper p-4 shadow-md"
+              className="border-b border-store-border bg-store-paper p-4 text-store-ink-strong shadow-md"
               role="dialog"
               aria-modal="true"
               aria-label="Search"
@@ -388,7 +387,7 @@ export function SiteHeader({
             />
             <div
               id={menuId}
-              className="absolute left-0 top-0 flex h-full w-[min(100%,320px)] flex-col bg-store-paper shadow-xl"
+              className="absolute left-0 top-0 flex h-full w-[min(100%,320px)] flex-col bg-store-paper text-store-ink-strong shadow-xl"
               role="dialog"
               aria-modal="true"
               aria-label="Site menu"
@@ -434,7 +433,7 @@ export function SiteHeader({
         )}
       </header>
 
-      {/* Mega menu panel — fixed at left viewport edge, just below the header */}
+      {/* Mega menu panel - fixed at left viewport edge, just below the header */}
       {activeNav?.subItems && (
         <MegaMenuPanel
           item={activeNav}
@@ -446,7 +445,7 @@ export function SiteHeader({
         />
       )}
 
-      {/* Backdrop — hover keeps mega menu open (pairs with MegaMenuPanel above) */}
+      {/* Backdrop - hover keeps mega menu open (pairs with MegaMenuPanel above) */}
       {activeNav && (
         <div
           ref={backdropRef}

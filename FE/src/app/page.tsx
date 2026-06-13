@@ -21,12 +21,12 @@ export default async function Home() {
   const womenBestsellers = womenProducts.filter((product) => product.imageUrls[0]);
 
   return (
-    <main className="-mx-4 -my-9 flex flex-1 flex-col bg-store-paper sm:-mx-6 lg:-mx-8">
-      <section className="relative min-h-[calc(100vh-var(--header-h,0px))] overflow-hidden bg-store-ink text-white">
+    <main className="-my-9 flex flex-1 flex-col bg-store-paper">
+      <section className="relative h-[620px] overflow-hidden bg-store-ink text-white md:aspect-[8/3] md:h-auto">
         <HomeHeroMedia {...homeHeroMedia} priority />
 
         <div className="absolute inset-0 bg-black/35" aria-hidden="true" />
-        <div className="absolute inset-x-0 bottom-0 z-10 flex justify-start px-4 pb-8 pt-24 sm:px-8 sm:pb-10 lg:px-12 lg:pb-12">
+        <div className="absolute inset-x-0 bottom-0 z-10 flex justify-start px-4 pb-8 pt-24 sm:px-8 sm:pb-10 lg:px-12 lg:pb-12 2xl:px-16">
           <div className="flex max-w-2xl flex-col items-start text-left">
             <h1 className="max-w-xl text-lg font-black uppercase leading-[1.12] tracking-normal text-white sm:text-xl lg:text-2xl">
               GYMSHARK X BRATZ

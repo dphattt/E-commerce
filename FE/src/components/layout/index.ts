@@ -5,6 +5,7 @@ export {
 } from "./SiteHeader";
 export { MegaMenuPanel, type MegaMenuPanelProps } from "./MegaMenuPanel";
 export { CartDrawer } from "./CartDrawer";
+export { PageShell } from "./PageShell";
 export { ScrollToTopOnNavigate } from "./ScrollToTopOnNavigate";
 export {
   SiteFooter,

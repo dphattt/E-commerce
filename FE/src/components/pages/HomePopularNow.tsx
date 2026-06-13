@@ -39,7 +39,7 @@ const popularItems = [
 
 export function HomePopularNow() {
   return (
-    <section className="bg-store-paper px-4 pb-16 pt-0 text-store-ink-strong sm:px-8 lg:px-12">
+    <section className="bg-store-paper px-4 pb-16 pt-0 text-store-ink-strong sm:px-8 lg:px-12 2xl:px-16">
       <div className="mb-8 flex flex-col items-start gap-6">
         <h2 className="text-2xl font-black uppercase leading-none tracking-normal sm:text-3xl">
           Popular Right Now

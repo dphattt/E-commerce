@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { renderHook } from "@testing-library/react";
 
 import { useCart } from "@/features/cart/model/useCart";
+import { ToastProvider } from "@/shared/context/ToastContext";
 import { TestStoreProvider } from "@/test-utils/store";
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -12,7 +13,7 @@ function wrapper({ children }: { children: React.ReactNode }) {
         auth: { user: null, sessionChecked: true },
       }}
     >
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </TestStoreProvider>
   );
 }
